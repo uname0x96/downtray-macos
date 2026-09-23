@@ -1,6 +1,6 @@
 # Architecture
 
-Arrivals is a menu bar app whose whole behavior lives in one headless Swift package,
+Downtray is a menu bar app whose whole behavior lives in one headless Swift package,
 `InboxCore`. The macOS app, the command-line tool, the shell scripts and the unit tests all
 drive the same presenter by sending events and reading one JSON snapshot of the model. The
 rules this follows are in `docs/rules.md`; this document says how each rule maps to the code.
@@ -16,7 +16,7 @@ rules this follows are in `docs/rules.md`; this document says how each rule maps
 │        (in memory)  │ (the Mac)                Snapshot (JSON contract)                  │
 └─────────────────────┼───────────────────────────────────┼────────────────────────────────┘
                       │                                   │
-        macOS/Arrivals (SwiftUI + AppKit)     inbox-cli · DebugBridge · scripts/test-inbox.sh
+        macOS/Downtray (SwiftUI + AppKit)     inbox-cli · DebugBridge · scripts/test-inbox.sh
 ```
 
 ## Layout
@@ -36,7 +36,7 @@ rules this follows are in `docs/rules.md`; this document says how each rule maps
 | `Sources/InboxCore/Hotkey.swift` | Key code + modifier value type, with display (`⌃⌥D`) and command-line (`ctrl+alt+d`) forms. |
 | `Sources/InboxCore/Bridge.swift` | `BridgeResponse`: the wire format of the debug bridge. |
 | `Sources/inbox-cli/main.swift` | `inbox-cli`: headless (in-process presenter + `FakeServices`) or `--remote` (the running app). |
-| `macOS/Arrivals/*` | The app: status item, popover, settings window, `MacServices`, folder watcher, hotkey, Quick Look, thumbnails, notifications, and the debug bridge. |
+| `macOS/Downtray/*` | The app: status item, popover, settings window, `MacServices`, folder watcher, hotkey, Quick Look, thumbnails, notifications, and the debug bridge. |
 | `Tests/InboxCoreTests/*` | Tier 1: reducer specs, presenter wiring with fakes and a test clock, grammar and snapshot round trips. |
 | `scripts/test-inbox.sh` | Tier 2: one scenario script that runs headless or against the real app. |
 
@@ -79,7 +79,7 @@ Mobius.swift is used as the loop runtime, not as the design. The design is the r
 | `notify`, `requestNotificationPermission` | `UNUserNotificationCenter`, bursts folded into one notification per 3 s. |
 | `chooseFolder` | Pro. `NSOpenPanel` for a folder to watch; the choice is stored as a security-scoped bookmark keyed by path so it survives relaunches. |
 | `loadHistory`, `saveHistory` | Pro. `history.json` in the container's Application Support (newest first, capped at 1000). |
-| `checkProStatus`, `purchasePro`, `restorePurchases` | StoreKit 2: `Transaction.currentEntitlements` for the non-consumable `app.arrivals.mac.pro`, `Product.purchase()`, `AppStore.sync()`. Without a store (no `.storekit` config, no App Store receipt) purchase fails with a toast and the app stays free. |
+| `checkProStatus`, `purchasePro`, `restorePurchases` | StoreKit 2: `Transaction.currentEntitlements` for the non-consumable `app.downtray.mac.pro`, `Product.purchase()`, `AppStore.sync()`. Without a store (no `.storekit` config, no App Store receipt) purchase fails with a toast and the app stays free. |
 
 ## Reading the model
 
@@ -155,11 +155,12 @@ send the next line as soon as the panel is really there (rule 11). The debug ent
   dropped on request: the pointer highlights the row under it with the same ring keyboard
   focus uses, and the first arrow key starts from the top (↓) or bottom (↑). Focus is only
   ever cleared by a filter change, never moved to another row behind the user's back.
-- **The product is Arrivals; the code keeps "inbox".** The app, bundle id (`app.arrivals.mac`),
-  product id, history folder and every user-facing string say Arrivals. `InboxCore`, `inbox-cli`,
+- **The product is Downtray; the code keeps "inbox".** The app, bundle id (`app.downtray.mac`),
+  product id, history folder and every user-facing string say Downtray. `InboxCore`, `inbox-cli`,
   `InboxReducer` and friends keep their names because the list they model is an inbox for
-  arrivals, and renaming a package churns every import for no behavior. The name was changed
-  before the first App Store upload; after an upload the bundle id is fixed for good.
+  arrivals, and renaming a package churns every import for no behavior. The product was
+  called Arrivals until the App Store rejected the name as taken; it became Downtray before
+  the first upload, while the bundle id could still change. After an upload it is fixed for good.
 - **`DispatchSource` instead of `NSMetadataQuery`.** Spotlight indexing can lag or be disabled
   for Downloads; a directory event source plus a rescan is immediate and needs no index.
 - **`ditto` instead of a zip library.** It is on every Mac, handles resource forks and large

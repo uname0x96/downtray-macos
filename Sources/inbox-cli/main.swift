@@ -1,7 +1,7 @@
 import Foundation
 import InboxCore
 
-// Presenter CLI. Drives Arrivals' logic either headlessly in this process (default,
+// Presenter CLI. Drives Downtray' logic either headlessly in this process (default,
 // against an in-memory file system) or attached to the running app through the debug bridge.
 //
 //   inbox-cli state                        print the current state
@@ -171,7 +171,7 @@ final class LineSocket {
             cursor = info.pointee.ai_next
         }
         guard descriptor >= 0 else {
-            throw DriverError("cannot connect to \(host):\(port). Is Arrivals running as a debug build?")
+            throw DriverError("cannot connect to \(host):\(port). Is Downtray running as a debug build?")
         }
         fd = descriptor
     }
@@ -301,7 +301,7 @@ do {
 
     default:
         print("""
-        inbox-cli: drive Arrivals without a UI, or attached to the running app.
+        inbox-cli: drive Downtray without a UI, or attached to the running app.
 
           state                        print the current state
           send <event> [<event> ...]   apply events in order and print the final state

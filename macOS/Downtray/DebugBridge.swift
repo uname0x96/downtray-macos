@@ -27,7 +27,7 @@ final class DebugBridge {
     private weak var panel: (any PanelController)?
     private var listener: NWListener?
     private var connections: [ObjectIdentifier: NWConnection] = [:]
-    private nonisolated static let log = Logger(subsystem: "app.arrivals.mac", category: "bridge")
+    private nonisolated static let log = Logger(subsystem: "app.downtray.mac", category: "bridge")
 
     init(presenter: InboxPresenter, panel: any PanelController) {
         self.presenter = presenter

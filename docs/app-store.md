@@ -8,16 +8,16 @@ to paste there. Everything below the checklist is a draft to edit, not a decisio
 ```sh
 cd macOS
 xcodegen generate
-xcodebuild -project Arrivals.xcodeproj -scheme Arrivals -configuration Release \
+xcodebuild -project Downtray.xcodeproj -scheme Downtray -configuration Release \
   -destination 'generic/platform=macOS' -derivedDataPath ../.build/DerivedData \
-  -archivePath ../.build/Arrivals.xcarchive CODE_SIGN_STYLE=Automatic archive
-xcodebuild -exportArchive -archivePath ../.build/Arrivals.xcarchive \
+  -archivePath ../.build/Downtray.xcarchive CODE_SIGN_STYLE=Automatic archive
+xcodebuild -exportArchive -archivePath ../.build/Downtray.xcarchive \
   -exportOptionsPlist ExportOptions.plist -exportPath ../.build/export -allowProvisioningUpdates
 ```
 
 `-allowProvisioningUpdates` lets Xcode create the "3rd Party Mac Developer Installer"
 certificate and the Mac App Store provisioning profile on first use (it did on this machine).
-The result is `.build/export/Arrivals.pkg`, signed for App Store Connect. Upload it with
+The result is `.build/export/Downtray.pkg`, signed for App Store Connect. Upload it with
 the Transporter app, or open the `.xcarchive` in Xcode's Organizer and press Distribute App.
 Notarization is not needed for App Store builds.
 
@@ -35,7 +35,7 @@ Done in the repository:
 - [x] App Sandbox with only Downloads, user-selected files and app-scoped bookmarks. The
       release entitlements have no network entitlement; the debug bridge is `#if DEBUG`.
 - [x] Hardened runtime, version 1.0.0 (1), copyright string.
-- [x] StoreKit 2 for the non-consumable `app.arrivals.mac.pro`, with a local
+- [x] StoreKit 2 for the non-consumable `app.downtray.mac.pro`, with a local
       `Pro.storekit` for testing from the Xcode scheme.
 - [x] Release archive and App Store export succeed with automatic signing.
 
@@ -43,10 +43,10 @@ Only possible in App Store Connect (account owner):
 
 - [ ] Accept the Paid Apps Agreement and fill in banking and tax forms. Without this the
       in-app purchase never leaves "Missing Metadata" and the app cannot be sold.
-- [ ] Create the app record: name "Arrivals", bundle id `app.arrivals.mac`,
+- [ ] Create the app record: name "Downtray", bundle id `app.downtray.mac`,
       primary category Productivity, SKU of your choice.
-- [ ] Create the in-app purchase: Non-Consumable, product id `app.arrivals.mac.pro`,
-      reference name "Pro", price tier for $7.99, display name "Arrivals Pro",
+- [ ] Create the in-app purchase: Non-Consumable, product id `app.downtray.mac.pro`,
+      reference name "Pro", price tier for $7.99, display name "Downtray Pro",
       description from `Pro.storekit`, a 1024×1024 promotional image is optional. Attach it
       to the first version under "In-App Purchases and Subscriptions" so it is reviewed with
       the app.
@@ -72,16 +72,16 @@ Still worth doing before submitting:
 - [ ] Localization: the string catalog is still empty because command-line builds do not
       extract strings; build once in the Xcode IDE to populate `Localizable.xcstrings`, or
       leave it, the app then ships English only.
-- [ ] Replace the placeholder copyright holder ("Arrivals") with the legal name.
+- [ ] Replace the placeholder copyright holder ("Downtray") with the legal name.
 
 ## Review notes (paste into "Notes" for App Review)
 
-> Arrivals is a menu bar utility (it has no Dock icon). After launch, press
+> Downtray is a menu bar utility (it has no Dock icon). After launch, press
 > Control-Option-D or click the tray icon in the menu bar to open the inbox. The first time,
 > macOS asks for access to the Downloads folder; please allow it, then drop any file into
 > ~/Downloads and it appears at the top of the list.
 >
-> The gear button opens Settings. The Pro in-app purchase ("Arrivals Pro",
+> The gear button opens Settings. The Pro in-app purchase ("Downtray Pro",
 > non-consumable) is on the Settings window; it unlocks extra watched folders, a longer list
 > with search, history, and rules. Rules act only on files that land in folders the user
 > chose to watch, with actions the user configured (move to a folder the user picked, move to
@@ -97,7 +97,7 @@ move, unzip or trash it, without leaving what you were doing.
 
 **Description**
 
-Arrivals puts the files that just arrived in your Downloads folder one keystroke away.
+Downtray puts the files that just arrived in your Downloads folder one keystroke away.
 Press ⌃⌥D and the newest files are there, newest first, with a Quick Look thumbnail and where
 they came from.
 
@@ -107,7 +107,7 @@ with a five-second undo. Filter by type (PDF, images, archives, installers) or t
 files only. A badge on the menu bar icon counts what arrived while you were away, and an
 optional notification tells you the moment a download finishes.
 
-Arrivals Pro (one-time purchase) adds:
+Downtray Pro (one-time purchase) adds:
 • Extra folders: watch your Desktop, a scanner folder, an AirDrop target, anything.
 • A longer list, 200 files, with search.
 • History: every file that ever landed, even after you moved it.
@@ -124,7 +124,7 @@ rules,productivity
 
 ## Privacy policy (draft, host at the privacy policy URL)
 
-> Arrivals does not collect, store or transmit any personal data. The app runs entirely
+> Downtray does not collect, store or transmit any personal data. The app runs entirely
 > on your Mac. It reads the folders you allow it to watch (Downloads by default, others only
 > when you choose them) to show you the files there and to carry out the actions you ask for.
 > Settings and the file history are stored locally in the app's sandbox container and never

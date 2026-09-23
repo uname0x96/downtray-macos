@@ -21,7 +21,7 @@ final class MacServices: InboxServices {
     #endif
 
     private let defaults = UserDefaults.standard
-    private nonisolated static let log = Logger(subsystem: "app.arrivals.mac", category: "services")
+    private nonisolated static let log = Logger(subsystem: "app.downtray.mac", category: "services")
     private var watchers: [FolderKind: FolderWatcher] = [:]
     private let hotkeys = HotkeyCenter()
     private let notifications = NotificationRelay()
@@ -35,7 +35,7 @@ final class MacServices: InboxServices {
     }
 
     /// The one-time Pro purchase (App Store Connect product id).
-    static let proProductID = "app.arrivals.mac.pro"
+    static let proProductID = "app.downtray.mac.pro"
     /// Destinations (rule targets, "Move to…" folders) whose security scope is open.
     private var scopedDestinations: [String: URL] = [:]
 
@@ -154,7 +154,7 @@ final class MacServices: InboxServices {
         panel.allowsMultipleSelection = false
         panel.canCreateDirectories = false
         panel.prompt = String(localized: "Grant Access")
-        panel.message = String(localized: "Arrivals needs access to your \(kind.title) folder to list new files.")
+        panel.message = String(localized: "Downtray needs access to your \(kind.title) folder to list new files.")
         if let standard { panel.directoryURL = URL(fileURLWithPath: standard) }
         NSApp.activate()
         let response = await panel.begin()
@@ -377,7 +377,7 @@ final class MacServices: InboxServices {
     private var historyURL: URL {
         let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
             ?? FileManager.default.temporaryDirectory
-        let folder = support.appendingPathComponent("Arrivals", isDirectory: true)
+        let folder = support.appendingPathComponent("Downtray", isDirectory: true)
         try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         return folder.appendingPathComponent("history.json")
     }

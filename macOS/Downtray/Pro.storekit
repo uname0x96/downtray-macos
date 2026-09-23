@@ -11,11 +11,11 @@
       "localizations" : [
         {
           "description" : "Extra folders, a 200-file list with search, full history, and rules.",
-          "displayName" : "Arrivals Pro",
+          "displayName" : "Downtray Pro",
           "locale" : "en_US"
         }
       ],
-      "productID" : "app.arrivals.mac.pro",
+      "productID" : "app.downtray.mac.pro",
       "referenceName" : "Pro",
       "type" : "NonConsumable"
     }

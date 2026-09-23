@@ -1,4 +1,4 @@
-# Arrivals
+# Downtray
 
 A menu bar inbox for the files that land in `~/Downloads` (and, optionally, the Desktop).
 Press ⌃⌥D, see the latest twenty, act on them with one key: open, Quick Look, reveal, copy
@@ -27,15 +27,15 @@ swift test
 # The app
 cd macOS
 xcodegen generate
-xcodebuild -project Arrivals.xcodeproj -scheme Arrivals -configuration Debug \
+xcodebuild -project Downtray.xcodeproj -scheme Downtray -configuration Debug \
   -destination 'platform=macOS' -derivedDataPath ../.build/DerivedData build
-open ../.build/DerivedData/Build/Products/Debug/Arrivals.app
+open ../.build/DerivedData/Build/Products/Debug/Downtray.app
 ```
 
 The project signs with your "Apple Development" certificate (team ID in `macOS/project.yml`).
 Without one, add `CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM=` to the `xcodebuild` line; macOS will
 then ask for Downloads access again after every rebuild. On first launch macOS asks
-"Arrivals would like to access files in your Downloads folder"; the app waits for the
+"Downtray would like to access files in your Downloads folder"; the app waits for the
 answer before it lists anything.
 
 ## Ship it
@@ -46,8 +46,8 @@ listing and privacy-policy text. In short:
 
 ```sh
 cd macOS
-xcodebuild ... -archivePath ../.build/Arrivals.xcarchive CODE_SIGN_STYLE=Automatic archive
-xcodebuild -exportArchive -archivePath ../.build/Arrivals.xcarchive \
+xcodebuild ... -archivePath ../.build/Downtray.xcarchive CODE_SIGN_STYLE=Automatic archive
+xcodebuild -exportArchive -archivePath ../.build/Downtray.xcarchive \
   -exportOptionsPlist ExportOptions.plist -exportPath ../.build/export -allowProvisioningUpdates
 ```
 
@@ -93,7 +93,7 @@ Sources/InboxCore/       model, events, effects, reducer, presenter, services, s
 Sources/inbox-cli/       headless / remote driver
 Tests/InboxCoreTests/    tier 1
 macOS/project.yml        xcodegen spec for the app
-macOS/Arrivals/     SwiftUI + AppKit app, MacServices, folder watcher, debug bridge
+macOS/Downtray/     SwiftUI + AppKit app, MacServices, folder watcher, debug bridge
 scripts/test-inbox.sh    tier 2
 docs/                    architecture, rules
 specs/                   the product spec
@@ -103,7 +103,7 @@ specs/                   the product spec
 
 MVP per `specs/mvp-spec.md`, plus the Pro tier: extra folders, 200-file
 list with search, history, rules, unlocked through StoreKit 2 (product
-`app.arrivals.mac.pro`, to be created in App Store Connect, see `docs/app-store.md`).
+`app.downtray.mac.pro`, to be created in App Store Connect, see `docs/app-store.md`).
 Icon, privacy manifest, usage strings and a signed App Store export are in place. Running the app from the
-Xcode scheme uses `macOS/Arrivals/Pro.storekit` for a local sandbox purchase; a build
+Xcode scheme uses `macOS/Downtray/Pro.storekit` for a local sandbox purchase; a build
 launched any other way reports "Pro is not available in this build" and stays free.

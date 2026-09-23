@@ -5,7 +5,7 @@ let package = Package(
     name: "InboxCore",
     platforms: [.macOS(.v14)],
     products: [
-        // Business logic for Arrivals. No AppKit, no SwiftUI: a UI, a CLI, a test or an
+        // Business logic for Downtray. No AppKit, no SwiftUI: a UI, a CLI, a test or an
         // agent drives it by sending events and reading the model.
         .library(name: "InboxCore", targets: ["InboxCore"]),
         // Headless driver: runs the presenter in-process, or attached to the running app.
