@@ -1,0 +1,38 @@
+{
+  "identifier" : "3F1E2C7A-9B1D-4E4B-A2C6-5D6E7F8A9B0C",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+    {
+      "displayPrice" : "7.99",
+      "familyShareable" : false,
+      "internalID" : "6746000001",
+      "localizations" : [
+        {
+          "description" : "Extra folders, a 200-file list with search, full history, and rules.",
+          "displayName" : "Arrivals Pro",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "app.arrivals.mac.pro",
+      "referenceName" : "Pro",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {
+    "_failTransactionsEnabled" : false,
+    "_locale" : "en_US",
+    "_storefront" : "USA",
+    "_storeKitErrors" : [
+
+    ]
+  },
+  "subscriptionGroups" : [
+
+  ],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}

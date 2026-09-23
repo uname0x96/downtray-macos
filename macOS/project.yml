@@ -1,0 +1,78 @@
+name: Arrivals
+options:
+  bundleIdPrefix: app.arrivals
+  deploymentTarget:
+    macOS: "14.0"
+  xcodeVersion: "26.0"
+  createIntermediateGroups: true
+  groupSortPosition: top
+packages:
+  InboxCore:
+    path: ..
+targets:
+  Arrivals:
+    type: application
+    platform: macOS
+    sources:
+      - path: Arrivals
+        excludes:
+          - "*.entitlements"
+          - "*.storekit"
+    dependencies:
+      - package: InboxCore
+        product: InboxCore
+    info:
+      path: Arrivals/Info.plist
+      properties:
+        CFBundleDisplayName: Arrivals
+        CFBundleName: Arrivals
+        CFBundleShortVersionString: "1.0.0"
+        CFBundleVersion: "1"
+        LSMinimumSystemVersion: "14.0"
+        LSUIElement: true
+        LSApplicationCategoryType: public.app-category.productivity
+        NSHumanReadableCopyright: "Copyright © 2026 Arrivals. All rights reserved."
+        # Shown in the macOS privacy prompts. Without them the prompt has an empty line and
+        # App Review rejects the build.
+        NSDownloadsFolderUsageDescription: Arrivals lists the files that land in your Downloads folder so you can open, move or trash them from the menu bar.
+        NSDesktopFolderUsageDescription: Arrivals can also list files that land on your Desktop, if you turn that on in Settings.
+        NSDocumentsFolderUsageDescription: Arrivals moves files here only when you choose this folder in a rule or a "Move to…" panel.
+        NSSupportsAutomaticTermination: false
+        NSSupportsSuddenTermination: false
+    settings:
+      base:
+        SWIFT_VERSION: "6.0"
+        SWIFT_STRICT_CONCURRENCY: complete
+        SWIFT_EMIT_LOC_STRINGS: YES
+        PRODUCT_BUNDLE_IDENTIFIER: app.arrivals.mac
+        MACOSX_DEPLOYMENT_TARGET: "14.0"
+        ARCHS: arm64 x86_64
+        ENABLE_HARDENED_RUNTIME: YES
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        # Local builds sign with the developer's "Apple Development" certificate so macOS keeps
+        # the Downloads privacy grant across rebuilds (an ad-hoc signature changes every build
+        # and triggers the prompt again). No provisioning profile is needed: none of the
+        # entitlements are restricted. Override on the command line if you have no certificate:
+        #   xcodebuild ... CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM=
+        # For TestFlight/App Store set CODE_SIGN_STYLE=Automatic and your team ID.
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGN_IDENTITY: "Apple Development"
+        DEVELOPMENT_TEAM: 8NA28XPH84
+      configs:
+        Debug:
+          CODE_SIGN_ENTITLEMENTS: Arrivals/Arrivals.debug.entitlements
+        Release:
+          CODE_SIGN_ENTITLEMENTS: Arrivals/Arrivals.entitlements
+schemes:
+  Arrivals:
+    build:
+      targets:
+        Arrivals: all
+    run:
+      config: Debug
+      # Local StoreKit testing: "Unlock Pro" shows the sandbox purchase sheet when the app is
+      # run from this scheme. A build launched with `open` has no store and shows
+      # "Pro is not available in this build"; scripts use `pro on` instead.
+      storeKitConfiguration: Arrivals/Pro.storekit
+    archive:
+      config: Release

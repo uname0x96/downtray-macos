@@ -1,0 +1,206 @@
+# Architecture
+
+Arrivals is a menu bar app whose whole behavior lives in one headless Swift package,
+`InboxCore`. The macOS app, the command-line tool, the shell scripts and the unit tests all
+drive the same presenter by sending events and reading one JSON snapshot of the model. The
+rules this follows are in `docs/rules.md`; this document says how each rule maps to the code.
+
+```
+┌──────────────────────────── InboxCore (SwiftPM, no AppKit) ────────────────────────────┐
+│  Event ──▶ InboxReducer.reduce(model, event) throws(EventError) ──▶ Step(model, effects) │
+│                     ▲                                                     │              │
+│                     │ result events                                       ▼              │
+│              InboxServices (protocol)  ◀───── InboxPresenter (Mobius loop, @MainActor)   │
+│                     │                                   │                                │
+│        FakeServices │ MacServices                       ▼                                │
+│        (in memory)  │ (the Mac)                Snapshot (JSON contract)                  │
+└─────────────────────┼───────────────────────────────────┼────────────────────────────────┘
+                      │                                   │
+        macOS/Arrivals (SwiftUI + AppKit)     inbox-cli · DebugBridge · scripts/test-inbox.sh
+```
+
+## Layout
+
+| Path | What it holds |
+|---|---|
+| `Sources/InboxCore/Models.swift` | `InboxModel` and its value types: files, filters, watched folders, settings, toast, pending undo. Derived data (`visibleFiles`, `badgeCount`, `duplicateNames`, `emptyState`) is computed here so every client sees the same answer. |
+| `Sources/InboxCore/Events.swift` | `Event`: everything that can happen, from the environment, the panel, the settings window, or as the outcome of an effect. `EventError`: the typed rejections. |
+| `Sources/InboxCore/Effects.swift` | `InboxEffect`: every side effect the loop can ask for. |
+| `Sources/InboxCore/Reducer.swift` | `InboxReducer.reduce`: the one function that changes state. Pure, synchronous, throws `EventError` for events that do not apply. |
+| `Sources/InboxCore/Update.swift` | The Mobius `Update` wrapper: unchanged model → `.dispatchEffects`, rejection → `.reject(error)` effect. |
+| `Sources/InboxCore/Services.swift` | `InboxServices`: the interface the presenter owns for talking to the world. |
+| `Sources/InboxCore/Presenter.swift` | `InboxPresenter`: builds the Mobius loop, routes each effect to a service call, feeds results back as events, publishes `model` for SwiftUI. `send` throws the typed error; `dispatch` records it in `lastError`. |
+| `Sources/InboxCore/FakeServices.swift` | In-memory implementation used by tests and the headless CLI. Keeps a log of calls so tests can assert on effects that reached the world. |
+| `Sources/InboxCore/Snapshot.swift` | `Snapshot`: the JSON view of the model. Everything the UI shows is derivable from it. |
+| `Sources/InboxCore/EventSyntax.swift` | The text grammar (`arrive a.pdf 120k example.com`, `hotkey`, `trash`, ...) shared by the CLI and the bridge. |
+| `Sources/InboxCore/Hotkey.swift` | Key code + modifier value type, with display (`⌃⌥D`) and command-line (`ctrl+alt+d`) forms. |
+| `Sources/InboxCore/Bridge.swift` | `BridgeResponse`: the wire format of the debug bridge. |
+| `Sources/inbox-cli/main.swift` | `inbox-cli`: headless (in-process presenter + `FakeServices`) or `--remote` (the running app). |
+| `macOS/Arrivals/*` | The app: status item, popover, settings window, `MacServices`, folder watcher, hotkey, Quick Look, thumbnails, notifications, and the debug bridge. |
+| `Tests/InboxCoreTests/*` | Tier 1: reducer specs, presenter wiring with fakes and a test clock, grammar and snapshot round trips. |
+| `scripts/test-inbox.sh` | Tier 2: one scenario script that runs headless or against the real app. |
+
+## The Mobius mapping
+
+Mobius.swift is used as the loop runtime, not as the design. The design is the reducer:
+
+- **Model** is `InboxModel`, a value type. Navigation (`panelOpen`), focus, selection, the
+  pending "Move to…" and the undo window are all data in it (rule 2).
+- **Event** is `Event`. Results of effects (`trashed`, `moved`, `unzipped`, `restored`,
+  `undoExpired`, `destinationChosen`, ...) are events like any other (rule 3).
+- **Update** is `InboxUpdate.update`, a thin adapter over `InboxReducer.reduce`. The reducer
+  is the tested API; the adapter only turns `Step` into `Next` and a thrown `EventError` into
+  the `.reject` effect (rule 4). The reducer stays synchronous and framework-free so tests use
+  `MobiusTest.UpdateSpec` or call it directly.
+- **Effect handler** is built in `InboxPresenter.makeLoop` with `EffectRouter`, one route per
+  effect case. Each route calls one `InboxServices` method on the main actor and dispatches
+  the result as an event. Timers (undo expiry, toast dismissal) use an injected clock so
+  tests advance time instead of sleeping.
+- The loop runs on the main thread. `send` is synchronous: when it returns, `model` already
+  reflects the event, so the bridge can answer after the UI's next run-loop turn.
+
+## Effects and their real implementations
+
+| Effect | `MacServices` |
+|---|---|
+| `loadSettings` / `saveSettings` | `UserDefaults` (JSON), login item state read from `SMAppService`. |
+| `startWatching` / `stopWatching` | `FolderWatcher`: `DispatchSource` on the directory, 150 ms debounce, rescan with `.addedToDirectoryDateKey`; partial downloads (`.download`, `.crdownload`, `.part`, `.tmp`) are skipped and new files are reported only after their size is stable for 3 polls at 400 ms. Source comes from the `kMDItemWhereFroms` xattr; AirDrop is inferred when a file lands in Downloads without it. |
+| `requestAccess` | `NSOpenPanel` on the folder; the choice is kept as a security-scoped bookmark. |
+| `openFiles`, `reveal`, `openFolder` | `NSWorkspace`. Opening goes through Gatekeeper like Finder. |
+| `quickLook` | `QLPreviewPanel` hosted by the popover's `NSHostingController`; the popover stops being transient while the panel is up. |
+| `copyToPasteboard` | `NSPasteboard`. |
+| `chooseDestination`, `move` | `NSOpenPanel` (destination remembered as a bookmark) then `FileManager.moveItem` with unique names. |
+| `unzip` | `/usr/bin/ditto -x -k` into a folder named after the archive, next to it. |
+| `trash`, `restore` | `FileManager.trashItem` (all or nothing) and a move back from the returned Trash URL. |
+| `scheduleUndoExpiry`, `scheduleToastDismiss` | Presenter timers (5 s and 4 s). |
+| `setLaunchAtLogin` | `SMAppService.mainApp`; opens System Settings when approval is required. |
+| `registerHotkey` | Carbon `RegisterEventHotKey`, default ⌃⌥D. |
+| `showPanel`, `hidePanel` | The status item's `NSPopover`. |
+| `notify`, `requestNotificationPermission` | `UNUserNotificationCenter`, bursts folded into one notification per 3 s. |
+| `chooseFolder` | Pro. `NSOpenPanel` for a folder to watch; the choice is stored as a security-scoped bookmark keyed by path so it survives relaunches. |
+| `loadHistory`, `saveHistory` | Pro. `history.json` in the container's Application Support (newest first, capped at 1000). |
+| `checkProStatus`, `purchasePro`, `restorePurchases` | StoreKit 2: `Transaction.currentEntitlements` for the non-consumable `app.arrivals.mac.pro`, `Product.purchase()`, `AppStore.sync()`. Without a store (no `.storekit` config, no App Store receipt) purchase fails with a toast and the app stays free. |
+
+## Reading the model
+
+`InboxModel` keeps `files` keyed by POSIX path. The panel lists `visibleFiles`: enabled folders
+only, filtered by `filter`, newest first, capped at `listLimit` (20). The badge counts files
+that arrived while the panel was closed; opening the panel clears it. `unread` is per file and
+is cleared by any action on that file or by "Mark all seen". A file whose watcher reports it
+gone leaves the list at once (`fileRemoved`); the user moved or deleted it themselves, so
+there is nothing to announce. Only History (Pro) keeps a greyed row for it, without actions.
+`InboxFile.missing` and `dismiss` remain for those history rows and for scripts.
+
+### Pro
+
+`settings.proUnlocked` gates four things in the reducer, each with a typed `proRequired`
+error: extra folders (`addFolder`, `removeFolder`), a 200-file list with a name `query`,
+`historyMode`, and `rules`. The store is the source of truth: `settingsLoaded` asks for
+`checkProStatus`, and `proStatusChanged` overwrites the saved flag either way, so a stale
+"unlocked" flag cannot outlive a refund.
+
+- **Extra folders** are `FolderKind.custom(path)` (the raw value is the absolute path). They
+  join `folders` at load from `settings.extraFolders` and are watched like Downloads.
+- **History** is `[HistoryEntry]`, one line per file that ever arrived in a watched folder
+  (path, size, kind, source, date), recorded in `fileArrived` and saved after each arrival. In
+  history mode the same list, filter chips and query apply to `historyFiles` instead of
+  `recentFiles`; rows for files no longer on disk show as missing.
+- **Rules** are `Rule { trigger, match, action }`. The trigger is arrival or "after opened";
+  the match is any subset of kind, host, name substring and extension; the action is move to
+  a folder, trash, mark seen, or `suggestTrash`, which puts a `Suggestion` on the model that
+  the popover shows as a notice with Yes and dismiss. The first enabled matching rule wins, and
+  it runs after the arrival has been recorded and notified.
+
+## Event grammar
+
+`inbox-cli events` prints the list. The same lines work in `inbox-cli send`, `inbox-cli repl`,
+over the bridge, and in `scripts/test-inbox.sh`. Files are addressed by name when unique, or
+by full path. `arrive` and `vanish` simulate the watcher and exist for the headless target;
+the attached target sees real files.
+
+Pro events have their own lines: `pro on|off` (stands in for the store), `folder add`,
+`folder remove <name>`, `history on|off|clear`, `search <text>`,
+`rule add <name> [kind=pdf] [host=example.com] [name=invoice] [ext=pdf] [on=arrival|opened] then move <path>|trash|seen|suggest-trash`,
+`rule remove|enable|disable <name>`, `accept`, `dismiss-suggestion`, `unlock`, `restore`.
+
+Session commands (not events): `state`, `reset`, `settle`, `dest <path>`, `pick <path>` (answers
+the next "Add Folder…" panel) and, on the bridge, `settings` (what the gear button does) and
+`windows` (visible windows, to check it opened) and `frames` (status item and popover
+rectangles, top-left origin, for `scripts/click.swift`). A scripted `pick` grants no sandbox bookmark,
+so in the attached tier the folder must be somewhere the app can already read, such as inside
+`~/Downloads`.
+
+## Debug bridge
+
+`DebugBridge` (debug builds only, `#if DEBUG`) listens on `127.0.0.1:8791`. One request line,
+one `BridgeResponse` JSON line: `{"ok": true, "snapshot": {...}}` or
+`{"ok": false, "error": "…", "snapshot": {...}}`. After each event it waits two run-loop turns
+and then until the popover's shown/hidden state matches `model.panelOpen`, so a script can
+send the next line as soon as the panel is really there (rule 11). The debug entitlements add
+`com.apple.security.network.server` for the listener; the release entitlements do not.
+
+## Tests
+
+| Tier | Where | What |
+|---|---|---|
+| 1 | `swift test` | Reducer specs with `MobiusTest`, presenter wiring with `FakeServices` and a `TestClock`, grammar/snapshot round trips. Milliseconds. |
+| 2 | `scripts/test-inbox.sh [headless\|attached\|both]` | The spec's success loop and edge cases as one scenario, asserted on snapshots, then the Pro loop (unlock, extra folder, history, search, a move rule, a suggest-trash rule). Headless runs in-process; attached drives the real app, writes real files to `~/Downloads`, checks the pasteboard, the Trash, `ditto` and the rule's move on disk. |
+| 3 | `scripts/test-click.sh`, and manual | Real mouse clicks through `CGEvent` (needs Accessibility for the terminal): status item, then one click on a row must open the file. The rest still needs a human: the Downloads privacy prompt, System Settings approval for login items, Quick Look rendering. |
+
+## Decisions worth knowing
+
+- **Primary click opens the file**, as the spec asks; ⌘-click and ⇧-click select. Keyboard
+  users move with arrows and act with Return/Space/⌘R/⌘C/⌘M/⌘U/⌫.
+- **Nothing is selected when the panel opens.** The spec's "focus the first unread row" was
+  dropped on request: the pointer highlights the row under it with the same ring keyboard
+  focus uses, and the first arrow key starts from the top (↓) or bottom (↑). Focus is only
+  ever cleared by a filter change, never moved to another row behind the user's back.
+- **The product is Arrivals; the code keeps "inbox".** The app, bundle id (`app.arrivals.mac`),
+  product id, history folder and every user-facing string say Arrivals. `InboxCore`, `inbox-cli`,
+  `InboxReducer` and friends keep their names because the list they model is an inbox for
+  arrivals, and renaming a package churns every import for no behavior. The name was changed
+  before the first App Store upload; after an upload the bundle id is fixed for good.
+- **`DispatchSource` instead of `NSMetadataQuery`.** Spotlight indexing can lag or be disabled
+  for Downloads; a directory event source plus a rescan is immediate and needs no index.
+- **`ditto` instead of a zip library.** It is on every Mac, handles resource forks and large
+  archives, and runs inside the sandbox because the output folder is next to the archive in
+  a folder the app already has access to.
+- **Signing.** Local builds use the developer's "Apple Development" certificate so macOS keeps
+  the "access your Downloads folder" grant across rebuilds; with an ad-hoc signature every build
+  is a new app to the privacy system. Pass `CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM=` to
+  `xcodebuild` to build without a certificate.
+- **The model leads the popover, in both directions.** `hotkeyPressed` and the status item
+  click both go through the reducer, which sets `panelOpen` and asks for `showPanel` or
+  `hidePanel`. The popover does not animate, so show and close complete synchronously and the
+  bridge can answer as soon as the effect returns. The popover delegate only reports a close
+  the user caused (click outside, Escape, another app activating) and re-closes a popover that
+  finished showing after the model had already closed it.
+- **The popover takes the first click.** `showPopover` activates the app with
+  `ignoringOtherApps` (the cooperative `activate()` is refused while another app is frontmost)
+  and the hosting view is a `FirstMouseHostingView` that accepts the first mouse, so a click
+  on a row acts on the row even when the window was not key. `PopoverHostingController` is a
+  plain `NSViewController` around that view; the Quick Look handshake lives there as before.
+- **Menu bar icon.** A template image from the asset catalog (`MenuBarIcon`, 18 pt), tinted
+  by macOS; the unread count is the button's title next to it. Left click toggles the panel;
+  right click shows a menu with Settings… and Quit. Quit is also ⌘Q in the panel and a button
+  in Settings, since an accessory app has no Dock icon to quit from. Quitting is UI-only
+  (`NSApp.terminate`), not a model event.
+- **Settings opens through SwiftUI's `openSettings` action.** The private `showSettingsWindow:`
+  selector stopped working on macOS 27. A zero-size `SettingsOpener` view inside the popover
+  captures the environment action so AppKit code and the bridge can call it; the app activates
+  itself first because an accessory app's window would otherwise open behind the front app.
+- **Real home directory.** Inside the App Sandbox, `FileManager.urls(for: .downloadsDirectory)`
+  and `NSHomeDirectory()` return the app container (`~/Library/Containers/<id>/Data/...`), and a
+  `DispatchSource` cannot open that path. `WatchedFolder.standard` reads the real home from the
+  password database (`getpwuid`) and the Downloads entitlement covers the real `~/Downloads`.
+- **No network.** The core has no networking; the app's only listener is the debug bridge on
+  loopback. StoreKit talks to Apple on the app's behalf; the core only sees a `Bool`.
+- **Outcomes never throw.** Events that come back from an effect (`folderChosen`,
+  `purchaseFailed`, …) have nobody waiting for an error, so the reducer answers them with a
+  toast; thrown `EventError`s are reserved for events a caller sent and can see rejected.
+- **Pro is data, not a build.** Every Pro path runs in the free build behind `isPro`, so the
+  headless tier covers it with `pro on` and the fake store, and the real app is exercised the
+  same way through the bridge. `Pro.storekit` in the scheme gives a local sandbox purchase when
+  the app is run from Xcode.
+- **Localization** goes through `Localizable.xcstrings` with `SWIFT_EMIT_LOC_STRINGS`, so every
+  user-facing string is exported from day one.
