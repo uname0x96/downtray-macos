@@ -27,7 +27,10 @@ targets:
         CFBundleDisplayName: Downtray
         CFBundleName: Downtray
         CFBundleShortVersionString: "1.0.0"
-        CFBundleVersion: "1"
+        CFBundleVersion: "3"
+        # No custom encryption; answers the export-compliance question so TestFlight builds do
+        # not wait in "Missing Compliance".
+        ITSAppUsesNonExemptEncryption: false
         LSMinimumSystemVersion: "14.0"
         LSUIElement: true
         LSApplicationCategoryType: public.app-category.productivity

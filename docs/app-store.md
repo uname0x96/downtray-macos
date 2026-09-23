@@ -114,7 +114,7 @@ they came from.
 
 Act on a file with one key: Return opens it, Space previews it, ⌘R reveals it in Finder, ⌘C
 copies its path, ⌘M moves it to a folder, ⌘U unzips it in place, and ⌫ moves it to the Trash
-with a five-second undo. Narrow the list to the last hour, today, or what you have not
+with a five-second undo, or drag it straight out of the list into any app. Narrow the list to the last hour, today, or what you have not
 opened yet, pick a type (Docs, Images, Media, Archives, Apps), or search by name or type. A
 badge on the menu bar icon counts the files you have not opened, and an optional
 notification tells you the moment a download finishes.

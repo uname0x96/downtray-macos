@@ -102,8 +102,9 @@ struct SettingsView: View {
             dangerSection
         }
         .formStyle(.grouped)
-        .frame(width: 440)
-        .fixedSize(horizontal: false, vertical: true)
+        // A grouped form scrolls on its own. The window used to grow with its content, which
+        // put the last sections below the bottom of the screen with no way to reach them.
+        .frame(width: 440, height: 640)
         .navigationTitle(String(localized: "settings.title", defaultValue: "Downtray Settings", comment: "Window title. Keep the brand name."))
     }
 
