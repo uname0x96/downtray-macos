@@ -196,6 +196,12 @@ send the next line as soon as the panel is really there (rule 11). The debug ent
   dropped on request: the pointer highlights the row under it with the same ring keyboard
   focus uses, and the first arrow key starts from the top (↓) or bottom (↑). Focus is only
   ever cleared by a filter change, never moved to another row behind the user's back.
+- **A row is a file you can drag.** `FileRowView` offers an `NSItemProvider` for its file URL
+  on drag, so a row can be dropped into Finder, Mail, a browser upload field or any other
+  drop target; a drag carries one file (a SwiftUI drag item has one provider) and marks that
+  file read, since it was used. The Settings window is a fixed 440 × 640 pt so the grouped
+  form scrolls; sized to its content it grew past the bottom of the screen once List, Types
+  and Danger were added.
 - **The product is Downtray; the code keeps "inbox".** The app, bundle id (`app.downtray.mac`),
   product id, history folder and every user-facing string say Downtray. `InboxCore`, `inbox-cli`,
   `InboxReducer` and friends keep their names because the list they model is an inbox for

@@ -561,6 +561,8 @@ struct RowActions {
     func copyName() { presenter.dispatch(.copyName(target)) }
     func markRead() { presenter.dispatch(.markRead(target)) }
     func markUnread() { presenter.dispatch(.markUnread(target)) }
+    /// A drag carries this one file (a drag item has one provider), so only it is marked read.
+    func dragStarted() { if file.unread { presenter.dispatch(.markRead(.files([file.id]))) } }
     func moveTo() { presenter.dispatch(.moveTo(target)) }
     func unzip() { presenter.dispatch(.unzip(target)) }
     func trash() { presenter.dispatch(.trash(target)) }
@@ -630,6 +632,12 @@ struct FileRowView: View {
         .opacity(file.missing ? 0.45 : 1)
         .contentShape(Rectangle())
         .onTapGesture { actions.click() }
+        // The row is a file: it can be dragged into Finder, Mail, a browser upload field or
+        // anywhere else that takes a file. Dragging counts as using the file, so it is read.
+        .onDrag {
+            actions.dragStarted()
+            return NSItemProvider(contentsOf: URL(fileURLWithPath: file.path)) ?? NSItemProvider()
+        }
         .onHover { hovering = $0 }
         .contextMenu { menuItems }
         .help(tooltip)
