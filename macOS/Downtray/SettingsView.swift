@@ -66,11 +66,19 @@ struct SettingsView: View {
                          : String(localized: "settings.moreFolders.free", defaultValue: "Pro: watch any other folder.", comment: "Shown in the free tier; 'Pro:' marks a paid feature."))
                         .foregroundStyle(.secondary)
                 }
+                Toggle(isOn: binding(\.includeFolders) { .setIncludeFolders($0) }) {
+                    Text(String(localized: "settings.includeFolders", defaultValue: "Include folders", comment: "Toggle: list folders that land in a watched folder, not only files."))
+                    Text(String(localized: "settings.includeFolders.body", defaultValue: "Also list folders that land in a watched folder, such as an unzipped download.")).foregroundStyle(.secondary)
+                }
+                .toggleStyle(.switch)
+                .accessibilityIdentifier("includeFolders")
             } header: {
                 Text(String(localized: "settings.folders", defaultValue: "Folders", comment: "Section title."))
             } footer: {
                 Text(String(localized: "settings.folders.footer", defaultValue: "The inbox shows the \(model.effectiveListLimit) newest files from the folders it watches.", comment: "Placeholder: 20 in the free tier, 200 with Pro."))
             }
+
+            listSection
 
             Section(String(localized: "settings.general", defaultValue: "General", comment: "Section title.")) {
                 Toggle(String(localized: "settings.launchAtLogin", defaultValue: "Launch at login"), isOn: binding(\.launchAtLogin) { .setLaunchAtLogin($0) })
@@ -90,11 +98,150 @@ struct SettingsView: View {
 
             proSection
             rulesSection
+            typesSection
+            dangerSection
         }
         .formStyle(.grouped)
         .frame(width: 440)
         .fixedSize(horizontal: false, vertical: true)
         .navigationTitle(String(localized: "settings.title", defaultValue: "Downtray Settings", comment: "Window title. Keep the brand name."))
+    }
+
+    // MARK: List, appearance
+
+    /// How long an item stays, and the two behaviours around reading.
+    @ViewBuilder
+    private var listSection: some View {
+        Section {
+            Picker(selection: Binding(get: { presenter.model.settings.retention }, set: { presenter.dispatch(.setRetention($0)) })) {
+                ForEach(Retention.allCases, id: \.self) { Text($0.localizedTitle).tag($0) }
+            } label: {
+                Text(String(localized: "settings.keepItems", defaultValue: "Keep items", comment: "Picker label: how long a file stays in the inbox after it arrived."))
+                Text(String(localized: "settings.keepItems.body", defaultValue: "Older files leave the inbox. They stay in their folder.")).foregroundStyle(.secondary)
+            }
+            .accessibilityIdentifier("retention")
+            Toggle(isOn: binding(\.markReadOnClose) { .setMarkReadOnClose($0) }) {
+                Text(String(localized: "settings.markReadOnClose", defaultValue: "Mark visible files as read when the inbox closes", comment: "Toggle in Settings › List."))
+            }
+            .toggleStyle(.switch)
+            .accessibilityIdentifier("markReadOnClose")
+            Toggle(isOn: binding(\.showBadge) { .setShowBadge($0) }) {
+                Text(String(localized: "settings.showBadge", defaultValue: "Show badge on the menu bar icon", comment: "Toggle in Settings › List."))
+                Text(String(localized: "settings.showBadge.body", defaultValue: "The badge counts unread files.")).foregroundStyle(.secondary)
+            }
+            .toggleStyle(.switch)
+            .accessibilityIdentifier("showBadge")
+        } header: {
+            Text(String(localized: "settings.list", defaultValue: "List", comment: "Section title: how the inbox list behaves."))
+        }
+    }
+
+    // MARK: Types
+
+    @State private var newExtension = ""
+    @State private var newGroup: TypeGroup = .docs
+
+    /// Which group the Type menu files an extension under, when the built-in table is wrong
+    /// for this user (a `.key` that is a license, not a Keynote deck).
+    @ViewBuilder
+    private var typesSection: some View {
+        Section {
+            let overrides = model.settings.typeOverrides.sorted { $0.key < $1.key }
+            ForEach(overrides, id: \.key) { ext, group in
+                LabeledContent {
+                    HStack(spacing: 8) {
+                        Picker("", selection: Binding(get: { presenter.model.settings.typeOverrides[ext] ?? group }, set: { presenter.dispatch(.setTypeOverride(ext, $0)) })) {
+                            ForEach(TypeGroup.allCases, id: \.self) { Text($0.localizedTitle).tag($0) }
+                        }
+                        .labelsHidden()
+                        .fixedSize()
+                        Button { presenter.dispatch(.setTypeOverride(ext, nil)) } label: { Image(systemName: "minus.circle") }
+                            .buttonStyle(.borderless)
+                            .help(String(localized: "settings.types.remove", defaultValue: "Remove this override", comment: "Tooltip on the minus button next to a type override."))
+                    }
+                } label: {
+                    Text(verbatim: ".\(ext)")
+                    Text(String(localized: "settings.types.builtIn", defaultValue: "Built in: \(TypeGroup.forExtension(ext).localizedTitle)", comment: "Under a type override: the group the extension would have without it. Placeholder: group name.")).foregroundStyle(.secondary)
+                }
+                .accessibilityIdentifier("typeOverride-\(ext)")
+            }
+            LabeledContent {
+                HStack(spacing: 8) {
+                    // In a grouped form a text field's title becomes a label beside it; the
+                    // example extension is wanted inside the field, so it is a prompt.
+                    TextField("", text: $newExtension, prompt: Text(String(localized: "settings.types.extension", defaultValue: "pdf", comment: "Placeholder of the extension field, an example extension.")))
+                        .labelsHidden()
+                        .multilineTextAlignment(.leading)
+                        .textFieldStyle(.roundedBorder)
+                        .frame(width: 80)
+                        .onSubmit(addOverride)
+                        .accessibilityIdentifier("newExtension")
+                    Picker("", selection: $newGroup) {
+                        ForEach(TypeGroup.allCases, id: \.self) { Text($0.localizedTitle).tag($0) }
+                    }
+                    .labelsHidden()
+                    .fixedSize()
+                    Button(String(localized: "settings.types.add", defaultValue: "Add", comment: "Button that saves a new type override."), action: addOverride)
+                        .disabled(newExtension.trimmingCharacters(in: CharacterSet(charactersIn: ". ")).isEmpty)
+                        .accessibilityIdentifier("addOverride")
+                }
+            } label: {
+                Text(String(localized: "settings.types.new", defaultValue: "Extension → group", comment: "Row label for adding a type override. Keep the arrow."))
+                Text(String(localized: "settings.types.body", defaultValue: "Decide which group the Type menu files an extension under.")).foregroundStyle(.secondary)
+            }
+            LabeledContent {
+                Button(String(localized: "settings.types.reset", defaultValue: "Reset to Defaults", comment: "Button: removes every type override.")) { presenter.dispatch(.resetTypeOverrides) }
+                    .disabled(model.settings.typeOverrides.isEmpty)
+                    .accessibilityIdentifier("resetOverrides")
+            } label: {
+                Text(model.settings.typeOverrides.isEmpty
+                     ? String(localized: "settings.types.none", defaultValue: "Built-in table", comment: "Status when no type override exists.")
+                     : String(localized: "settings.types.count", defaultValue: "\(model.settings.typeOverrides.count) overrides", comment: "Status line. Plural: 1 → '1 override'."))
+            }
+        } header: {
+            Text(String(localized: "settings.types", defaultValue: "Types", comment: "Section title: the extension-to-group table behind the Type menu."))
+        }
+    }
+
+    private func addOverride() {
+        let ext = newExtension.trimmingCharacters(in: CharacterSet(charactersIn: ". ")).lowercased()
+        guard !ext.isEmpty else { return }
+        presenter.dispatch(.setTypeOverride(ext, newGroup))
+        newExtension = ""
+    }
+
+    // MARK: Danger
+
+    @State private var confirmClear = false
+
+    @ViewBuilder
+    private var dangerSection: some View {
+        Section {
+            LabeledContent {
+                Button(String(localized: "settings.markAllRead", defaultValue: "Mark All as Read", comment: "Button in Settings › Danger.")) { presenter.dispatch(.markAllSeen) }
+                    .disabled(model.unreadCount == 0)
+                    .accessibilityIdentifier("markAllRead")
+            } label: {
+                Text(String(localized: "settings.markAllRead.body", defaultValue: "Clears every unread dot and the badge."))
+            }
+            LabeledContent {
+                Button(String(localized: "settings.clearList", defaultValue: "Clear List…", comment: "Button in Settings › Danger: empties the inbox.")) { confirmClear = true }
+                    .disabled(model.recentFiles.isEmpty)
+                    .accessibilityIdentifier("clearList")
+            } label: {
+                Text(String(localized: "settings.clearList.body", defaultValue: "Empties the inbox. Files stay in their folders; new arrivals show up again."))
+            }
+        } header: {
+            Text(String(localized: "settings.danger", defaultValue: "Danger", comment: "Section title: actions that cannot be undone."))
+        }
+        .confirmationDialog(
+            String(localized: "settings.clearList.confirm.title", defaultValue: "Clear the inbox list?", comment: "Confirmation before Clear List."),
+            isPresented: $confirmClear
+        ) {
+            Button(String(localized: "settings.clearList.confirm.button", defaultValue: "Clear List", comment: "Confirmation button."), role: .destructive) { presenter.dispatch(.clearList(Date())) }
+        } message: {
+            Text(String(localized: "settings.clearList.confirm.message", defaultValue: "No file is deleted. The inbox starts again from the next arrival.", comment: "Confirmation body."))
+        }
     }
 
     // MARK: Language

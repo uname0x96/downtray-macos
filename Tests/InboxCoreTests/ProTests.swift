@@ -100,9 +100,9 @@ import MobiusTest
         var m = pro()
         for arrival in [folder, gone, here] { m = try InboxReducer.reduce(m, .fileArrived(arrival)).model }
         m = try InboxReducer.reduce(m, .fileRemoved(gone.id)).model
-        m = try InboxReducer.reduce(m, .setFilter(.images)).model
+        m = try InboxReducer.reduce(m, .setTypeFilter(.images)).model
         m = try InboxReducer.reduce(m, .setHistoryMode(true)).model
-        #expect(m.visibleFiles.map(\.name) == ["here.pdf", "gone.pdf"], "folders are left out and the inbox type chip does not apply")
+        #expect(m.visibleFiles.map(\.name) == ["here.pdf", "gone.pdf"], "folders are left out and the inbox Type menu does not apply")
         #expect(m.visibleFiles.map(\.missing) == [false, true])
 
         m = try InboxReducer.reduce(m, .setHistoryFilter(.gone)).model

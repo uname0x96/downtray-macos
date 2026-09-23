@@ -66,7 +66,7 @@ Attach to the running debug build instead (the bridge listens on `127.0.0.1:8791
 
 ```sh
 .build/debug/inbox-cli --remote state
-.build/debug/inbox-cli --remote send hotkey "filter pdf" --summary
+.build/debug/inbox-cli --remote send hotkey "filter today" "type docs" --summary
 ```
 
 Pro flows use the same grammar. `pro on` stands in for the store, `pick` answers the folder
@@ -103,8 +103,8 @@ specs/                   the product spec
 
 ## Status
 
-MVP per `specs/mvp-spec.md` with the popover per `specs/popover-spec.md` and the History
-panel per `specs/history-spec.md`, plus the Pro tier:
+MVP per `specs/mvp-spec.md` with the popover per `specs/popover-spec.md`, the History
+panel per `specs/history-spec.md` and the filters per `specs/filter-spec.md`, plus the Pro tier:
 extra folders, 200-file list, searchable history, rules, unlocked through StoreKit 2 (product
 `app.downtray.mac.pro`, to be created in App Store Connect, see `docs/app-store.md`).
 Icon, privacy manifest, usage strings, four languages and a signed App Store export are in place. Running the app from the

@@ -21,12 +21,19 @@ public enum Event: Equatable, Sendable {
     // MARK: Panel
 
     case hotkeyPressed
+    /// The chip row. Remembered in settings.
     case setFilter(FileFilter)
+    /// The Type menu; nil is Any. Remembered in settings.
+    case setTypeFilter(TypeGroup?)
     case select(FileID, SelectionMode)
     case focus(FileID)
     case moveFocus(FocusDirection)
     case clearSelection
     case markAllSeen
+    /// Settings > Danger: files that arrived up to this moment leave the inbox (they stay on
+    /// disk). Carries the clock because Settings is used while the panel, which refreshes
+    /// `now`, may have been closed for hours.
+    case clearList(Date)
     case openWatchedFolder(FolderKind)
     case dismissToast
     /// The "Show older files" row: History with Pro, the Pro sheet without.
@@ -39,6 +46,9 @@ public enum Event: Equatable, Sendable {
     case quickLook(Target)
     case reveal(Target)
     case copyPath(Target)
+    case copyName(Target)
+    case markRead(Target)
+    case markUnread(Target)
     case moveTo(Target)
     case unzip(Target)
     case trash(Target)
@@ -74,6 +84,13 @@ public enum Event: Equatable, Sendable {
     case setNotifications(Bool)
     /// UI language; nil follows macOS. Takes effect at the next launch.
     case setLanguage(AppLanguage?)
+    case setIncludeFolders(Bool)
+    case setRetention(Retention)
+    case setMarkReadOnClose(Bool)
+    case setShowBadge(Bool)
+    /// Maps an extension to a Type group; nil removes the override.
+    case setTypeOverride(String, TypeGroup?)
+    case resetTypeOverrides
     case grantAccess(FolderKind)
     case unlockPro
     case restorePurchases
@@ -113,6 +130,7 @@ public enum EventError: Error, Equatable, Sendable, CustomStringConvertible {
     case unknownRule(String)
     case duplicateRule(String)
     case noSuggestion
+    case invalidExtension(String)
 
     public var description: String {
         switch self {
@@ -130,6 +148,7 @@ public enum EventError: Error, Equatable, Sendable, CustomStringConvertible {
         case .unknownRule(let name): return "no rule named '\(name)'"
         case .duplicateRule(let name): return "a rule named '\(name)' already exists"
         case .noSuggestion: return "no suggestion to act on"
+        case .invalidExtension(let ext): return "'\(ext)' is not a file extension"
         }
     }
 }

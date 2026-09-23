@@ -61,7 +61,10 @@ extension Event {
     public static let grammar: [(command: String, description: String)] = [
         ("panel open|close", "open or close the popover (what the status item click does)"),
         ("hotkey", "press the global hotkey: opens the panel focused on the first unread row, or closes it"),
-        ("filter <name>", "all, today, pdf, images, other"),
+        ("filter <name>", "the chip: all, 1h, today, unread"),
+        ("type <name>", "the Type menu: any, docs, images, media, archives, apps"),
+        ("type map <ext> <group|none>", "map an extension to a group (none removes the override)"),
+        ("type reset", "drop every extension override"),
         ("older", "the 'Show older files' row: History with Pro, the Pro sheet without"),
         ("paywall off", "dismiss the Pro sheet"),
         ("select <file> [toggle|range]", "click, ⌘-click or ⇧-click a row"),
@@ -72,16 +75,24 @@ extension Event {
         ("ql [file ...]", "Quick Look (Space)"),
         ("reveal [file ...]", "reveal in Finder (⌘R)"),
         ("copy [file ...]", "copy POSIX path (⌘C)"),
+        ("copy-name [file ...]", "copy the file name"),
+        ("read [file ...]", "mark as read"),
+        ("unread [file ...]", "mark as unread"),
         ("move [file ...]", "Move to… (⌘M); the destination comes from the folder panel or `dest`"),
         ("unzip [file ...]", "extract a .zip beside the archive (⌘U)"),
         ("trash [file ...]", "move to Trash with a 5 s undo (⌫)"),
         ("undo", "put the last trashed files back"),
         ("dismiss <file>", "remove a greyed-out row whose file vanished"),
-        ("seen", "mark all rows seen and clear the badge"),
+        ("seen", "mark every file read; the badge follows"),
+        ("clear-list", "files that arrived until now leave the inbox (they stay on disk)"),
         ("finder [downloads|desktop]", "open the watched folder in Finder"),
         ("desktop on|off", "watch the Desktop folder too"),
         ("login on|off", "launch at login"),
         ("notify on|off", "notification on new file"),
+        ("folders on|off", "list folders inside watched folders as rows"),
+        ("keep day|week|month", "how long a file stays in the inbox after it arrived"),
+        ("read-on-close on|off", "closing the panel marks the visible rows read"),
+        ("badge on|off", "show the unread count on the menu bar icon"),
         ("language en|ja|de|fr|system", "UI language (system: follow macOS); applies at the next launch"),
         ("hotkey-set <combo>", "e.g. ctrl+alt+d, cmd+shift+space"),
         ("grant downloads|desktop", "ask for folder access"),
@@ -94,12 +105,12 @@ extension Event {
         ("history all|available|gone", "Pro: History's segment"),
         ("history clear", "Pro: forget the recorded arrivals"),
         ("forget <file>", "Pro: remove one row from History"),
-        ("search [text]", "History: filter rows by name; no text clears the search"),
+        ("search [text]", "filter rows by name, extension, type or source; no text clears the search"),
         ("rule add <name> [kind=pdf] [host=stripe.com] [name=invoice] [ext=dmg] [on=arrival|opened] then move <path>|trash|seen|suggest-trash", "Pro: add a rule"),
         ("rule remove|enable|disable <name>", "Pro: manage a rule"),
         ("accept", "do what the current suggestion offers"),
         ("dismiss-suggestion", "drop the current suggestion"),
-        ("today <yyyy-mm-dd>", "set the day used by the Today filter"),
+        ("today <yyyy-mm-dd>", "set the clock: the day for Today, midnight of it for 1h"),
         ("arrive <file> [size] [host|airdrop]", "a file lands in Downloads (prefix desktop/ for the Desktop); size like 120k, 2m"),
         ("vanish <file>", "a listed file disappears from its folder"),
     ]
@@ -177,6 +188,22 @@ extension Event {
             let value = try required().lowercased()
             guard let filter = FileFilter(rawValue: value) else { throw .invalidArgument(value) }
             return .setFilter(filter)
+        case "type":
+            guard let first = words.first?.lowercased() else { throw .missingArgument(command) }
+            switch first {
+            case "any": return .setTypeFilter(nil)
+            case "reset": return .resetTypeOverrides
+            case "map":
+                guard words.count == 3 else { throw .missingArgument("type map <ext> <group>") }
+                let ext = words[1].lowercased()
+                let value = words[2].lowercased()
+                if value == "none" { return .setTypeOverride(ext, nil) }
+                guard let group = TypeGroup(rawValue: value), group != .other else { throw .invalidArgument(words[2]) }
+                return .setTypeOverride(ext, group)
+            default:
+                guard let group = TypeGroup(rawValue: first), group != .other else { throw .invalidArgument(first) }
+                return .setTypeFilter(group)
+            }
         case "select":
             guard let name = words.first else { throw .missingArgument(command) }
             var mode = SelectionMode.replace
@@ -193,16 +220,27 @@ extension Event {
         case "ql", "quicklook", "preview": return .quickLook(try target(words))
         case "reveal": return .reveal(try target(words))
         case "copy": return .copyPath(try target(words))
+        case "copy-name": return .copyName(try target(words))
+        case "read": return .markRead(try target(words))
+        case "unread": return .markUnread(try target(words))
         case "move": return .moveTo(try target(words))
         case "unzip": return .unzip(try target(words))
         case "trash", "delete": return .trash(try target(words))
         case "undo": return .undoTrash
         case "dismiss": return .dismiss(try file(try required()))
         case "seen": return .markAllSeen
+        case "clear-list": return .clearList(context.now)
         case "finder": return .openWatchedFolder(try folder(argument))
         case "desktop": return .setWatchDesktop(try onOff())
         case "login": return .setLaunchAtLogin(try onOff())
         case "notify": return .setNotifications(try onOff())
+        case "folders": return .setIncludeFolders(try onOff())
+        case "keep":
+            let value = try required().lowercased()
+            guard let retention = Retention(rawValue: value) else { throw .invalidArgument(value) }
+            return .setRetention(retention)
+        case "read-on-close": return .setMarkReadOnClose(try onOff())
+        case "badge": return .setShowBadge(try onOff())
         case "language":
             let code = try required().lowercased()
             if code == "system" { return .setLanguage(nil) }
@@ -307,6 +345,17 @@ extension Event {
         case .panelClosed: return "panel close"
         case .hotkeyPressed: return "hotkey"
         case .setFilter(let filter): return "filter \(filter.rawValue)"
+        case .setTypeFilter(let type): return "type \(type?.rawValue ?? "any")"
+        case .setTypeOverride(let ext, let group): return "type map \(ext) \(group?.rawValue ?? "none")"
+        case .resetTypeOverrides: return "type reset"
+        case .clearList: return "clear-list"
+        case .copyName(let target): return "copy-name" + names(target)
+        case .markRead(let target): return "read" + names(target)
+        case .markUnread(let target): return "unread" + names(target)
+        case .setIncludeFolders(let on): return "folders \(on ? "on" : "off")"
+        case .setRetention(let retention): return "keep \(retention.rawValue)"
+        case .setMarkReadOnClose(let on): return "read-on-close \(on ? "on" : "off")"
+        case .setShowBadge(let on): return "badge \(on ? "on" : "off")"
         case .showOlderFiles: return "older"
         case .dismissPaywall: return "paywall off"
         case .select(let id, let mode): return "select \(name(id))" + (mode == .replace ? "" : " \(mode.rawValue)")

@@ -20,8 +20,11 @@ func file(_ name: String, minutesAgo: Double = 0, size: Int64 = 1024, folder: St
               source: source, unread: unread)
 }
 
+/// The clock the tests run on: 09:00 on `today`; `file(minutesAgo:)` counts back from it.
+let now = today.addingTimeInterval(3600 * 9)
+
 func model(_ files: [InboxFile] = [], open: Bool = false) -> InboxModel {
-    var model = InboxModel(files: files, folders: WatchedFolder.sample(), today: today)
+    var model = InboxModel(files: files, folders: WatchedFolder.sample(), today: today, now: now)
     model.loaded = true
     model.panelOpen = open
     return model
@@ -61,9 +64,10 @@ func model(_ files: [InboxFile] = [], open: Bool = false) -> InboxModel {
         }
     }
 
-    @Test func arrivalWhilePanelOpenIsUnreadButNotBadged() {
+    @Test func arrivalWhilePanelOpenIsUnreadAndBadgedToo() {
+        // The badge is the unread count, whatever the panel is doing.
         spec.given(model(open: true)).when(.fileArrived(file("a.pdf"))).then { result in
-            #expect(result.model.badgeCount == 0)
+            #expect(result.model.badgeCount == 1)
             #expect(result.model.unreadCount == 1)
         }
     }
@@ -97,14 +101,14 @@ func model(_ files: [InboxFile] = [], open: Bool = false) -> InboxModel {
         }
     }
 
-    @Test func openingThePanelClearsTheBadgeAndSelectsNothing() {
+    @Test func openingThePanelMarksNothingReadAndSelectsNothing() {
         let read = file("seen.pdf", unread: false)
         let unread = file("new.pdf", minutesAgo: 3)
-        var m = model([read, unread])
-        m.badgeIDs = [unread.id]
+        let m = model([read, unread])
         spec.given(m).when(.panelOpened).then { result in
             #expect(result.model.panelOpen)
-            #expect(result.model.badgeCount == 0)
+            #expect(result.model.badgeCount == 1, "opening the panel alone does not mark read")
+            #expect(result.model.unreadCount == 1)
             #expect(result.model.focused == nil && result.model.selection.isEmpty)
         }
     }
@@ -142,8 +146,7 @@ func model(_ files: [InboxFile] = [], open: Bool = false) -> InboxModel {
     }
 
     @Test func markAllSeenClearsDotsAndBadge() {
-        var m = model([file("a.pdf"), file("b.pdf", minutesAgo: 1)])
-        m.badgeIDs = Set(m.files.keys)
+        let m = model([file("a.pdf"), file("b.pdf", minutesAgo: 1)])
         spec.given(m).when(.markAllSeen).then { result in
             #expect(result.model.unreadCount == 0)
             #expect(result.model.badgeCount == 0)
@@ -160,20 +163,207 @@ func model(_ files: [InboxFile] = [], open: Bool = false) -> InboxModel {
         #expect(m.visibleFiles.last?.name == "f19.pdf")
     }
 
-    @Test func filtersMatchKindsAndToday() {
-        let yesterday = InboxFile(path: downloads + "/old.pdf", addedAt: today.addingTimeInterval(-3600))
-        let files = [file("a.pdf"), file("b.png", minutesAgo: 1), file("c.zip", minutesAgo: 2),
-                     file("d.dmg", minutesAgo: 3), file("e.txt", minutesAgo: 4), yesterday]
-        var m = model(files)
-        func names(_ filter: FileFilter) -> [String] {
-            m.filter = filter
+    // MARK: Chips, Type menu, search (the filter spec's matrix)
+
+    @Test func typeGroupsComeFromTheExtensionTable() {
+        #expect(file("Invoice.PDF").typeGroup() == .docs)
+        #expect(file("shot.PNG").typeGroup() == .images)
+        #expect(file("app.dmg").typeGroup() == .apps)
+        #expect(file("clip.mov").typeGroup() == .media)
+        #expect(file("src.tar.gz").typeGroup() == .archives)
+        #expect(file("notes").typeGroup() == .other)
+        #expect(file("data.bin").typeGroup() == .other)
+        let folder = InboxFile(path: downloads + "/shots.app", addedAt: now, kind: .folder)
+        #expect(folder.typeGroup() == .other, "a directory is never an app")
+        #expect(file("notes.md").typeGroup(overrides: ["md": .media]) == .media, "overrides win")
+    }
+
+    @Test func chipsTypeMenuAndSearchAreAndCombined() {
+        let invoice = file("Invoice.PDF", source: .web(host: "stripe.com"))
+        let shot = file("shot.png", minutesAgo: 61)
+        let early = InboxFile(path: downloads + "/early.png", addedAt: today.addingTimeInterval(60))
+        let late = InboxFile(path: downloads + "/late.dmg", addedAt: today.addingTimeInterval(-60))
+        let clip = file("clip.mp4", minutesAgo: 2, unread: false)
+        var m = model([invoice, shot, early, late, clip])
+        func names(_ chip: FileFilter, type: TypeGroup? = nil, search: String = "") -> [String] {
+            m.filter = chip
+            m.typeFilter = type
+            m.query = search
             return m.visibleFiles.map(\.name)
         }
-        #expect(names(.all).count == 6)
-        #expect(names(.today) == ["a.pdf", "b.png", "c.zip", "d.dmg", "e.txt"])
-        #expect(names(.pdf) == ["a.pdf", "old.pdf"])
-        #expect(names(.images) == ["b.png"])
-        #expect(names(.other) == ["c.zip", "d.dmg", "e.txt"], "archives, installers and plain files share the Other chip")
+        #expect(names(.all) == ["Invoice.PDF", "clip.mp4", "shot.png", "early.png", "late.dmg"], "newest first")
+        #expect(names(.lastHour) == ["Invoice.PDF", "clip.mp4"], "61 minutes is outside the hour")
+        #expect(names(.today) == ["Invoice.PDF", "clip.mp4", "shot.png", "early.png"], "00:01 is today, yesterday 23:59 is not")
+        #expect(names(.unread) == ["Invoice.PDF", "shot.png", "early.png", "late.dmg"])
+        #expect(names(.all, type: .images) == ["shot.png", "early.png"])
+        #expect(names(.today, type: .images) == ["shot.png", "early.png"], "Type AND chip")
+        #expect(names(.lastHour, type: .images) == [])
+        #expect(names(.all, search: "pdf") == ["Invoice.PDF"], "the extension matches without the dot")
+        #expect(names(.all, search: ".PDF") == ["Invoice.PDF"], "and with it")
+        #expect(names(.all, search: "images") == ["shot.png", "early.png"], "the type group's name matches")
+        #expect(names(.all, search: "stripe") == ["Invoice.PDF"], "the source host matches")
+        #expect(names(.all, search: "  late ") == ["late.dmg"], "trimmed, case-insensitive name match")
+        #expect(names(.today, type: .docs, search: "inv") == ["Invoice.PDF"], "all three combine")
+        m.typeLabels = [.images: "Bilder"]
+        #expect(names(.all, search: "bild") == ["shot.png", "early.png"], "the localized group name matches too")
+        #expect(m.count(for: .unread) == 4 && m.count(for: .lastHour) == 2, "chip counts ignore Type and search")
+    }
+
+    @Test func emptyStatesFollowTheChipTheTypeMenuAndTheSearch() throws {
+        var m = model([file("a.pdf", minutesAgo: 90, unread: false)], open: true)
+        #expect(m.emptyState == nil)
+        m.filter = .lastHour
+        #expect(m.emptyState == .nothingLastHour)
+        m.filter = .unread
+        #expect(m.emptyState == .caughtUp)
+        m.filter = .all
+        m.typeFilter = .images
+        #expect(m.emptyState == .noMatches, "the Type menu narrowed a non-empty list")
+        m.typeFilter = nil
+        m.query = "zzz"
+        #expect(m.emptyState == .noMatches)
+        m.query = ""
+        m = try InboxReducer.reduce(m, .setToday(today.addingTimeInterval(2 * 24 * 3600))).model
+        m.filter = .today
+        #expect(m.emptyState == .nothingToday)
+        #expect(model(open: true).emptyState == .nothingNew, "nothing at all")
+        var denied = model()
+        denied.folders[0].access = .denied
+        #expect(denied.emptyState == .needsAccess)
+    }
+
+    @Test func launchChipIsTodayUnlessTodayIsEmpty() throws {
+        let settings = Settings(selectedChip: .today, selectedType: .docs)
+        var m = try InboxReducer.reduce(model(), .settingsLoaded(settings, folders: WatchedFolder.sample())).model
+        #expect(m.filter == .today && m.typeFilter == .docs, "the chip and the Type menu are restored")
+        let old = InboxFile(path: downloads + "/old.pdf", addedAt: today.addingTimeInterval(-3600))
+        m = try InboxReducer.reduce(m, .scanCompleted(.downloads, [old])).model
+        #expect(m.filter == .all, "nothing today at launch: fall back to All")
+
+        var fresh = try InboxReducer.reduce(model(), .settingsLoaded(settings, folders: WatchedFolder.sample())).model
+        fresh = try InboxReducer.reduce(fresh, .scanCompleted(.downloads, [file("new.pdf")])).model
+        #expect(fresh.filter == .today, "something today: Today stays")
+        fresh = try InboxReducer.reduce(fresh, .scanCompleted(.downloads, [old])).model
+        #expect(fresh.filter == .today, "decided once; later scans do not flip it")
+
+        let step = try InboxReducer.reduce(fresh, .setFilter(.unread))
+        #expect(step.model.settings.selectedChip == .unread && step.effects == [.saveSettings(step.model.settings)], "the chip is remembered")
+        let typed = try InboxReducer.reduce(step.model, .setTypeFilter(nil))
+        #expect(typed.model.settings.selectedType == nil && typed.effects == [.saveSettings(typed.model.settings)])
+        #expect(try InboxReducer.reduce(typed.model, .setTypeFilter(nil)).effects.isEmpty, "no save when nothing changed")
+    }
+
+    @Test func inboxSectionsGroupByRecencyOnlyForAllAndToday() {
+        let justNow = file("a.pdf", minutesAgo: 5)
+        let earlierToday = file("b.pdf", minutesAgo: 20)
+        let yesterday = InboxFile(path: downloads + "/c.pdf", addedAt: today.addingTimeInterval(-3600))
+        let thisWeek = InboxFile(path: downloads + "/d.pdf", addedAt: today.addingTimeInterval(-4 * 24 * 3600))
+        let earlier = InboxFile(path: downloads + "/e.pdf", addedAt: today.addingTimeInterval(-6 * 24 * 3600 - 1), unread: false)
+        var m = model([justNow, earlierToday, yesterday, thisWeek, earlier])
+        m.settings.retention = .month
+        func sections() -> [(String, [String])] { m.inboxSections.map { ($0.section.rawValue, $0.files.map(\.name)) } }
+        #expect(sections().map(\.0) == ["justNow", "earlierToday", "yesterday", "thisWeek", "earlier"])
+        #expect(sections().map(\.1) == [["a.pdf"], ["b.pdf"], ["c.pdf"], ["d.pdf"], ["e.pdf"]])
+        #expect(m.snapshot.sections == ["justNow", "earlierToday", "yesterday", "thisWeek", "earlier"])
+        m.filter = .today
+        #expect(sections().map(\.0) == ["justNow", "earlierToday"], "Today only has the two sections")
+        m.filter = .lastHour
+        #expect(m.inboxSections.isEmpty && m.snapshot.sections == nil, "1h is a flat list")
+        m.filter = .unread
+        #expect(m.inboxSections.isEmpty, "Unread is a flat list")
+        m.filter = .all
+        m.query = "pdf"
+        #expect(m.inboxSections.isEmpty, "a search is a flat list")
+    }
+
+    @Test func retentionAndClearListKeepOldArrivalsOutOfTheInbox() throws {
+        let fresh = file("fresh.pdf")
+        let stale = InboxFile(path: downloads + "/stale.pdf", addedAt: now.addingTimeInterval(-8 * 24 * 3600))
+        var m = model([fresh, stale])
+        #expect(m.visibleFiles.map(\.name) == ["fresh.pdf"], "7 days by default")
+        #expect(m.hasOlderFiles, "the folder holds more than the inbox shows")
+        m = try InboxReducer.reduce(m, .setRetention(.month)).model
+        #expect(m.visibleFiles.map(\.name) == ["fresh.pdf", "stale.pdf"] && !m.hasOlderFiles)
+        m = try InboxReducer.reduce(m, .setRetention(.day)).model
+        #expect(m.visibleFiles.map(\.name) == ["fresh.pdf"])
+
+        let step = try InboxReducer.reduce(m, .clearList(now))
+        #expect(step.model.visibleFiles.isEmpty && step.model.emptyState == .nothingNew)
+        #expect(step.model.files.count == 2, "the files stay on disk and in the model")
+        #expect(step.effects == [.saveSettings(step.model.settings)])
+        let later = InboxFile(path: downloads + "/later.pdf", addedAt: now.addingTimeInterval(60))
+        m = try InboxReducer.reduce(step.model, .fileArrived(later)).model
+        #expect(m.visibleFiles.map(\.name) == ["later.pdf"], "what arrives after the clear shows")
+    }
+
+    @Test func foldersAreRowsOnlyWhenTheSettingSaysSo() throws {
+        let folder = InboxFile(path: downloads + "/shots", addedAt: now, kind: .folder)
+        var m = model([folder, file("a.pdf", minutesAgo: 1)])
+        #expect(m.visibleFiles.map(\.name) == ["a.pdf"])
+        m = try InboxReducer.reduce(m, .setIncludeFolders(true)).model
+        #expect(m.visibleFiles.map(\.name) == ["shots", "a.pdf"])
+    }
+
+    @Test func aRedownloadOfTheSamePathIsANewArrival() throws {
+        let first = file("report.pdf", minutesAgo: 30)
+        var m = model([first])
+        m = try InboxReducer.reduce(m, .open(.files([first.id]))).model
+        #expect(m.files[first.id]?.unread == false)
+        var again = first
+        again.addedAt = now
+        again.size = 999
+        let step = try InboxReducer.reduce(m, .fileArrived(again))
+        #expect(step.model.files[first.id]?.unread == true, "unread again")
+        #expect(step.model.files[first.id]?.size == 999)
+        #expect(step.model.history.map(\.name) == ["report.pdf"], "recorded once, at the top")
+        #expect(step.effects == [.saveHistory(step.model.history)])
+        // A rescan that reports the same "date added" is a change, not an arrival.
+        var touched = again
+        touched.size = 1000
+        let same = try InboxReducer.reduce(step.model, .fileArrived(touched))
+        #expect(same.model.files[first.id]?.size == 1000 && same.effects.isEmpty)
+    }
+
+    @Test func markReadOnCloseAndTheBadgeSetting() throws {
+        let a = file("a.pdf")
+        let b = file("b.pdf", minutesAgo: 1)
+        var m = model([a, b], open: true)
+        m = try InboxReducer.reduce(m, .setMarkReadOnClose(true)).model
+        m.query = "a."
+        #expect(m.visibleFiles.map(\.name) == ["a.pdf"])
+        m = try InboxReducer.reduce(m, .panelClosed).model
+        #expect(m.files[a.id]?.unread == false && m.files[b.id]?.unread == true, "only the rows that were on screen")
+        #expect(m.badgeCount == 1)
+        m = try InboxReducer.reduce(m, .setShowBadge(false)).model
+        #expect(m.badgeCount == 0 && m.unreadCount == 1, "the badge is off, the dots stay")
+        #expect(m.snapshot.badge == 0 && m.snapshot.settings.showBadge == false)
+    }
+
+    @Test func markReadUnreadAndCopyName() throws {
+        let a = file("a.pdf")
+        var m = model([a], open: true)
+        m = try InboxReducer.reduce(m, .markRead(.files([a.id]))).model
+        #expect(m.files[a.id]?.unread == false)
+        m = try InboxReducer.reduce(m, .markUnread(.files([a.id]))).model
+        #expect(m.files[a.id]?.unread == true)
+        let step = try InboxReducer.reduce(m, .copyName(.files([a.id])))
+        #expect(step.effects.first == .copyToPasteboard("a.pdf"))
+        #expect(step.model.toast?.message == "Name copied" && step.model.files[a.id]?.unread == false)
+    }
+
+    @Test func typeOverridesAreSavedAndReset() throws {
+        var m = model([file("notes.md")])
+        let step = try InboxReducer.reduce(m, .setTypeOverride(".MD ", .media))
+        #expect(step.model.settings.typeOverrides == ["md": .media])
+        #expect(step.model.visibleFiles[0].typeGroup(overrides: step.model.settings.typeOverrides) == .media)
+        #expect(step.model.snapshot.rows[0].type == "media")
+        #expect(step.effects == [.saveSettings(step.model.settings)])
+        #expect(throws: EventError.invalidExtension(".")) { try InboxReducer.reduce(m, .setTypeOverride(".", .docs)) }
+        m = try InboxReducer.reduce(step.model, .setTypeOverride("md", nil)).model
+        #expect(m.settings.typeOverrides.isEmpty)
+        m = try InboxReducer.reduce(m, .setTypeOverride("md", .apps)).model
+        m = try InboxReducer.reduce(m, .resetTypeOverrides).model
+        #expect(m.settings.typeOverrides.isEmpty)
     }
 
     @Test func showOlderFilesOpensHistoryWithProAndTheProSheetWithout() throws {
@@ -209,12 +399,12 @@ func model(_ files: [InboxFile] = [], open: Bool = false) -> InboxModel {
         var m = model([file("a.pdf"), file("b.png", minutesAgo: 1)], open: true)
         m.focused = downloads + "/b.png"
         m.selection = [m.focused!]
-        spec.given(m).when(.setFilter(.pdf)).then { result in
+        spec.given(m).when(.setTypeFilter(.docs)).then { result in
             #expect(result.model.focused == nil && result.model.selection.isEmpty)
         }
         m.focused = downloads + "/a.pdf"
         m.selection = [m.focused!]
-        spec.given(m).when(.setFilter(.pdf)).then { result in
+        spec.given(m).when(.setTypeFilter(.docs)).then { result in
             #expect(result.model.focused == downloads + "/a.pdf")
         }
     }
@@ -283,8 +473,7 @@ func model(_ files: [InboxFile] = [], open: Bool = false) -> InboxModel {
 
     @Test func openMarksReadAndAsksTheSystemToOpen() {
         let f = file("a.pdf")
-        var m = model([f])
-        m.badgeIDs = [f.id]
+        let m = model([f])
         spec.given(m).when(.open(.files([f.id]))).then { result in
             #expect(result.model.files[f.id]?.unread == false)
             #expect(result.model.badgeCount == 0)
@@ -405,7 +594,6 @@ func model(_ files: [InboxFile] = [], open: Bool = false) -> InboxModel {
         var m = model([a], open: true)
         m.focused = a.id
         m.selection = [a.id]
-        m.badgeIDs = [a.id]
         spec.given(m).when(.fileRemoved(a.id)).then { result in
             #expect(result.model.files.isEmpty)
             #expect(result.model.focused == nil && result.model.selection.isEmpty && result.model.badgeCount == 0)
@@ -475,7 +663,7 @@ func model(_ files: [InboxFile] = [], open: Bool = false) -> InboxModel {
         let photo = file("photo.heic", minutesAgo: 1, source: .airDrop)
         let archive = file("build.zip", minutesAgo: 2)
         spec.given(model([invoice, photo, archive]))
-            .when(.hotkeyPressed, .setFilter(.pdf), .moveFocus(.down), .open(.selection), .setFilter(.all),
+            .when(.hotkeyPressed, .setTypeFilter(.docs), .moveFocus(.down), .open(.selection), .setTypeFilter(nil),
                   .select(photo.id, .replace), .trash(.selection), .trashed(token: 1, items: [TrashedItem(file: photo, trashedPath: "/T/p")]),
                   .select(archive.id, .replace), .unzip(.selection), .panelClosed)
             .then { result in

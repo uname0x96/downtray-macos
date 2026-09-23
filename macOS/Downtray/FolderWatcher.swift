@@ -22,7 +22,12 @@ final class FolderWatcher {
     private var settling: [FileID: Task<Void, Never>] = [:]
     private var rescan: Task<Void, Never>?
 
-    static let partialExtensions: Set<String> = ["download", "crdownload", "part", "tmp"]
+    static let partialExtensions: Set<String> = ["download", "crdownload", "part", "aria2", "tmp"]
+    /// Names that are never a download: Office lock files and Windows folder metadata. Dotfiles
+    /// (`.DS_Store` among them) are already left out by `skipsHiddenFiles`.
+    static func isIgnoredName(_ name: String) -> Bool {
+        name.hasPrefix("~$") || name.lowercased() == "desktop.ini"
+    }
     static let settlePolls = 3
     static let settleInterval: Duration = .milliseconds(400)
     static let debounce: Duration = .milliseconds(150)
@@ -85,9 +90,14 @@ final class FolderWatcher {
 
         for (id, file) in current {
             if let existing = known[id] {
-                if existing.size != file.size || existing.modifiedAt != file.modifiedAt {
+                if settling[id] != nil { continue }
+                if existing.addedAt != file.addedAt {
+                    // Same path, new "added" date: the file was downloaded again over the old
+                    // one. That is a new arrival (unread again, back at the top), not an edit.
+                    settle(file)
+                } else if existing.size != file.size || existing.modifiedAt != file.modifiedAt {
                     known[id] = file
-                    if settling[id] == nil { sink(.fileChanged(file)) }
+                    sink(.fileChanged(file))
                 }
             } else if settling[id] == nil {
                 settle(file)
@@ -133,6 +143,7 @@ final class FolderWatcher {
         var result: [FileID: InboxFile] = [:]
         for item in contents {
             if partialExtensions.contains(item.pathExtension.lowercased()) { continue }
+            if isIgnoredName(item.lastPathComponent) { continue }
             if let file = try? describe(item, isInitial: isInitial) { result[file.id] = file }
         }
         return result

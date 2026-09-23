@@ -10,10 +10,47 @@ extension FileFilter {
     var localizedTitle: String {
         switch self {
         case .all: String(localized: "filter.all", defaultValue: "All", comment: "Filter chip: every file.")
+        case .lastHour: String(localized: "filter.lastHour", defaultValue: "1h", comment: "Filter chip: files that arrived in the last hour. Keep very short; four chips and the Type menu share one row.")
         case .today: String(localized: "filter.today", defaultValue: "Today", comment: "Filter chip: files that arrived today.")
-        case .pdf: String(localized: "filter.pdf", defaultValue: "PDF", comment: "Filter chip: PDF documents. Keep short.")
-        case .images: String(localized: "filter.images", defaultValue: "Images", comment: "Filter chip: pictures. Keep short.")
-        case .other: String(localized: "filter.other", defaultValue: "Other", comment: "Filter chip: everything that is not a PDF or an image. Keep short; the five chips share one row.")
+        case .unread: String(localized: "filter.unread", defaultValue: "Unread", comment: "Filter chip: files the user has not opened yet. Keep short.")
+        }
+    }
+}
+
+extension TypeGroup {
+    /// The Type menu's items, and the button label while a group is selected.
+    var localizedTitle: String {
+        switch self {
+        case .docs: String(localized: "type.docs", defaultValue: "Docs", comment: "Type menu item: documents, spreadsheets, presentations, text. Keep short.")
+        case .images: String(localized: "type.images", defaultValue: "Images", comment: "Type menu item: pictures.")
+        case .media: String(localized: "type.media", defaultValue: "Media", comment: "Type menu item: video and audio.")
+        case .archives: String(localized: "type.archives", defaultValue: "Archives", comment: "Type menu item: zip, tar and similar.")
+        case .apps: String(localized: "type.apps", defaultValue: "Apps", comment: "Type menu item: dmg, pkg, app and other installers.")
+        case .other: String(localized: "type.other", defaultValue: "Other", comment: "Type group for anything not in the table; only shown in Settings.")
+        }
+    }
+}
+
+extension Retention {
+    /// Settings › List › Keep items.
+    var localizedTitle: String {
+        switch self {
+        case .day: String(localized: "retention.day", defaultValue: "24 hours", comment: "Keep items picker option.")
+        case .week: String(localized: "retention.week", defaultValue: "7 days", comment: "Keep items picker option.")
+        case .month: String(localized: "retention.month", defaultValue: "30 days", comment: "Keep items picker option.")
+        }
+    }
+}
+
+extension InboxSection {
+    /// Section header in the inbox list (All and Today chips only).
+    var localizedTitle: String {
+        switch self {
+        case .justNow: String(localized: "section.justNow", defaultValue: "Just now", comment: "Inbox section header: files that arrived in the last 15 minutes.")
+        case .earlierToday: String(localized: "section.earlierToday", defaultValue: "Earlier today", comment: "Inbox section header.")
+        case .yesterday: String(localized: "section.yesterday", defaultValue: "Yesterday", comment: "Inbox section header.")
+        case .thisWeek: String(localized: "section.thisWeek", defaultValue: "This week", comment: "Inbox section header: the last six days before yesterday.")
+        case .earlier: String(localized: "section.earlier", defaultValue: "Earlier", comment: "Inbox section header: older than a week.")
         }
     }
 }
@@ -156,6 +193,8 @@ extension ToastText {
         switch self {
         case .pathCopied(let count):
             String(localized: "toast.pathCopied", defaultValue: "\(count) paths copied", comment: "Toast after Copy Path. Plural: 1 → 'Path copied'.")
+        case .nameCopied(let count):
+            String(localized: "toast.nameCopied", defaultValue: "\(count) names copied", comment: "Toast after Copy Name. Plural: 1 → 'Name copied'.")
         case .moved(let names, let folder):
             names.count == 1
                 ? String(localized: "toast.movedOne", defaultValue: "Moved \(names[0]) to \(folder)", comment: "Toast after a move. First placeholder: file name, second: destination folder name.")

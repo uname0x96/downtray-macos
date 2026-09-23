@@ -83,13 +83,34 @@ Mobius.swift is used as the loop runtime, not as the design. The design is the r
 
 ## Reading the model
 
-`InboxModel` keeps `files` keyed by POSIX path. The panel lists `visibleFiles`: enabled folders
-only, filtered by `filter`, newest first, capped at `listLimit` (20). The badge counts files
-that arrived while the panel was closed; opening the panel clears it. `unread` is per file and
-is cleared by any action on that file or by "Mark all seen". A file whose watcher reports it
-gone leaves the list at once (`fileRemoved`); the user moved or deleted it themselves, so
-there is nothing to announce. Only History (Pro) keeps a "Gone" row for it.
-`InboxFile.missing` marks those rows; `dismiss` remains for scripts.
+`InboxModel` keeps `files` keyed by POSIX path. `recentFiles` are the candidates: enabled
+folders only, files (folders too with `settings.includeFolders`), younger than
+`settings.retention` (24 h / 7 d / 30 d, default 7 d) and newer than `settings.listClearedAt`
+("Clear List" in Settings). The panel lists `visibleFiles`: `recentFiles` through the chip
+(`filter`: All, 1h, Today, Unread), the Type menu (`typeFilter`: Docs, Images, Media, Archives,
+Apps, from `TypeGroup.forExtension` plus `settings.typeOverrides`) and the Pro `query`, all
+ANDed, newest first, capped at `listLimit` (20, Pro 200). The query matches the name, the
+extension with or without its dot, the group's English name or its localized label
+(`typeLabels`, injected by the app) and the web host. With the All or Today chip and no query
+the list is grouped by `inboxSections` (Just now < 15 min, Earlier today, Yesterday, This week,
+Earlier; Today shows the first two); 1h, Unread and a search are flat. The chip and type are
+saved (`selectedChip`, `selectedType`); at launch Today falls back to All once the Downloads
+scan shows nothing from today (`chipResolved`). `now` is the moment the panel opened
+(`setToday(Date)`), so "1h" and "Just now" count from it.
+
+The badge is the number of unread files in `recentFiles` (`badgeCount`, off with
+`settings.showBadge`). `unread` is per file and is cleared by Open, Show in Finder, Mark as
+Read, "Mark all seen", or, with `settings.markReadOnClose`, for the visible rows when the
+panel closes; opening the panel alone never clears it, and Mark as Unread puts it back. A
+download that lands again at the same path (`fileArrived` with a newer `addedAt`) is a new
+arrival: unread again, back at the top. A file whose watcher reports it gone leaves the list at
+once (`fileRemoved`); the user moved or deleted it themselves, so there is nothing to
+announce. Only History (Pro) keeps a "Gone" row for it. `InboxFile.missing` marks those rows;
+`dismiss` remains for scripts.
+
+Empty states (`emptyState`): `needsAccess`; `nothingNew` when `recentFiles` is empty ("No
+recent downloads" with an Open Downloads Folder button); `noMatches` when a query or a type
+hides everything; otherwise per chip `nothingLastHour`, `nothingToday`, `caughtUp`.
 
 ### Pro
 
@@ -132,6 +153,11 @@ error: extra folders (`addFolder`, `removeFolder`), a 200-file list with a name 
 over the bridge, and in `scripts/test-inbox.sh`. Files are addressed by name when unique, or
 by full path. `arrive` and `vanish` simulate the watcher and exist for the headless target;
 the attached target sees real files.
+
+Filter lines: `filter all|1h|today|unread`, `type any|docs|images|media|archives|apps`,
+`type map <ext> <group|none>`, `type reset`, `search <text>`. Row actions: `open`, `reveal`,
+`copy-path`, `copy-name`, `read`, `unread`, `trash`, `move`, `unzip`. Settings: `folders on|off`,
+`keep day|week|month`, `read-on-close on|off`, `badge on|off`, `clear-list`, `seen` (mark all).
 
 Pro events have their own lines: `pro on|off` (stands in for the store), `folder add`,
 `folder remove <name>`, `history on|off|all|available|gone|clear`, `forget <file>`, `search <text>`,
@@ -239,9 +265,10 @@ send the next line as soon as the panel is really there (rule 11). The debug ent
   instance and quits; the newcomer normally hands over to a running copy, so the leaving one first
   writes its pid to defaults (launch arguments do not reach a sandboxed app), and the newcomer
   waits for that pid to exit, forcing it if a closing sheet stalls the quit.
-  The five filter chips (All, Today, PDF, Images, Other; archives and installers keep their
-  `FileKind` but share Other) sit on one row at 360 pt in every language: a chip hugs its
-  label and never wraps, so a label that does not fit is shortened in the catalog. A row's
+  The four filter chips (All, 1h, Today, Unread) and the Type menu button sit on one row at
+  360 pt in every language: a chip hugs its label and never wraps, so a label that does not
+  fit is shortened in the catalog. The Type button is Liquid Glass on macOS 26 and later
+  (`.glass`, `.glassProminent` while a type is selected) and a tinted capsule before that. A row's
   second line is `time · size · kind`, where the kind is the system's name for image, archive,
   disk image, package, application and media types and the uppercase extension otherwise
   (`InboxFile.rowKind`), falling back to the extension when the line would overflow; the

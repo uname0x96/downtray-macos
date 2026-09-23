@@ -33,7 +33,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, Pan
     #endif
 
     override init() {
-        presenter = InboxPresenter(model: InboxModel(folders: WatchedFolder.standard), services: services)
+        var model = InboxModel(folders: WatchedFolder.standard)
+        // The search field matches the group names the user sees ("Bilder"), not only the
+        // English ones the core knows.
+        model.typeLabels = Dictionary(uniqueKeysWithValues: TypeGroup.allCases.map { ($0, $0.localizedTitle) })
+        presenter = InboxPresenter(model: model, services: services)
         super.init()
     }
 
@@ -183,7 +187,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, Pan
         button.title = count == 0 ? "" : (count > 9 ? "9+" : "\(count)")
         button.toolTip = count == 0
             ? appName
-            : String(localized: "statusItem.newFiles", defaultValue: "\(count) new files", comment: "Tooltip on the menu bar icon while the badge shows. Plural: 1 → '1 new file'.")
+            : String(localized: "statusItem.unreadFiles", defaultValue: "\(count) unread files", comment: "Tooltip on the menu bar icon while the badge shows. Plural: 1 → '1 unread file'.")
     }
 
     // MARK: Popover
@@ -218,7 +222,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, Pan
 
     func showPopover() {
         guard let button = statusItem?.button, !popover.isShown else { return }
-        presenter.dispatch(.setToday(Calendar.current.startOfDay(for: Date())))
+        // The moment of opening: "1h", "Just now" and the day boundary all count from it.
+        presenter.dispatch(.setToday(Date()))
         // A status-item click does not activate an accessory app, and the cooperative
         // `activate()` may be refused while another app is frontmost. Without activation the
         // popover window cannot become key, and the first click inside it is spent on that

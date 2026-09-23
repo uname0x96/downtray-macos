@@ -59,7 +59,37 @@
         }
       }
     },
+    "action.copyName": {
+      "comment": "Menu item and ⇧⌘C: puts the file's name on the clipboard.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Namen kopieren"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy Name"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copier le nom"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "名前をコピー"
+          }
+        }
+      }
+    },
     "action.copyPath": {
+      "comment": "Menu item and ⌘C: puts the file's path on the clipboard.",
       "localizations": {
         "de": {
           "stringUnit": {
@@ -87,7 +117,66 @@
         }
       }
     },
+    "action.markRead": {
+      "comment": "Menu item: clears the row's unread dot.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Als gelesen markieren"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark as Read"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marquer comme lu"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "既読にする"
+          }
+        }
+      }
+    },
+    "action.markUnread": {
+      "comment": "Menu item: puts the unread dot back.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Als ungelesen markieren"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark as Unread"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marquer comme non lu"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未読にする"
+          }
+        }
+      }
+    },
     "action.move": {
+      "comment": "Menu item and ⌘M: opens a folder picker.",
       "localizations": {
         "de": {
           "stringUnit": {
@@ -173,34 +262,6 @@
         }
       }
     },
-    "action.reveal": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Im Finder anzeigen"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reveal in Finder"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Afficher dans le Finder"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Finder に表示"
-          }
-        }
-      }
-    },
     "action.selectAll": {
       "comment": "⌘A.",
       "localizations": {
@@ -226,6 +287,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "すべてを選択"
+          }
+        }
+      }
+    },
+    "action.showInFinder": {
+      "comment": "Menu item and ⌘R: selects the file in a Finder window.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Im Finder zeigen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show in Finder"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afficher dans le Finder"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finder に表示"
           }
         }
       }
@@ -260,6 +350,7 @@
       }
     },
     "action.unzip": {
+      "comment": "Menu item and ⌘U: extracts a zip next to itself.",
       "localizations": {
         "de": {
           "stringUnit": {
@@ -317,6 +408,7 @@
       }
     },
     "app.quit": {
+      "comment": "Menu item and ⌘Q. Keep the brand name as is.",
       "localizations": {
         "de": {
           "stringUnit": {
@@ -429,6 +521,64 @@
         }
       }
     },
+    "empty.caughtUp": {
+      "comment": "Empty state of the Unread chip: every file has been opened or marked read.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alles gelesen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You’re all caught up"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous êtes à jour"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "すべて確認済みです"
+          }
+        }
+      }
+    },
+    "empty.lastHour": {
+      "comment": "Empty state of the 1h chip.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nichts in der letzten Stunde"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing in the last hour"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rien depuis une heure"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この 1 時間に届いたものはありません"
+          }
+        }
+      }
+    },
     "empty.noMatches": {
       "comment": "Inbox (Pro) or History while the search finds nothing.",
       "localizations": {
@@ -454,6 +604,150 @@
           "stringUnit": {
             "state": "translated",
             "value": "一致するものはありません。"
+          }
+        }
+      }
+    },
+    "empty.noMatches.hint": {
+      "comment": "Under 'No matches' on the inbox: what the search understands.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Versuche einen Dateinamen oder einen Typ wie pdf."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try a file name or type like pdf."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Essayez un nom de fichier ou un type comme pdf."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ファイル名や「pdf」などの種類で探してみてください。"
+          }
+        }
+      }
+    },
+    "empty.noRecent.body": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neue Dateien in Downloads erscheinen hier."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New files in Downloads will show up here."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les nouveaux fichiers de Téléchargements apparaîtront ici."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ダウンロードに届いた新しいファイルがここに表示されます。"
+          }
+        }
+      }
+    },
+    "empty.noRecent.title": {
+      "comment": "Empty state of the inbox when the watched folders hold nothing recent.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine neuen Downloads"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No recent downloads"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun téléchargement récent"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最近のダウンロードはありません"
+          }
+        }
+      }
+    },
+    "empty.openDownloads": {
+      "comment": "Button under the empty inbox: opens the folder in Finder.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ordner „Downloads“ öffnen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Downloads Folder"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir le dossier Téléchargements"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ダウンロードフォルダを開く"
+          }
+        }
+      }
+    },
+    "empty.today": {
+      "comment": "Empty state of the Today chip.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heute nichts"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing today"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rien aujourd’hui"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今日届いたものはありません"
           }
         }
       }
@@ -574,89 +868,31 @@
         }
       }
     },
-    "filter.images": {
-      "comment": "Filter chip: pictures. Keep short.",
+    "filter.lastHour": {
+      "comment": "Filter chip: files that arrived in the last hour. Keep very short; four chips and the Type menu share one row.",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bilder"
+            "value": "1 Std."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Images"
+            "value": "1h"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Images"
+            "value": "1 h"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "画像"
-          }
-        }
-      }
-    },
-    "filter.other": {
-      "comment": "Filter chip: everything that is not a PDF or an image. Keep short; the five chips share one row.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Andere"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Other"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Autres"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "その他"
-          }
-        }
-      }
-    },
-    "filter.pdf": {
-      "comment": "Filter chip: PDF documents. Keep short.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "PDF"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "PDF"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "PDF"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "PDF"
+            "value": "1時間"
           }
         }
       }
@@ -686,6 +922,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "今日"
+          }
+        }
+      }
+    },
+    "filter.unread": {
+      "comment": "Filter chip: files the user has not opened yet. Keep short.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ungelesen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unread"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non lus"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未読"
           }
         }
       }
@@ -1067,63 +1332,6 @@
         }
       }
     },
-    "inbox.empty.body": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Neue Downloads erscheinen hier."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "New downloads will show up here."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Les nouveaux téléchargements apparaîtront ici."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "新しいダウンロードはここに表示されます。"
-          }
-        }
-      }
-    },
-    "inbox.empty.title": {
-      "comment": "Empty state of the inbox.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nichts Neues."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nothing new."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rien de nouveau."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "新着はありません。"
-          }
-        }
-      }
-    },
     "inbox.footer.markAllSeen": {
       "comment": "Footer button: clears the unread dots and the badge.",
       "localizations": {
@@ -1269,31 +1477,31 @@
         }
       }
     },
-    "inbox.search": {
-      "comment": "Placeholder of the search field on the inbox (Pro).",
+    "inbox.search.placeholder": {
+      "comment": "Placeholder of the search field on the inbox (Pro): it matches file names and type names such as pdf or Images.",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Suchen"
+            "value": "Name oder Typ"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Search"
+            "value": "Name or type"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Rechercher"
+            "value": "Nom ou type"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "検索"
+            "value": "名前または種類"
           }
         }
       }
@@ -2124,6 +2332,7 @@
       }
     },
     "pro.restore": {
+      "comment": "Standard App Store wording.",
       "localizations": {
         "de": {
           "stringUnit": {
@@ -2181,6 +2390,7 @@
       }
     },
     "pro.unlock.button": {
+      "comment": "Purchase button while the price is unknown.",
       "localizations": {
         "de": {
           "stringUnit": {
@@ -2209,6 +2419,7 @@
       }
     },
     "pro.unlock.buttonWithPrice": {
+      "comment": "Purchase button. Placeholder: localized price, e.g. $7.99.",
       "localizations": {
         "de": {
           "stringUnit": {
@@ -2232,6 +2443,93 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pro を購入 — %@"
+          }
+        }
+      }
+    },
+    "retention.day": {
+      "comment": "Keep items picker option.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "24 Stunden"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "24 hours"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "24 heures"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "24 時間"
+          }
+        }
+      }
+    },
+    "retention.month": {
+      "comment": "Keep items picker option.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30 Tage"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30 days"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30 jours"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30 日"
+          }
+        }
+      }
+    },
+    "retention.week": {
+      "comment": "Keep items picker option.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7 Tage"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7 days"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7 jours"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7 日"
           }
         }
       }
@@ -3504,7 +3802,182 @@
         }
       }
     },
+    "search.clear": {
+      "comment": "Accessibility label of the × in the search field.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suche löschen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear search"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Effacer la recherche"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "検索を消去"
+          }
+        }
+      }
+    },
+    "section.earlier": {
+      "comment": "Inbox section header: older than a week.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Früher"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Earlier"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plus ancien"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "それ以前"
+          }
+        }
+      }
+    },
+    "section.earlierToday": {
+      "comment": "Inbox section header.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heute"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Earlier today"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aujourd’hui"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今日"
+          }
+        }
+      }
+    },
+    "section.justNow": {
+      "comment": "Inbox section header: files that arrived in the last 15 minutes.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gerade eben"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Just now"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "À l’instant"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "たった今"
+          }
+        }
+      }
+    },
+    "section.thisWeek": {
+      "comment": "Inbox section header: the last six days before yesterday.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Woche"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This week"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cette semaine"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今週"
+          }
+        }
+      }
+    },
+    "section.yesterday": {
+      "comment": "Inbox section header.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gestern"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yesterday"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hier"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "昨日"
+          }
+        }
+      }
+    },
     "settings.accessNeeded": {
+      "comment": "Row title when macOS denied a folder.",
       "localizations": {
         "de": {
           "stringUnit": {
@@ -3586,6 +4059,179 @@
           "stringUnit": {
             "state": "translated",
             "value": "常にオン"
+          }
+        }
+      }
+    },
+    "settings.clearList": {
+      "comment": "Button in Settings › Danger: empties the inbox.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liste leeren …"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear List…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vider la liste…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リストを消去…"
+          }
+        }
+      }
+    },
+    "settings.clearList.body": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leert den Posteingang. Die Dateien bleiben in ihren Ordnern; neue Dateien erscheinen wieder."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empties the inbox. Files stay in their folders; new arrivals show up again."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vide la boîte de réception. Les fichiers restent dans leurs dossiers ; les nouvelles arrivées réapparaissent."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "受信箱を空にします。ファイルはフォルダに残り、新しく届いたものは再び表示されます。"
+          }
+        }
+      }
+    },
+    "settings.clearList.confirm.button": {
+      "comment": "Confirmation button.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liste leeren"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear List"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vider la liste"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リストを消去"
+          }
+        }
+      }
+    },
+    "settings.clearList.confirm.message": {
+      "comment": "Confirmation body.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es wird keine Datei gelöscht. Der Posteingang beginnt mit der nächsten neuen Datei von vorn."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No file is deleted. The inbox starts again from the next arrival."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun fichier n’est supprimé. La boîte de réception repart de la prochaine arrivée."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ファイルは削除されません。次に届いたファイルから受信箱をやり直します。"
+          }
+        }
+      }
+    },
+    "settings.clearList.confirm.title": {
+      "comment": "Confirmation before Clear List.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liste im Posteingang leeren?"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear the inbox list?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vider la liste de la boîte de réception ?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "受信箱のリストを消去しますか?"
+          }
+        }
+      }
+    },
+    "settings.danger": {
+      "comment": "Section title: actions that cannot be undone.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gefahrenzone"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Danger"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zone sensible"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "危険な操作"
           }
         }
       }
@@ -3822,6 +4468,7 @@
       }
     },
     "settings.grantAccess": {
+      "comment": "Opens the folder picker that grants access.",
       "localizations": {
         "de": {
           "stringUnit": {
@@ -4034,6 +4681,120 @@
         }
       }
     },
+    "settings.includeFolders": {
+      "comment": "Toggle: list folders that land in a watched folder, not only files.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ordner einbeziehen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Include folders"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inclure les dossiers"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "フォルダも含める"
+          }
+        }
+      }
+    },
+    "settings.includeFolders.body": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auch Ordner auflisten, die in einem überwachten Ordner landen, etwa ein entpackter Download."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Also list folders that land in a watched folder, such as an unzipped download."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liste aussi les dossiers qui arrivent dans un dossier surveillé, comme un téléchargement décompressé."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "解凍したダウンロードなど、監視中のフォルダに届いたフォルダも一覧に載せます。"
+          }
+        }
+      }
+    },
+    "settings.keepItems": {
+      "comment": "Picker label: how long a file stays in the inbox after it arrived.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einträge behalten"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep items"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conserver les éléments"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "項目を保持"
+          }
+        }
+      }
+    },
+    "settings.keepItems.body": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ältere Dateien verlassen den Posteingang. In ihrem Ordner bleiben sie."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Older files leave the inbox. They stay in their folder."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les fichiers plus anciens quittent la boîte de réception. Ils restent dans leur dossier."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "古いファイルは受信箱から消えます。フォルダには残ります。"
+          }
+        }
+      }
+    },
     "settings.language": {
       "comment": "Picker label in General.",
       "localizations": {
@@ -4180,6 +4941,7 @@
       }
     },
     "settings.language.system": {
+      "comment": "Picker option: follow the macOS language.",
       "localizations": {
         "de": {
           "stringUnit": {
@@ -4231,6 +4993,121 @@
           "stringUnit": {
             "state": "translated",
             "value": "ログイン時に起動"
+          }
+        }
+      }
+    },
+    "settings.list": {
+      "comment": "Section title: how the inbox list behaves.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liste"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "List"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liste"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リスト"
+          }
+        }
+      }
+    },
+    "settings.markAllRead": {
+      "comment": "Button in Settings › Danger.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle als gelesen markieren"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark All as Read"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tout marquer comme lu"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "すべて既読にする"
+          }
+        }
+      }
+    },
+    "settings.markAllRead.body": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entfernt alle Ungelesen-Punkte und die Kennzeichnung."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clears every unread dot and the badge."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Efface tous les points « non lu » et le badge."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未読の印とバッジをすべて消します。"
+          }
+        }
+      }
+    },
+    "settings.markReadOnClose": {
+      "comment": "Toggle in Settings › List.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sichtbare Dateien beim Schließen als gelesen markieren"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mark visible files as read when the inbox closes"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marquer les fichiers visibles comme lus à la fermeture"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "受信箱を閉じたとき、表示中のファイルを既読にする"
           }
         }
       }
@@ -4350,6 +5227,7 @@
       }
     },
     "settings.pro": {
+      "comment": "Section title and row label for the paid tier. Usually left as 'Pro'.",
       "localizations": {
         "de": {
           "stringUnit": {
@@ -4492,6 +5370,63 @@
         }
       }
     },
+    "settings.showBadge": {
+      "comment": "Toggle in Settings › List.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kennzeichen am Menüleistensymbol zeigen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show badge on the menu bar icon"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afficher le badge sur l’icône de la barre des menus"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "メニューバーのアイコンにバッジを表示"
+          }
+        }
+      }
+    },
+    "settings.showBadge.body": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Kennzeichen zählt ungelesene Dateien."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The badge counts unread files."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le badge compte les fichiers non lus."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "バッジは未読ファイルの数です。"
+          }
+        }
+      }
+    },
     "settings.title": {
       "comment": "Window title. Keep the brand name.",
       "localizations": {
@@ -4521,8 +5456,123 @@
         }
       }
     },
-    "statusItem.newFiles": {
-      "comment": "Tooltip on the menu bar icon while the badge shows. Plural: 1 → '1 new file'.",
+    "settings.types": {
+      "comment": "Section title: the extension-to-group table behind the Type menu.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Typen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Types"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Types"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "種類"
+          }
+        }
+      }
+    },
+    "settings.types.add": {
+      "comment": "Button that saves a new type override.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hinzufügen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouter"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "追加"
+          }
+        }
+      }
+    },
+    "settings.types.body": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lege fest, in welche Gruppe das Typ-Menü eine Endung einordnet."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Decide which group the Type menu files an extension under."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisissez dans quel groupe le menu Type classe une extension."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拡張子を「種類」メニューのどのグループに入れるかを決めます。"
+          }
+        }
+      }
+    },
+    "settings.types.builtIn": {
+      "comment": "Under a type override: the group the extension would have without it. Placeholder: group name.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Standard: %@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Built in: %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Par défaut : %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "標準: %@"
+          }
+        }
+      }
+    },
+    "settings.types.count": {
+      "comment": "Status line. Plural: 1 → '1 override'.",
       "localizations": {
         "de": {
           "variations": {
@@ -4530,13 +5580,13 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "1 neue Datei"
+                  "value": "1 Regel"
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "%lld neue Dateien"
+                  "value": "%lld Regeln"
                 }
               }
             }
@@ -4548,13 +5598,13 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "1 new file"
+                  "value": "1 override"
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "%lld new files"
+                  "value": "%lld overrides"
                 }
               }
             }
@@ -4566,13 +5616,13 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "1 nouveau fichier"
+                  "value": "1 règle"
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "%lld nouveaux fichiers"
+                  "value": "%lld règles"
                 }
               }
             }
@@ -4584,7 +5634,223 @@
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "%lld 件の新しいファイル"
+                  "value": "%lld 件の上書き"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "settings.types.extension": {
+      "comment": "Placeholder of the extension field, an example extension.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pdf"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pdf"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pdf"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pdf"
+          }
+        }
+      }
+    },
+    "settings.types.new": {
+      "comment": "Row label for adding a type override. Keep the arrow.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Endung → Gruppe"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extension → group"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extension → groupe"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拡張子 → グループ"
+          }
+        }
+      }
+    },
+    "settings.types.none": {
+      "comment": "Status when no type override exists.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Standardtabelle"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Built-in table"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Table par défaut"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "標準の対応表"
+          }
+        }
+      }
+    },
+    "settings.types.remove": {
+      "comment": "Tooltip on the minus button next to a type override.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Regel entfernen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove this override"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer cette règle"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この上書きを削除"
+          }
+        }
+      }
+    },
+    "settings.types.reset": {
+      "comment": "Button: removes every type override.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf Standard zurücksetzen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset to Defaults"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rétablir les réglages par défaut"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "デフォルトに戻す"
+          }
+        }
+      }
+    },
+    "statusItem.unreadFiles": {
+      "comment": "Tooltip on the menu bar icon while the badge shows. Plural: 1 → '1 unread file'.",
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "1 ungelesene Datei"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld ungelesene Dateien"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "1 unread file"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld unread files"
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "1 fichier non lu"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld fichiers non lus"
+                }
+              }
+            }
+          }
+        },
+        "ja": {
+          "variations": {
+            "plural": {
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "未読 %lld 件"
                 }
               }
             }
@@ -4866,6 +6132,77 @@
         }
       }
     },
+    "toast.nameCopied": {
+      "comment": "Toast after Copy Name. Plural: 1 → 'Name copied'.",
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Name kopiert"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Namen kopiert"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Name copied"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld names copied"
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Nom copié"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld noms copiés"
+                }
+              }
+            }
+          }
+        },
+        "ja": {
+          "variations": {
+            "plural": {
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld 件の名前をコピーしました"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "toast.pathCopied": {
       "comment": "Toast after Copy Path. Plural: 1 → 'Path copied'.",
       "localizations": {
@@ -4962,6 +6299,238 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pro を購入しました。ありがとうございます!"
+          }
+        }
+      }
+    },
+    "type.any": {
+      "comment": "First item of the Type menu: no type filter.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Any"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tous"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "すべて"
+          }
+        }
+      }
+    },
+    "type.apps": {
+      "comment": "Type menu item: dmg, pkg, app and other installers.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apps"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apps"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apps"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アプリ"
+          }
+        }
+      }
+    },
+    "type.archives": {
+      "comment": "Type menu item: zip, tar and similar.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archive"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archives"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archives"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アーカイブ"
+          }
+        }
+      }
+    },
+    "type.docs": {
+      "comment": "Type menu item: documents, spreadsheets, presentations, text. Keep short.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dokumente"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Docs"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Documents"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "書類"
+          }
+        }
+      }
+    },
+    "type.images": {
+      "comment": "Type menu item: pictures.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bilder"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Images"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Images"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "画像"
+          }
+        }
+      }
+    },
+    "type.media": {
+      "comment": "Type menu item: video and audio.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Medien"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Media"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Médias"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "メディア"
+          }
+        }
+      }
+    },
+    "type.menu": {
+      "comment": "Label of the type menu button while no type is selected. Keep short.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Typ"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Type"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Type"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "種類"
+          }
+        }
+      }
+    },
+    "type.other": {
+      "comment": "Type group for anything not in the table; only shown in Settings.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sonstige"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autres"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "その他"
           }
         }
       }

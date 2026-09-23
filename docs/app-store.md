@@ -114,9 +114,10 @@ they came from.
 
 Act on a file with one key: Return opens it, Space previews it, ⌘R reveals it in Finder, ⌘C
 copies its path, ⌘M moves it to a folder, ⌘U unzips it in place, and ⌫ moves it to the Trash
-with a five-second undo. Filter by type (PDF, images, other) or to today's
-files only. A badge on the menu bar icon counts what arrived while you were away, and an
-optional notification tells you the moment a download finishes.
+with a five-second undo. Narrow the list to the last hour, today, or what you have not
+opened yet, pick a type (Docs, Images, Media, Archives, Apps), or search by name or type. A
+badge on the menu bar icon counts the files you have not opened, and an optional
+notification tells you the moment a download finishes.
 
 Downtray Pro (one-time purchase) adds:
 • Extra folders: watch your Desktop, a scanner folder, an AirDrop target, anything.
@@ -142,7 +143,7 @@ the App Sandbox.
 
 Downtray は、ダウンロードフォルダに届いたばかりのファイルをキー 1 つで手元に呼び出します。⌃⌥D を押すと、新しい順に並んだファイルが、クイックルックのサムネイルと入手元とともに表示されます。
 
-キー 1 つでファイルを操作できます。Return で開く、Space でプレビュー、⌘R で Finder に表示、⌘C でパスをコピー、⌘M でフォルダへ移動、⌘U でその場に解凍、⌫ でゴミ箱へ (5 秒間は取り消し可能)。種類 (PDF、画像、その他) や「今日」で絞り込めます。離れている間に届いたファイルの数はメニューバーアイコンのバッジに表示され、必要ならダウンロード完了時に通知も受け取れます。
+キー 1 つでファイルを操作できます。Return で開く、Space でプレビュー、⌘R で Finder に表示、⌘C でパスをコピー、⌘M でフォルダへ移動、⌘U でその場に解凍、⌫ でゴミ箱へ (5 秒間は取り消し可能)。「1時間」「今日」「未読」で絞り込み、種類 (書類、画像、メディア、アーカイブ、アプリ) を選び、名前や種類で検索できます。まだ開いていないファイルの数はメニューバーアイコンのバッジに表示され、必要ならダウンロード完了時に通知も受け取れます。
 
 Downtray Pro (買い切り) で追加されるもの:
 • 追加のフォルダ: デスクトップ、スキャナの保存先、AirDrop の保存先など、どのフォルダでも監視できます。
@@ -166,7 +167,7 @@ Downtray Pro (買い切り) で追加されるもの:
 
 Downtray bringt die Dateien, die gerade in deinem Downloads-Ordner gelandet sind, mit einem Tastendruck zu dir. Drücke ⌃⌥D und die neuesten Dateien sind da, die jüngste zuoberst, mit Übersicht-Vorschau und Herkunft.
 
-Erledige eine Datei mit einer Taste: Zeilenschalter öffnet sie, Leertaste zeigt die Vorschau, ⌘R zeigt sie im Finder, ⌘C kopiert ihren Pfad, ⌘M bewegt sie in einen Ordner, ⌘U entpackt sie an Ort und Stelle und ⌫ legt sie in den Papierkorb, mit fünf Sekunden zum Widerrufen. Filtere nach Art (PDF, Bilder, Andere) oder nur nach heute. Ein Badge am Menüleistensymbol zählt, was in deiner Abwesenheit ankam, und auf Wunsch meldet eine Mitteilung den Moment, in dem ein Download fertig ist.
+Erledige eine Datei mit einer Taste: Zeilenschalter öffnet sie, Leertaste zeigt die Vorschau, ⌘R zeigt sie im Finder, ⌘C kopiert ihren Pfad, ⌘M bewegt sie in einen Ordner, ⌘U entpackt sie an Ort und Stelle und ⌫ legt sie in den Papierkorb, mit fünf Sekunden zum Widerrufen. Zeige nur die letzte Stunde, nur heute oder nur Ungelesenes, wähle einen Typ (Dokumente, Bilder, Medien, Archive, Apps) oder suche nach Name oder Typ. Ein Badge am Menüleistensymbol zählt die Dateien, die du noch nicht geöffnet hast, und auf Wunsch meldet eine Mitteilung den Moment, in dem ein Download fertig ist.
 
 Downtray Pro (einmaliger Kauf) ergänzt:
 • Weitere Ordner: überwache deinen Schreibtisch, einen Scanner-Ordner, ein AirDrop-Ziel, was du willst.
@@ -190,7 +191,7 @@ Privat von Grund auf: kein Account, kein Netzwerk, keine Analyse. Alles bleibt a
 
 Downtray met les fichiers qui viennent d’arriver dans votre dossier Téléchargements à une touche de vous. Appuyez sur ⌃⌥D et les fichiers les plus récents sont là, du plus récent au plus ancien, avec une vignette Coup d’œil et leur provenance.
 
-Agissez sur un fichier avec une seule touche : Retour l’ouvre, Espace l’affiche en aperçu, ⌘R l’affiche dans le Finder, ⌘C copie son chemin, ⌘M le déplace vers un dossier, ⌘U le décompresse sur place et ⌫ le place dans la corbeille, avec cinq secondes pour annuler. Filtrez par type (PDF, images, autres) ou sur les fichiers du jour. Un badge sur l’icône de la barre des menus compte ce qui est arrivé en votre absence, et une notification facultative vous prévient dès qu’un téléchargement se termine.
+Agissez sur un fichier avec une seule touche : Retour l’ouvre, Espace l’affiche en aperçu, ⌘R l’affiche dans le Finder, ⌘C copie son chemin, ⌘M le déplace vers un dossier, ⌘U le décompresse sur place et ⌫ le place dans la corbeille, avec cinq secondes pour annuler. Limitez la liste à la dernière heure, à aujourd’hui ou aux fichiers non lus, choisissez un type (Documents, Images, Médias, Archives, Apps) ou cherchez par nom ou par type. Un badge sur l’icône de la barre des menus compte les fichiers que vous n’avez pas encore ouverts, et une notification facultative vous prévient dès qu’un téléchargement se termine.
 
 Downtray Pro (achat unique) ajoute :
 • D’autres dossiers : surveillez votre Bureau, un dossier de scanner, une cible AirDrop, ce que vous voulez.

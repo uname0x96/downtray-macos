@@ -104,20 +104,36 @@ headless_scenario() {
     expect '.badge == 3 and (.rows | length) == 3'
 
     send "hotkey"
-    expect '.panelOpen and .badge == 0' "hotkey opens the panel and clears the badge"
+    expect '.panelOpen and .badge == 3 and .unread == 3' "opening the panel alone marks nothing read; the badge is the unread count"
     expect '.rows[0].name == "archive.zip" and .focused == null and .selection == []' "nothing is selected on open"
     send "down"
     expect '.rows[0].focused and .rows[0].selected' "the first arrow key focuses the top row"
 
-    send "filter pdf";    expect '(.rows | length) == 1 and .rows[0].name == "report.pdf"'
-    send "filter images"; expect '(.rows | length) == 1 and .rows[0].name == "photo.png"'
-    send "filter other";  expect '(.rows | length) == 1 and .rows[0].name == "archive.zip"' "archives share the Other chip"
-    send "filter all";    expect '(.rows | length) == 3'
+    expect '.filter == "all" and .filters == ["all", "1h", "today", "unread"] and .type == "any"' "the folder was empty at launch, so the Today chip fell back to All"
+    send "filter today"; expect '(.rows | length) == 3 and .settings.selectedChip == "today"'
+    expect '.counts == {"1h": 3, "today": 3, "unread": 3} and .sections == ["justNow", "justNow", "justNow"]' "chip counts and the recency sections"
+    send "filter 1h";     expect '(.rows | length) == 3 and .sections == null' "1h is a flat list"
+    send "type docs";     expect '(.rows | length) == 1 and .rows[0].name == "report.pdf" and .rows[0].type == "docs"'
+    send "type images";   expect '(.rows | length) == 1 and .rows[0].name == "photo.png"'
+    send "type archives"; expect '(.rows | length) == 1 and .rows[0].name == "archive.zip"'
+    send "type media";    expect '.rows == [] and .emptyState == "noMatches"' "an empty Type is No matches"
+    send "type any";      expect '(.rows | length) == 3 and .settings.typeOverrides == {}'
+    send "type map png docs"; expect '.settings.typeOverrides == {"png": "docs"} and (.rows | map(select(.type == "docs")) | length) == 2' "an override wins over the table"
+    send "type reset";    expect '.settings.typeOverrides == {}'
+    send "search zip";    expect '(.rows | length) == 1 and .rows[0].name == "archive.zip"' "the extension matches"
+    send "search example"; expect '(.rows | length) == 1 and .rows[0].name == "report.pdf"' "the source host matches"
+    send "search";        expect '(.rows | length) == 3'
+    send "filter unread"; expect '(.rows | length) == 3'
+    send "read report.pdf"; expect '(.rows | length) == 2 and .badge == 2' "a read row leaves the Unread chip and the badge follows"
+    send "unread report.pdf"; expect '(.rows | length) == 3 and .badge == 3'
+    send "filter all";    expect '(.rows | length) == 3 and .settings.selectedChip == "all"' "the chip is remembered"
 
     send "open report.pdf"
     expect "$(row report.pdf) | .unread == false" "open marks the row read"
     send "copy report.pdf"
     expect '.toast.message == "Path copied"'
+    send "copy-name report.pdf"
+    expect '.toast.message == "Name copied"'
 
     send "unzip archive.zip"
     expect '.toast.message | startswith("Extracted archive.zip")'
@@ -152,7 +168,18 @@ headless_scenario() {
     send "language system"; expect '.settings.language == null'
 
     send "seen"
-    expect '.unread == 0'
+    expect '.unread == 0 and .badge == 0'
+    send "badge off";  expect '.settings.showBadge == false'
+    send "badge on"
+    send "keep day";   expect '.settings.retention == "day"'
+    send "keep week"
+    send "read-on-close on"; expect '.settings.markReadOnClose == true'
+    send "read-on-close off"
+    send "folders on"; expect '.settings.includeFolders == true'
+    send "folders off"
+    send "clear-list"; expect '.rows == [] and .emptyState == "nothingNew" and .settings.selectedChip == "all"' "Clear list empties the inbox without touching the files"
+    send "arrive after.txt 1k"
+    expect '(.rows | map(.name)) == ["after.txt"]' "what arrives after the clear shows"
     send "panel close"
     expect '.panelOpen == false and .selection == [] and .focused == null'
 

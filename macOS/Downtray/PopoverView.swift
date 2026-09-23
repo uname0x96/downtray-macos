@@ -2,14 +2,20 @@ import AppKit
 import SwiftUI
 import InboxCore
 
-/// The panel (~360 × 520 pt): header with filter chips, the list of latest files, and a footer.
-/// The view only sends events; focus, selection, toast and undo all come from the model.
+/// The panel (~360 × 520 pt): header, the filter row (chips and the Type menu), the list of
+/// recent files, and a footer. The view only sends events; focus, selection, toast and undo all
+/// come from the model.
 struct PopoverView: View {
     @Environment(InboxPresenter.self) private var presenter
     @FocusState private var focused: Bool
+    @FocusState private var searchFocused: Bool
+    /// What the search field shows; the model's `query` follows it 150 ms after the last key.
+    @State private var draft = ""
+    @State private var queryDebounce: Task<Void, Never>?
     let openSettings: () -> Void
 
     private var model: InboxModel { presenter.model }
+    private static let searchDebounce: Duration = .milliseconds(150)
 
     var body: some View {
         VStack(spacing: 0) {
@@ -23,7 +29,7 @@ struct PopoverView: View {
                 content
             } else {
                 header
-                chips
+                filterRow
                 // Pro lists 200 files, which is too many to scan by eye; free stops at 20.
                 if model.isPro { searchField }
                 Divider()
@@ -42,6 +48,8 @@ struct PopoverView: View {
         .focused($focused)
         .onKeyPress(phases: .down) { press in handle(press) }
         .onAppear { focused = true }
+        // The model clears the query when the panel closes or leaves History; follow it.
+        .onChange(of: model.query) { _, query in if query != draft { draft = query } }
         .accessibilityIdentifier("popover")
     }
 
@@ -121,38 +129,99 @@ struct PopoverView: View {
         .accessibilityIdentifier("historyFilter")
     }
 
-    /// Exactly five chips on one row at 360 pt in every language: a chip hugs its label and
+    /// All / 1h / Today / Unread on one row, then the Type menu. A chip hugs its label and
     /// never wraps or truncates, so a label that does not fit is shortened in the catalog.
-    private var chips: some View {
+    /// Clicking the selected chip does nothing; a change scrolls the list back to the top.
+    private var filterRow: some View {
         HStack(spacing: 6) {
             ForEach(FileFilter.allCases, id: \.self) { filter in
                 FilterChip(title: filter.localizedTitle, id: filter.rawValue, selected: model.filter == filter) {
-                    presenter.dispatch(.setFilter(filter))
+                    if model.filter != filter { presenter.dispatch(.setFilter(filter)) }
                 }
             }
             Spacer(minLength: 0)
+            typeMenu
         }
         .padding(.horizontal, 14)
         .padding(.bottom, 8)
     }
 
-    /// Filters the list by file name: on History, and on the inbox with Pro.
+    /// `Type ▾`: Any, then the five groups, with a checkmark on the current one. The button
+    /// reads "Type" while Any is selected and the group's name otherwise. Liquid Glass on
+    /// macOS 26 and later, like the History buttons; a tinted capsule before that.
+    private var typeMenu: some View {
+        let selected = model.typeFilter
+        let title = selected?.localizedTitle ?? String(localized: "type.menu", defaultValue: "Type", comment: "Label of the type menu button while no type is selected. Keep short.")
+        let menu = Menu {
+            Picker("", selection: Binding(get: { presenter.model.typeFilter }, set: { presenter.dispatch(.setTypeFilter($0)) })) {
+                Text(String(localized: "type.any", defaultValue: "Any", comment: "First item of the Type menu: no type filter.")).tag(TypeGroup?.none)
+                Divider()
+                ForEach(TypeGroup.menuCases, id: \.self) { Text($0.localizedTitle).tag(TypeGroup?.some($0)) }
+            }
+            .pickerStyle(.inline)
+            .labelsHidden()
+        } label: {
+            Text(title)
+                .font(.caption.weight(.medium))
+                .lineLimit(1)
+        }
+        .fixedSize()
+        .accessibilityIdentifier("typeMenu")
+        return typeMenuStyle(menu, selected: selected != nil)
+    }
+
+    @ViewBuilder
+    private func typeMenuStyle(_ menu: some View, selected: Bool) -> some View {
+        if #available(macOS 26, *) {
+            if selected {
+                menu.menuStyle(.button).buttonStyle(.glassProminent).buttonBorderShape(.capsule).controlSize(.small)
+            } else {
+                menu.menuStyle(.button).buttonStyle(.glass).buttonBorderShape(.capsule).controlSize(.small)
+            }
+        } else {
+            // The borderless menu style rebuilds its label from text and image, so the chip
+            // look (capsule, tint) is applied to the menu itself, not to the label.
+            menu.menuStyle(.borderlessButton)
+                .menuIndicator(.visible)
+                .padding(.leading, 10)
+                .padding(.trailing, 6)
+                .frame(minHeight: 28)
+                .background(Capsule().fill(selected ? Color.accentColor : Color.primary.opacity(0.08)))
+                .foregroundStyle(selected ? Color.white : Color.primary)
+                .contentShape(Capsule())
+        }
+    }
+
+    /// Filters the list: on History by name, on the inbox (Pro) by name, extension, type group
+    /// or source host. The model gets the text 150 ms after the last key, so a fast typist does
+    /// not re-filter 200 rows per character.
     private var searchField: some View {
         HStack(spacing: 6) {
             Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
             TextField(
                 model.historyMode
                     ? String(localized: "history.search", defaultValue: "Search history", comment: "Placeholder of the search field on the History panel.")
-                    : String(localized: "inbox.search", defaultValue: "Search", comment: "Placeholder of the search field on the inbox (Pro)."),
-                text: Binding(get: { presenter.model.query }, set: { presenter.dispatch(.setQuery($0)) })
+                    : String(localized: "inbox.search.placeholder", defaultValue: "Name or type", comment: "Placeholder of the search field on the inbox (Pro): it matches file names and type names such as pdf or Images."),
+                text: $draft
             )
             .textFieldStyle(.plain)
+            .focused($searchFocused)
+            .onChange(of: draft) { _, text in scheduleQuery(text) }
+            .onSubmit { if model.focused != nil { presenter.dispatch(.open(.selection)) } }
+            .onKeyPress(.upArrow) { presenter.dispatch(.moveFocus(.up)); return .handled }
+            .onKeyPress(.downArrow) { presenter.dispatch(.moveFocus(.down)); return .handled }
+            .onKeyPress(.escape) {
+                guard !draft.isEmpty else { return .ignored }
+                clearQuery()
+                return .handled
+            }
             .accessibilityIdentifier("search")
-            if !model.query.isEmpty {
-                Button { presenter.dispatch(.setQuery("")) } label: {
+            if !draft.isEmpty {
+                Button(action: clearQuery) {
                     Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(String(localized: "search.clear", defaultValue: "Clear search", comment: "Accessibility label of the × in the search field."))
             }
         }
         .font(.callout)
@@ -163,29 +232,50 @@ struct PopoverView: View {
         .padding(.bottom, 8)
     }
 
+    private func scheduleQuery(_ text: String) {
+        queryDebounce?.cancel()
+        guard text != model.query else { return }
+        queryDebounce = Task { @MainActor in
+            try? await Task.sleep(for: Self.searchDebounce)
+            guard !Task.isCancelled else { return }
+            presenter.dispatch(.setQuery(text))
+        }
+    }
+
+    private func clearQuery() {
+        queryDebounce?.cancel()
+        draft = ""
+        presenter.dispatch(.setQuery(""))
+    }
+
     // MARK: List
 
     @ViewBuilder
     private var content: some View {
         if let empty = model.emptyState {
-            EmptyStateView(state: empty) {
-                presenter.dispatch(.grantAccess(.downloads))
-            }
+            EmptyStateView(
+                state: empty,
+                inHistory: model.historyMode,
+                grant: { presenter.dispatch(.grantAccess(.downloads)) },
+                openDownloads: { presenter.dispatch(.openWatchedFolder(.downloads)) }
+            )
         } else if model.historyMode {
             historyList
         } else {
             ScrollViewReader { proxy in
                 ScrollView {
-                    LazyVStack(spacing: 1) {
-                        ForEach(model.visibleFiles) { file in
-                            FileRowView(
-                                file: file,
-                                showFolder: model.duplicateNames.contains(file.name),
-                                selected: model.selection.contains(file.id),
-                                focused: model.focused == file.id,
-                                actions: RowActions(presenter: presenter, file: file, selection: model.selection)
-                            )
-                            .id(file.id)
+                    LazyVStack(alignment: .leading, spacing: 1) {
+                        Color.clear.frame(height: 0).id(Self.topAnchor)
+                        let sections = model.inboxSections
+                        if sections.isEmpty {
+                            // 1h, Unread and a search show a flat list: one bucket, no headers.
+                            ForEach(model.visibleFiles) { file in inboxRow(file) }
+                        } else {
+                            ForEach(sections, id: \.section) { section in
+                                sectionHeader(section.section.localizedTitle)
+                                    .accessibilityIdentifier("section-\(section.section.rawValue)")
+                                ForEach(section.files) { file in inboxRow(file) }
+                            }
                         }
                         if model.hasOlderFiles {
                             Button {
@@ -212,8 +302,33 @@ struct PopoverView: View {
                 .onChange(of: model.focused) { _, id in
                     if let id { withAnimation(.easeOut(duration: 0.15)) { proxy.scrollTo(id, anchor: .center) } }
                 }
+                .onChange(of: model.filter) { _, _ in proxy.scrollTo(Self.topAnchor, anchor: .top) }
+                .onChange(of: model.typeFilter) { _, _ in proxy.scrollTo(Self.topAnchor, anchor: .top) }
             }
         }
+    }
+
+    private static let topAnchor = "top"
+
+    private func inboxRow(_ file: InboxFile) -> some View {
+        FileRowView(
+            file: file,
+            showFolder: model.duplicateNames.contains(file.name),
+            selected: model.selection.contains(file.id),
+            focused: model.focused == file.id,
+            actions: RowActions(presenter: presenter, file: file, selection: model.selection)
+        )
+        .id(file.id)
+    }
+
+    private func sectionHeader(_ title: String) -> some View {
+        Text(title)
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 8)
+            .padding(.top, 10)
+            .padding(.bottom, 4)
+            .accessibilityAddTraits(.isHeader)
     }
 
     /// History rows grouped by the local calendar day they arrived, newest first. An Available
@@ -223,13 +338,7 @@ struct PopoverView: View {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 1, pinnedViews: []) {
                     ForEach(historySections, id: \.day) { section in
-                        Text(Self.sectionTitle(for: section.day, today: model.today))
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.secondary)
-                            .padding(.horizontal, 8)
-                            .padding(.top, 10)
-                            .padding(.bottom, 4)
-                            .accessibilityAddTraits(.isHeader)
+                        sectionHeader(Self.sectionTitle(for: section.day, today: model.today))
                         ForEach(section.files) { file in
                             if file.missing {
                                 GoneRowView(file: file, focused: model.focused == file.id) {
@@ -297,7 +406,7 @@ struct PopoverView: View {
             Button(String(localized: "inbox.footer.openDownloads", defaultValue: "Open Downloads in Finder", comment: "Footer link button, leading. Shares one line with 'Mark all seen'.")) { presenter.dispatch(.openWatchedFolder(.downloads)) }
             Spacer()
             Button(String(localized: "inbox.footer.markAllSeen", defaultValue: "Mark all seen", comment: "Footer button: clears the unread dots and the badge.")) { presenter.dispatch(.markAllSeen) }
-                .disabled(model.unreadCount == 0 && model.badgeCount == 0)
+                .disabled(model.unreadCount == 0)
         }
         .buttonStyle(.link)
         .foregroundStyle(.secondary)
@@ -336,8 +445,9 @@ struct PopoverView: View {
 
     // MARK: Keyboard
 
-    /// Return, Space, arrows and ⌫ act on the focused/selected rows. ⌘R/⌘C/⌘M/⌘U are declared as
-    /// hidden buttons so they also show up in the menu bar's key equivalents.
+    /// Return, Space, arrows and ⌫ act on the focused/selected rows; typing a character starts a
+    /// search (Pro). ⌘R/⌘C/⌘M/⌘U are declared as hidden buttons so they also show up in the
+    /// menu bar's key equivalents.
     private func handle(_ press: KeyPress) -> KeyPress.Result {
         if press.modifiers.contains(.command) { return .ignored }
         switch press.key {
@@ -361,14 +471,29 @@ struct PopoverView: View {
             if model.selection.isEmpty { return .ignored }
             presenter.dispatch(.clearSelection)
             return .handled
-        default: return .ignored
+        default:
+            return startSearch(with: press) ? .handled : .ignored
         }
+    }
+
+    /// A letter or digit typed over the list goes into the search field, which takes focus.
+    /// The text is added after the focus change, since a field that becomes first responder
+    /// selects its contents and the next character would replace them.
+    private func startSearch(with press: KeyPress) -> Bool {
+        guard model.isPro || model.historyMode, !searchFocused, !model.paywallShown else { return false }
+        let text = press.characters
+        guard !text.isEmpty, text.unicodeScalars.allSatisfy({ !CharacterSet.controlCharacters.contains($0) }),
+              press.key.character.isLetter || press.key.character.isNumber || press.key.character.isPunctuation else { return false }
+        searchFocused = true
+        DispatchQueue.main.async { draft += text }
+        return true
     }
 
     private var hiddenShortcuts: some View {
         Group {
-            Button(String(localized: "action.reveal", defaultValue: "Reveal in Finder", comment: "Menu item and ⌘R.")) { presenter.dispatch(.reveal(.selection)) }.keyboardShortcut("r", modifiers: .command)
+            Button(String(localized: "action.showInFinder", defaultValue: "Show in Finder", comment: "Menu item and ⌘R: selects the file in a Finder window.")) { presenter.dispatch(.reveal(.selection)) }.keyboardShortcut("r", modifiers: .command)
             Button(String(localized: "action.copyPath", defaultValue: "Copy Path", comment: "Menu item and ⌘C: puts the file's path on the clipboard.")) { presenter.dispatch(.copyPath(.selection)) }.keyboardShortcut("c", modifiers: .command)
+            Button(String(localized: "action.copyName", defaultValue: "Copy Name", comment: "Menu item and ⇧⌘C: puts the file's name on the clipboard.")) { presenter.dispatch(.copyName(.selection)) }.keyboardShortcut("c", modifiers: [.command, .shift])
             Button(String(localized: "action.move", defaultValue: "Move to…", comment: "Menu item and ⌘M: opens a folder picker.")) { presenter.dispatch(.moveTo(.selection)) }.keyboardShortcut("m", modifiers: .command)
             Button(String(localized: "action.unzip", defaultValue: "Unzip Here", comment: "Menu item and ⌘U: extracts a zip next to itself.")) { presenter.dispatch(.unzip(.selection)) }.keyboardShortcut("u", modifiers: .command)
             Button(String(localized: "action.selectAll", defaultValue: "Select All", comment: "⌘A.")) { selectAll() }.keyboardShortcut("a", modifiers: .command)
@@ -433,6 +558,9 @@ struct RowActions {
     func quickLook() { presenter.dispatch(.quickLook(target)) }
     func reveal() { presenter.dispatch(.reveal(target)) }
     func copyPath() { presenter.dispatch(.copyPath(target)) }
+    func copyName() { presenter.dispatch(.copyName(target)) }
+    func markRead() { presenter.dispatch(.markRead(target)) }
+    func markUnread() { presenter.dispatch(.markUnread(target)) }
     func moveTo() { presenter.dispatch(.moveTo(target)) }
     func unzip() { presenter.dispatch(.unzip(target)) }
     func trash() { presenter.dispatch(.trash(target)) }
@@ -542,8 +670,18 @@ struct FileRowView: View {
             }
             Button(String(localized: "action.open", defaultValue: "Open", comment: "Menu item: open the file in its default app.")) { actions.open() }
             Button(String(localized: "action.quickLook", defaultValue: "Quick Look", comment: "Menu item: the macOS Quick Look preview. Use the system's name for it.")) { actions.quickLook() }
-            Button(String(localized: "action.reveal", defaultValue: "Reveal in Finder")) { actions.reveal() }
+            Button(String(localized: "action.showInFinder", defaultValue: "Show in Finder")) { actions.reveal() }
+            Divider()
+            // History rows have no unread state, so no toggle there.
+            if showUnread {
+                if file.unread {
+                    Button(String(localized: "action.markRead", defaultValue: "Mark as Read", comment: "Menu item: clears the row's unread dot.")) { actions.markRead() }
+                } else {
+                    Button(String(localized: "action.markUnread", defaultValue: "Mark as Unread", comment: "Menu item: puts the unread dot back.")) { actions.markUnread() }
+                }
+            }
             Button(String(localized: "action.copyPath", defaultValue: "Copy Path")) { actions.copyPath() }
+            Button(String(localized: "action.copyName", defaultValue: "Copy Name")) { actions.copyName() }
             Divider()
             Button(String(localized: "action.move", defaultValue: "Move to…")) { actions.moveTo() }
             if file.isZip {
@@ -643,7 +781,10 @@ struct GoneRowView: View {
 
 struct EmptyStateView: View {
     let state: EmptyState
+    /// History keeps its own wording for "No matches"; the inbox adds a hint.
+    var inHistory = false
     let grant: () -> Void
+    var openDownloads: (() -> Void)? = nil
 
     var body: some View {
         VStack(spacing: 12) {
@@ -655,14 +796,31 @@ struct EmptyStateView: View {
             case .noMatches:
                 Text(String(localized: "empty.noMatches", defaultValue: "No matches.", comment: "Inbox (Pro) or History while the search finds nothing."))
                     .font(.headline)
+                if !inHistory {
+                    Text(String(localized: "empty.noMatches.hint", defaultValue: "Try a file name or type like pdf.", comment: "Under 'No matches' on the inbox: what the search understands."))
+                        .foregroundStyle(.secondary)
+                }
             case .historyEmpty:
                 Text(String(localized: "history.empty", defaultValue: "Nothing in history yet.", comment: "History panel before any file has been recorded."))
                     .font(.headline)
             case .nothingNew:
-                Text(String(localized: "inbox.empty.title", defaultValue: "Nothing new.", comment: "Empty state of the inbox."))
+                Text(String(localized: "empty.noRecent.title", defaultValue: "No recent downloads", comment: "Empty state of the inbox when the watched folders hold nothing recent."))
                     .font(.headline)
-                Text(String(localized: "inbox.empty.body", defaultValue: "New downloads will show up here."))
+                Text(String(localized: "empty.noRecent.body", defaultValue: "New files in Downloads will show up here."))
                     .foregroundStyle(.secondary)
+                if let openDownloads {
+                    Button(String(localized: "empty.openDownloads", defaultValue: "Open Downloads Folder", comment: "Button under the empty inbox: opens the folder in Finder."), action: openDownloads)
+                        .accessibilityIdentifier("openDownloads")
+                }
+            case .nothingLastHour:
+                Text(String(localized: "empty.lastHour", defaultValue: "Nothing in the last hour", comment: "Empty state of the 1h chip."))
+                    .font(.headline)
+            case .nothingToday:
+                Text(String(localized: "empty.today", defaultValue: "Nothing today", comment: "Empty state of the Today chip."))
+                    .font(.headline)
+            case .caughtUp:
+                Text(String(localized: "empty.caughtUp", defaultValue: "You’re all caught up", comment: "Empty state of the Unread chip: every file has been opened or marked read."))
+                    .font(.headline)
             case .needsAccess:
                 Text(String(localized: "inbox.permission.title", defaultValue: "Downtray can't see your Downloads folder.", comment: "Empty state when macOS denied access. Keep the brand name."))
                     .multilineTextAlignment(.center)
@@ -682,6 +840,9 @@ struct EmptyStateView: View {
         case .noMatches: "magnifyingglass"
         case .historyEmpty: "clock"
         case .nothingNew: "tray"
+        case .nothingLastHour: "clock"
+        case .nothingToday: "calendar"
+        case .caughtUp: "checkmark.circle"
         }
     }
 }
