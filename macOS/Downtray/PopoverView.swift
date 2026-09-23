@@ -91,20 +91,18 @@ struct PopoverView: View {
                     Label(String(localized: "history.back", defaultValue: "Inbox", comment: "Back button on the History panel; returns to the inbox."), systemImage: "chevron.left")
                         .labelStyle(.titleAndIcon)
                 }
-                .buttonStyle(.link)
-                .font(.callout)
+                .navigationGlass()
                 .accessibilityIdentifier("historyBack")
                 Spacer()
                 Button(String(localized: "history.done", defaultValue: "Done", comment: "Trailing button on the History panel; returns to the inbox.")) {
                     presenter.dispatch(.setHistoryMode(false))
                 }
-                .buttonStyle(.link)
-                .font(.callout)
+                .navigationGlass()
                 .accessibilityIdentifier("historyDone")
             }
         }
-        .padding(.horizontal, 14)
-        .padding(.top, 12)
+        .padding(.horizontal, 10)
+        .padding(.top, 10)
         .padding(.bottom, 8)
     }
 
@@ -767,5 +765,21 @@ struct NoticeView: View {
         .shadow(color: .black.opacity(0.15), radius: 6, y: 2)
         .padding(.bottom, 44)
         .transition(.move(edge: .bottom).combined(with: .opacity))
+    }
+}
+
+private extension View {
+    /// The History panel's navigation buttons: Liquid Glass capsules on macOS 26 and later,
+    /// plain link buttons before that (the deployment target is macOS 14).
+    @ViewBuilder
+    func navigationGlass() -> some View {
+        if #available(macOS 26, *) {
+            self.buttonStyle(.glass)
+                .buttonBorderShape(.capsule)
+                .font(.callout)
+        } else {
+            self.buttonStyle(.link)
+                .font(.callout)
+        }
     }
 }
