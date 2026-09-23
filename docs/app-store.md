@@ -67,11 +67,16 @@ Still worth doing before submitting:
 - [ ] Run the Release build on a second Mac or a fresh user account: first-launch Downloads
       prompt, Desktop grant, login item approval, notification permission, a purchase with a
       Sandbox tester.
-- [ ] Look at the Pro screens (Settings > Rules, the rule editor sheet, the search field and
-      the History toggle in the popover) and adjust spacing and copy.
-- [ ] Localization: the string catalog is still empty because command-line builds do not
-      extract strings; build once in the Xcode IDE to populate `Localizable.xcstrings`, or
-      leave it, the app then ships English only.
+- [ ] Look at the Pro screens (Settings > Rules, the rule editor sheet, and the Pro sheet in
+      the popover) and adjust spacing and copy. The History panel was reworked per
+      `specs/history-spec.md` and checked in four languages.
+- [x] Localization: `Localizable.xcstrings` carries English, Japanese, German and French for
+      every UI string; `scripts/check-strings.sh` keeps code and catalog in step. The Japanese
+      and German texts were machine-drafted and need a native speaker's pass before the first
+      submission (French can ship with a spot check, per `specs/i18n-spec.md`).
+- [ ] Add the Japanese, German and French listings below in App Store Connect (subtitle,
+      promotional text, description, keywords, What's New). The name stays "Downtray" in every
+      storefront.
 - [ ] Replace the placeholder copyright holder ("Downtray") with the legal name.
 
 ## Review notes (paste into "Notes" for App Review)
@@ -81,16 +86,22 @@ Still worth doing before submitting:
 > macOS asks for access to the Downloads folder; please allow it, then drop any file into
 > ~/Downloads and it appears at the top of the list.
 >
-> The gear button opens Settings. The Pro in-app purchase ("Downtray Pro",
-> non-consumable) is on the Settings window; it unlocks extra watched folders, a longer list
-> with search, history, and rules. Rules act only on files that land in folders the user
+> The gear menu opens Settings. The Pro in-app purchase ("Downtray Pro",
+> non-consumable) is on the Settings window and on a sheet inside the popover; it unlocks
+> extra watched folders, a longer list, a searchable history, and rules. Rules act only on files that land in folders the user
 > chose to watch, with actions the user configured (move to a folder the user picked, move to
 > Trash with undo, mark as seen, or ask first). The app has no network access and collects no
 > data.
 
 ## App Store description (draft)
 
-**Subtitle** (30 chars): Your downloads, one key away
+One listing per language: English (U.S.) is the source; Japanese, German and French follow.
+Keywords are comma-separated without spaces, never repeat the name or the subtitle, and never
+contain "Downtray".
+
+### English (U.S.)
+
+**Subtitle** (30 chars): Inbox for new downloads
 
 **Promotional text**: Press ⌃⌥D and act on what just landed in Downloads: open, Quick Look,
 move, unzip or trash it, without leaving what you were doing.
@@ -103,24 +114,96 @@ they came from.
 
 Act on a file with one key: Return opens it, Space previews it, ⌘R reveals it in Finder, ⌘C
 copies its path, ⌘M moves it to a folder, ⌘U unzips it in place, and ⌫ moves it to the Trash
-with a five-second undo. Filter by type (PDF, images, archives, installers) or to today's
-files only. A badge on the menu bar icon counts what arrived while you were away, and an
-optional notification tells you the moment a download finishes.
+with a five-second undo. Narrow the list to the last hour, today, or what you have not
+opened yet, pick a type (Docs, Images, Media, Archives, Apps), or search by name or type. A
+badge on the menu bar icon counts the files you have not opened, and an optional
+notification tells you the moment a download finishes.
 
 Downtray Pro (one-time purchase) adds:
 • Extra folders: watch your Desktop, a scanner folder, an AirDrop target, anything.
-• A longer list, 200 files, with search.
-• History: every file that ever landed, even after you moved it.
+• A longer list, 200 files.
+• History: every file that ever landed, even after you moved it, with search.
 • Rules: sort arrivals automatically. Receipts from a shop into Receipts, installers
   straight to the Trash once opened, or just ask first.
 
 Private by design: no account, no network, no analytics. Everything stays on your Mac, inside
 the App Sandbox.
 
-**Keywords** (100 chars): downloads,menu bar,files,inbox,finder,quick look,unzip,organize,
-rules,productivity
+**Keywords** (100 chars): files,organize,AirDrop,finder,pdf,unzip,desktop,tray,menu bar,history
 
 **What's New (1.0.0)**: First release.
+
+### Japanese
+
+**Subtitle**: 新しいダウンロードの受信箱
+
+**Promotional text**: ⌃⌥D を押すだけで、ダウンロードに届いたばかりのファイルをその場で処理できます。開く、クイックルック、移動、解凍、ゴミ箱へ。作業を中断せずに。
+
+**Description**
+
+Downtray は、ダウンロードフォルダに届いたばかりのファイルをキー 1 つで手元に呼び出します。⌃⌥D を押すと、新しい順に並んだファイルが、クイックルックのサムネイルと入手元とともに表示されます。
+
+キー 1 つでファイルを操作できます。Return で開く、Space でプレビュー、⌘R で Finder に表示、⌘C でパスをコピー、⌘M でフォルダへ移動、⌘U でその場に解凍、⌫ でゴミ箱へ (5 秒間は取り消し可能)。「1時間」「今日」「未読」で絞り込み、種類 (書類、画像、メディア、アーカイブ、アプリ) を選び、名前や種類で検索できます。まだ開いていないファイルの数はメニューバーアイコンのバッジに表示され、必要ならダウンロード完了時に通知も受け取れます。
+
+Downtray Pro (買い切り) で追加されるもの:
+• 追加のフォルダ: デスクトップ、スキャナの保存先、AirDrop の保存先など、どのフォルダでも監視できます。
+• 長いリスト (200 件)。
+• 履歴: 移動したあとも、届いたファイルをすべて記録し、検索できます。
+• ルール: 新着を自動で整理します。ショップの領収書は「領収書」フォルダへ、開いたインストーラはそのままゴミ箱へ、または先に確認するだけ。
+
+プライバシー第一の設計: アカウント不要、ネットワーク接続なし、分析なし。すべては App Sandbox の中の、あなたの Mac に留まります。
+
+**Keywords**: ファイル,整理,AirDrop,Finder,PDF,解凍,デスクトップ,メニューバー,zip,履歴
+
+**What's New (1.0.0)**: 初回リリース。
+
+### German
+
+**Subtitle**: Eingang für neue Downloads
+
+**Promotional text**: Drücke ⌃⌥D und erledige, was gerade in Downloads gelandet ist: öffnen, Übersicht, bewegen, entpacken oder in den Papierkorb, ohne deine Arbeit zu unterbrechen.
+
+**Description**
+
+Downtray bringt die Dateien, die gerade in deinem Downloads-Ordner gelandet sind, mit einem Tastendruck zu dir. Drücke ⌃⌥D und die neuesten Dateien sind da, die jüngste zuoberst, mit Übersicht-Vorschau und Herkunft.
+
+Erledige eine Datei mit einer Taste: Zeilenschalter öffnet sie, Leertaste zeigt die Vorschau, ⌘R zeigt sie im Finder, ⌘C kopiert ihren Pfad, ⌘M bewegt sie in einen Ordner, ⌘U entpackt sie an Ort und Stelle und ⌫ legt sie in den Papierkorb, mit fünf Sekunden zum Widerrufen. Zeige nur die letzte Stunde, nur heute oder nur Ungelesenes, wähle einen Typ (Dokumente, Bilder, Medien, Archive, Apps) oder suche nach Name oder Typ. Ein Badge am Menüleistensymbol zählt die Dateien, die du noch nicht geöffnet hast, und auf Wunsch meldet eine Mitteilung den Moment, in dem ein Download fertig ist.
+
+Downtray Pro (einmaliger Kauf) ergänzt:
+• Weitere Ordner: überwache deinen Schreibtisch, einen Scanner-Ordner, ein AirDrop-Ziel, was du willst.
+• Eine längere Liste, 200 Dateien.
+• Verlauf: jede Datei, die je angekommen ist, auch nachdem du sie bewegt hast, mit Suche.
+• Regeln: neue Dateien automatisch sortieren. Belege eines Shops nach „Belege“, Installer nach dem Öffnen direkt in den Papierkorb, oder einfach erst nachfragen.
+
+Privat von Grund auf: kein Account, kein Netzwerk, keine Analyse. Alles bleibt auf deinem Mac, in der App-Sandbox.
+
+**Keywords**: Dateien,ordnen,AirDrop,Finder,PDF,entpacken,Schreibtisch,Menüleiste,zip,Verlauf
+
+**What's New (1.0.0)**: Erste Version.
+
+### French
+
+**Subtitle**: Vos nouveaux téléchargements
+
+**Promotional text**: Appuyez sur ⌃⌥D et agissez sur ce qui vient d’arriver dans Téléchargements : ouvrir, Coup d’œil, déplacer, décompresser ou mettre à la corbeille, sans quitter ce que vous faisiez.
+
+**Description**
+
+Downtray met les fichiers qui viennent d’arriver dans votre dossier Téléchargements à une touche de vous. Appuyez sur ⌃⌥D et les fichiers les plus récents sont là, du plus récent au plus ancien, avec une vignette Coup d’œil et leur provenance.
+
+Agissez sur un fichier avec une seule touche : Retour l’ouvre, Espace l’affiche en aperçu, ⌘R l’affiche dans le Finder, ⌘C copie son chemin, ⌘M le déplace vers un dossier, ⌘U le décompresse sur place et ⌫ le place dans la corbeille, avec cinq secondes pour annuler. Limitez la liste à la dernière heure, à aujourd’hui ou aux fichiers non lus, choisissez un type (Documents, Images, Médias, Archives, Apps) ou cherchez par nom ou par type. Un badge sur l’icône de la barre des menus compte les fichiers que vous n’avez pas encore ouverts, et une notification facultative vous prévient dès qu’un téléchargement se termine.
+
+Downtray Pro (achat unique) ajoute :
+• D’autres dossiers : surveillez votre Bureau, un dossier de scanner, une cible AirDrop, ce que vous voulez.
+• Une liste plus longue, 200 fichiers.
+• L’historique : chaque fichier jamais arrivé, même après l’avoir déplacé, avec recherche.
+• Les règles : triez automatiquement les nouveaux fichiers. Les reçus d’une boutique vers « Reçus », les installateurs directement à la corbeille une fois ouverts, ou simplement demander d’abord.
+
+Privé par conception : pas de compte, pas de réseau, pas d’analyse. Tout reste sur votre Mac, dans le bac à sable de l’app.
+
+**Keywords**: fichiers,ranger,AirDrop,Finder,PDF,décompresser,bureau,barre des menus,zip,historique
+
+**What's New (1.0.0)**: Première version.
 
 ## Privacy policy (draft, host at the privacy policy URL)
 

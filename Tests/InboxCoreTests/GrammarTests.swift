@@ -13,7 +13,10 @@ import Testing
             "panel open", "panel close", "hotkey", "filter today", "select a.pdf", "select a.pdf toggle",
             "select b.zip range", "focus a.pdf", "up", "down", "deselect", "open", "open a.pdf b.zip", "ql a.pdf",
             "reveal", "copy a.pdf", "move", "unzip b.zip", "trash a.pdf", "undo", "dismiss a.pdf", "seen",
-            "finder downloads", "desktop on", "login off", "notify on", "hotkey-set ctrl+alt+d",
+            "finder downloads", "desktop on", "login off", "notify on", "language ja", "language system", "hotkey-set ctrl+alt+d",
+            "filter 1h", "filter unread", "type docs", "type any", "type map foo docs", "type map foo none", "type reset",
+            "copy-name a.pdf", "read a.pdf", "unread", "clear-list", "folders on", "keep month", "read-on-close on", "badge off",
+            "older", "paywall off", "history gone", "forget a.pdf",
             "grant desktop", "unlock", "today 2026-09-23", "vanish b.zip",
         ]
         for line in lines {
@@ -65,7 +68,8 @@ import Testing
         #expect(snapshot.settings.hotkey == "⌃⌥D")
         let decoded = try? JSONDecoder().decode(Snapshot.self, from: Data(snapshot.json().utf8))
         #expect(decoded == snapshot)
-        #expect(snapshot.summary == "[open] all: 1 rows, 1 unread")
+        #expect(snapshot.rows[0].type == "docs")
+        #expect(snapshot.summary == "[open] all: 1 rows, 1 unread, badge 1")
     }
 
     @Test func bridgeResponseRoundTrips() throws {

@@ -12,30 +12,30 @@ struct SettingsView: View {
         Form {
             Section {
                 LabeledContent {
-                    Text("Always on").foregroundStyle(.secondary)
+                    Text(String(localized: "settings.alwaysOn", defaultValue: "Always on", comment: "Value next to the Downloads folder: it cannot be turned off.")).foregroundStyle(.secondary)
                 } label: {
-                    Text("Downloads")
+                    Text(FolderKind.downloads.localizedTitle)
                     Text(Self.displayPath(model.downloads?.path)).foregroundStyle(.secondary)
                 }
                 if model.downloads?.access == .denied {
                     LabeledContent {
-                        Button("Grant Access…") { presenter.dispatch(.grantAccess(.downloads)) }
+                        Button(String(localized: "settings.grantAccess", defaultValue: "Grant Access…", comment: "Opens the folder picker that grants access.")) { presenter.dispatch(.grantAccess(.downloads)) }
                     } label: {
-                        Text("Access needed")
-                        Text("macOS has not allowed Downtray to read this folder.").foregroundStyle(.secondary)
+                        Text(String(localized: "settings.accessNeeded", defaultValue: "Access needed", comment: "Row title when macOS denied a folder."))
+                        Text(String(localized: "settings.downloads.denied", defaultValue: "macOS has not allowed Downtray to read this folder.", comment: "Keep the brand name.")).foregroundStyle(.secondary)
                     }
                 }
                 Toggle(isOn: binding(\.watchDesktop) { .setWatchDesktop($0) }) {
-                    Text("Desktop")
-                    Text("Also list files that land on the Desktop.").foregroundStyle(.secondary)
+                    Text(FolderKind.desktop.localizedTitle)
+                    Text(String(localized: "settings.desktop.body", defaultValue: "Also list files that land on the Desktop.")).foregroundStyle(.secondary)
                 }
                 .toggleStyle(.switch)
                 if model.folder(.desktop)?.access == .denied {
                     LabeledContent {
-                        Button("Grant Access…") { presenter.dispatch(.grantAccess(.desktop)) }
+                        Button(String(localized: "settings.grantAccess", defaultValue: "Grant Access…")) { presenter.dispatch(.grantAccess(.desktop)) }
                     } label: {
-                        Text("Access needed")
-                        Text("Choose the Desktop folder to let Downtray watch it.").foregroundStyle(.secondary)
+                        Text(String(localized: "settings.accessNeeded", defaultValue: "Access needed"))
+                        Text(String(localized: "settings.desktop.denied", defaultValue: "Choose the Desktop folder to let Downtray watch it.", comment: "Keep the brand name.")).foregroundStyle(.secondary)
                     }
                 }
                 ForEach(model.customFolders, id: \.kind) { folder in
@@ -46,56 +46,259 @@ struct SettingsView: View {
                             Image(systemName: "minus.circle")
                         }
                         .buttonStyle(.borderless)
-                        .help("Stop watching this folder")
+                        .help(String(localized: "settings.folder.remove", defaultValue: "Stop watching this folder", comment: "Tooltip on the minus button next to a custom folder."))
                         .accessibilityIdentifier("removeFolder")
                     } label: {
-                        Text(folder.title)
+                        Text(folder.localizedTitle)
                         Text(folder.access == .denied
-                             ? String(localized: "Can't read this folder any more.")
+                             ? String(localized: "settings.folder.unreadable", defaultValue: "Can't read this folder any more.", comment: "Shown under a custom folder whose access was lost.")
                              : Self.displayPath(folder.path))
                             .foregroundStyle(folder.access == .denied ? Color.orange : Color.secondary)
                     }
                 }
                 LabeledContent {
-                    Button("Add Folder…") { presenter.dispatch(.addFolder) }
+                    Button(String(localized: "settings.addFolder", defaultValue: "Add Folder…", comment: "Opens the folder picker (Pro).")) { presenter.dispatch(.addFolder) }
                         .accessibilityIdentifier("addFolder")
                 } label: {
-                    Text("More folders")
+                    Text(String(localized: "settings.moreFolders", defaultValue: "More folders"))
                     Text(model.isPro
-                         ? String(localized: "Watch any other folder, such as a scanner or AirDrop target.")
-                         : String(localized: "Pro: watch any other folder."))
+                         ? String(localized: "settings.moreFolders.pro", defaultValue: "Watch any other folder, such as a scanner or AirDrop target.")
+                         : String(localized: "settings.moreFolders.free", defaultValue: "Pro: watch any other folder.", comment: "Shown in the free tier; 'Pro:' marks a paid feature."))
                         .foregroundStyle(.secondary)
                 }
+                Toggle(isOn: binding(\.includeFolders) { .setIncludeFolders($0) }) {
+                    Text(String(localized: "settings.includeFolders", defaultValue: "Include folders", comment: "Toggle: list folders that land in a watched folder, not only files."))
+                    Text(String(localized: "settings.includeFolders.body", defaultValue: "Also list folders that land in a watched folder, such as an unzipped download.")).foregroundStyle(.secondary)
+                }
+                .toggleStyle(.switch)
+                .accessibilityIdentifier("includeFolders")
             } header: {
-                Text("Folders")
+                Text(String(localized: "settings.folders", defaultValue: "Folders", comment: "Section title."))
             } footer: {
-                Text(model.isPro
-                     ? String(localized: "The inbox shows the 200 newest files from the folders it watches.")
-                     : String(localized: "The inbox shows the 20 newest files from the folders it watches."))
+                Text(String(localized: "settings.folders.footer", defaultValue: "The inbox shows the \(model.effectiveListLimit) newest files from the folders it watches.", comment: "Placeholder: 20 in the free tier, 200 with Pro."))
             }
 
-            Section("General") {
-                Toggle("Launch at login", isOn: binding(\.launchAtLogin) { .setLaunchAtLogin($0) })
-                LabeledContent("Show inbox") {
+            listSection
+
+            Section(String(localized: "settings.general", defaultValue: "General", comment: "Section title.")) {
+                Toggle(String(localized: "settings.launchAtLogin", defaultValue: "Launch at login"), isOn: binding(\.launchAtLogin) { .setLaunchAtLogin($0) })
+                LabeledContent(String(localized: "settings.hotkey", defaultValue: "Show inbox", comment: "Label of the keyboard shortcut recorder.")) {
                     HotkeyRecorder(hotkey: model.settings.hotkey) { presenter.dispatch(.setHotkey($0)) }
                 }
-                Toggle("Notify on new file", isOn: binding(\.notificationsEnabled) { .setNotifications($0) })
+                Toggle(String(localized: "settings.notifications", defaultValue: "Notify on new file", comment: "Toggle for system notifications."), isOn: binding(\.notificationsEnabled) { .setNotifications($0) })
+                languageRow
                 LabeledContent {
-                    Button("Quit Downtray") { NSApp.terminate(nil) }
+                    Button(String(localized: "app.quit", defaultValue: "Quit Downtray")) { NSApp.terminate(nil) }
                 } label: {
-                    Text("Quit")
-                    Text("Also in the menu bar icon's right-click menu, or ⌘Q while the inbox is open.")
+                    Text(String(localized: "settings.quit", defaultValue: "Quit"))
+                    Text(String(localized: "settings.quit.body", defaultValue: "Also in the menu bar icon's right-click menu, or ⌘Q while the inbox is open.", comment: "Keep the ⌘Q glyph."))
                         .foregroundStyle(.secondary)
                 }
             }
 
             proSection
             rulesSection
+            typesSection
+            dangerSection
         }
         .formStyle(.grouped)
         .frame(width: 440)
         .fixedSize(horizontal: false, vertical: true)
-        .navigationTitle("Downtray Settings")
+        .navigationTitle(String(localized: "settings.title", defaultValue: "Downtray Settings", comment: "Window title. Keep the brand name."))
+    }
+
+    // MARK: List, appearance
+
+    /// How long an item stays, and the two behaviours around reading.
+    @ViewBuilder
+    private var listSection: some View {
+        Section {
+            Picker(selection: Binding(get: { presenter.model.settings.retention }, set: { presenter.dispatch(.setRetention($0)) })) {
+                ForEach(Retention.allCases, id: \.self) { Text($0.localizedTitle).tag($0) }
+            } label: {
+                Text(String(localized: "settings.keepItems", defaultValue: "Keep items", comment: "Picker label: how long a file stays in the inbox after it arrived."))
+                Text(String(localized: "settings.keepItems.body", defaultValue: "Older files leave the inbox. They stay in their folder.")).foregroundStyle(.secondary)
+            }
+            .accessibilityIdentifier("retention")
+            Toggle(isOn: binding(\.markReadOnClose) { .setMarkReadOnClose($0) }) {
+                Text(String(localized: "settings.markReadOnClose", defaultValue: "Mark visible files as read when the inbox closes", comment: "Toggle in Settings › List."))
+            }
+            .toggleStyle(.switch)
+            .accessibilityIdentifier("markReadOnClose")
+            Toggle(isOn: binding(\.showBadge) { .setShowBadge($0) }) {
+                Text(String(localized: "settings.showBadge", defaultValue: "Show badge on the menu bar icon", comment: "Toggle in Settings › List."))
+                Text(String(localized: "settings.showBadge.body", defaultValue: "The badge counts unread files.")).foregroundStyle(.secondary)
+            }
+            .toggleStyle(.switch)
+            .accessibilityIdentifier("showBadge")
+        } header: {
+            Text(String(localized: "settings.list", defaultValue: "List", comment: "Section title: how the inbox list behaves."))
+        }
+    }
+
+    // MARK: Types
+
+    @State private var newExtension = ""
+    @State private var newGroup: TypeGroup = .docs
+
+    /// Which group the Type menu files an extension under, when the built-in table is wrong
+    /// for this user (a `.key` that is a license, not a Keynote deck).
+    @ViewBuilder
+    private var typesSection: some View {
+        Section {
+            let overrides = model.settings.typeOverrides.sorted { $0.key < $1.key }
+            ForEach(overrides, id: \.key) { ext, group in
+                LabeledContent {
+                    HStack(spacing: 8) {
+                        Picker("", selection: Binding(get: { presenter.model.settings.typeOverrides[ext] ?? group }, set: { presenter.dispatch(.setTypeOverride(ext, $0)) })) {
+                            ForEach(TypeGroup.allCases, id: \.self) { Text($0.localizedTitle).tag($0) }
+                        }
+                        .labelsHidden()
+                        .fixedSize()
+                        Button { presenter.dispatch(.setTypeOverride(ext, nil)) } label: { Image(systemName: "minus.circle") }
+                            .buttonStyle(.borderless)
+                            .help(String(localized: "settings.types.remove", defaultValue: "Remove this override", comment: "Tooltip on the minus button next to a type override."))
+                    }
+                } label: {
+                    Text(verbatim: ".\(ext)")
+                    Text(String(localized: "settings.types.builtIn", defaultValue: "Built in: \(TypeGroup.forExtension(ext).localizedTitle)", comment: "Under a type override: the group the extension would have without it. Placeholder: group name.")).foregroundStyle(.secondary)
+                }
+                .accessibilityIdentifier("typeOverride-\(ext)")
+            }
+            LabeledContent {
+                HStack(spacing: 8) {
+                    // In a grouped form a text field's title becomes a label beside it; the
+                    // example extension is wanted inside the field, so it is a prompt.
+                    TextField("", text: $newExtension, prompt: Text(String(localized: "settings.types.extension", defaultValue: "pdf", comment: "Placeholder of the extension field, an example extension.")))
+                        .labelsHidden()
+                        .multilineTextAlignment(.leading)
+                        .textFieldStyle(.roundedBorder)
+                        .frame(width: 80)
+                        .onSubmit(addOverride)
+                        .accessibilityIdentifier("newExtension")
+                    Picker("", selection: $newGroup) {
+                        ForEach(TypeGroup.allCases, id: \.self) { Text($0.localizedTitle).tag($0) }
+                    }
+                    .labelsHidden()
+                    .fixedSize()
+                    Button(String(localized: "settings.types.add", defaultValue: "Add", comment: "Button that saves a new type override."), action: addOverride)
+                        .disabled(newExtension.trimmingCharacters(in: CharacterSet(charactersIn: ". ")).isEmpty)
+                        .accessibilityIdentifier("addOverride")
+                }
+            } label: {
+                Text(String(localized: "settings.types.new", defaultValue: "Extension → group", comment: "Row label for adding a type override. Keep the arrow."))
+                Text(String(localized: "settings.types.body", defaultValue: "Decide which group the Type menu files an extension under.")).foregroundStyle(.secondary)
+            }
+            LabeledContent {
+                Button(String(localized: "settings.types.reset", defaultValue: "Reset to Defaults", comment: "Button: removes every type override.")) { presenter.dispatch(.resetTypeOverrides) }
+                    .disabled(model.settings.typeOverrides.isEmpty)
+                    .accessibilityIdentifier("resetOverrides")
+            } label: {
+                Text(model.settings.typeOverrides.isEmpty
+                     ? String(localized: "settings.types.none", defaultValue: "Built-in table", comment: "Status when no type override exists.")
+                     : String(localized: "settings.types.count", defaultValue: "\(model.settings.typeOverrides.count) overrides", comment: "Status line. Plural: 1 → '1 override'."))
+            }
+        } header: {
+            Text(String(localized: "settings.types", defaultValue: "Types", comment: "Section title: the extension-to-group table behind the Type menu."))
+        }
+    }
+
+    private func addOverride() {
+        let ext = newExtension.trimmingCharacters(in: CharacterSet(charactersIn: ". ")).lowercased()
+        guard !ext.isEmpty else { return }
+        presenter.dispatch(.setTypeOverride(ext, newGroup))
+        newExtension = ""
+    }
+
+    // MARK: Danger
+
+    @State private var confirmClear = false
+
+    @ViewBuilder
+    private var dangerSection: some View {
+        Section {
+            LabeledContent {
+                Button(String(localized: "settings.markAllRead", defaultValue: "Mark All as Read", comment: "Button in Settings › Danger.")) { presenter.dispatch(.markAllSeen) }
+                    .disabled(model.unreadCount == 0)
+                    .accessibilityIdentifier("markAllRead")
+            } label: {
+                Text(String(localized: "settings.markAllRead.body", defaultValue: "Clears every unread dot and the badge."))
+            }
+            LabeledContent {
+                Button(String(localized: "settings.clearList", defaultValue: "Clear List…", comment: "Button in Settings › Danger: empties the inbox.")) { confirmClear = true }
+                    .disabled(model.recentFiles.isEmpty)
+                    .accessibilityIdentifier("clearList")
+            } label: {
+                Text(String(localized: "settings.clearList.body", defaultValue: "Empties the inbox. Files stay in their folders; new arrivals show up again."))
+            }
+        } header: {
+            Text(String(localized: "settings.danger", defaultValue: "Danger", comment: "Section title: actions that cannot be undone."))
+        }
+        .confirmationDialog(
+            String(localized: "settings.clearList.confirm.title", defaultValue: "Clear the inbox list?", comment: "Confirmation before Clear List."),
+            isPresented: $confirmClear
+        ) {
+            Button(String(localized: "settings.clearList.confirm.button", defaultValue: "Clear List", comment: "Confirmation button."), role: .destructive) { presenter.dispatch(.clearList(Date())) }
+        } message: {
+            Text(String(localized: "settings.clearList.confirm.message", defaultValue: "No file is deleted. The inbox starts again from the next arrival.", comment: "Confirmation body."))
+        }
+    }
+
+    // MARK: Language
+
+    /// A pick that needs a relaunch, waiting for the alert's answer. `.some(nil)` is "System".
+    /// Relaunch Now saves it and restarts; Later drops it, so the picker stays where it was.
+    @State private var relaunchPrompt: AppLanguage?? = nil
+
+    @ViewBuilder
+    private var languageRow: some View {
+        Picker(
+            String(localized: "settings.language", defaultValue: "Language", comment: "Picker label in General."),
+            selection: Binding(get: { presenter.model.settings.language }, set: { choice in
+                if Self.languageAtNextLaunch(for: choice) == Self.runningLanguage {
+                    presenter.dispatch(.setLanguage(choice))
+                } else {
+                    relaunchPrompt = .some(choice)
+                }
+            })
+        ) {
+            Text(String(localized: "settings.language.system", defaultValue: "System", comment: "Picker option: follow the macOS language.")).tag(AppLanguage?.none)
+            Divider()
+            ForEach(AppLanguage.allCases, id: \.self) { Text(verbatim: $0.endonym).tag(AppLanguage?.some($0)) }
+        }
+        .accessibilityIdentifier("language")
+        .alert(
+            String(localized: "settings.language.alert.title", defaultValue: "Relaunch Downtray to switch to \(Self.name(of: relaunchPrompt ?? nil))?", comment: "Alert after the language picker changed. Placeholder: the chosen language's own name (日本語) or 'System'. Keep the brand name."),
+            isPresented: Binding(get: { relaunchPrompt != nil }, set: { if !$0 { relaunchPrompt = nil } })
+        ) {
+            Button(String(localized: "settings.language.relaunchNow", defaultValue: "Relaunch Now", comment: "Alert button: save the language and restart the app.")) {
+                if let choice = relaunchPrompt {
+                    presenter.dispatch(.setLanguage(choice))
+                    // After the alert has closed: a quit requested while a sheet is closing stalls.
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { AppDelegate.relaunch() }
+                }
+            }
+            Button(String(localized: "settings.language.later", defaultValue: "Later", comment: "Alert button: keep the current language; the pick is discarded."), role: .cancel) {}
+        } message: {
+            Text(String(localized: "settings.language.alert.message", defaultValue: "The language changes when Downtray restarts. Later keeps the current language.", comment: "Alert body under the relaunch question. Keep the brand name."))
+        }
+    }
+
+    /// What the alert calls the choice: the endonym, or the "System" option's label.
+    private static func name(of choice: AppLanguage?) -> String {
+        choice?.endonym ?? String(localized: "settings.language.system", defaultValue: "System")
+    }
+
+    /// The localization this process shows ("ja"). Foundation picks it once, at launch.
+    private static let runningLanguage = Bundle.main.preferredLocalizations.first ?? "en"
+
+    /// The localization the next launch will show: the choice, or for "System" the first of the
+    /// user's macOS languages that the app ships. The system list is read from the global domain,
+    /// since inside the app `Locale.preferredLanguages` already reflects the app's own override.
+    private static func languageAtNextLaunch(for choice: AppLanguage?) -> String {
+        if let choice { return choice.rawValue }
+        let system = UserDefaults.standard.persistentDomain(forName: UserDefaults.globalDomain)?["AppleLanguages"] as? [String] ?? []
+        return Bundle.preferredLocalizations(from: Bundle.main.localizations, forPreferences: system).first ?? "en"
     }
 
     // MARK: Pro
@@ -107,36 +310,37 @@ struct SettingsView: View {
     private var proSection: some View {
         Section {
             if model.isPro {
-                LabeledContent("Pro") {
-                    Label("Unlocked", systemImage: "checkmark.seal.fill").foregroundStyle(.green)
+                LabeledContent(String(localized: "settings.pro", defaultValue: "Pro", comment: "Section title and row label for the paid tier. Usually left as 'Pro'.")) {
+                    Label(String(localized: "settings.pro.unlocked", defaultValue: "Unlocked", comment: "Status next to Pro after purchase."), systemImage: "checkmark.seal.fill").foregroundStyle(.green)
                 }
                 LabeledContent {
-                    Button("Clear History") { presenter.dispatch(.clearHistory) }
+                    Button(String(localized: "settings.history.clear", defaultValue: "Clear History")) { presenter.dispatch(.clearHistory) }
                         .disabled(model.history.isEmpty)
                 } label: {
-                    Text("History")
+                    Text(String(localized: "settings.history", defaultValue: "History", comment: "Row label."))
                     Text(historySummary).foregroundStyle(.secondary)
                 }
             } else {
                 LabeledContent {
-                    Button(proPrice.map { String(localized: "Unlock Pro — \($0)") } ?? String(localized: "Unlock Pro…")) {
+                    Button(proPrice.map { String(localized: "pro.unlock.buttonWithPrice", defaultValue: "Unlock Pro — \($0)", comment: "Purchase button. Placeholder: localized price, e.g. $7.99.") }
+                           ?? String(localized: "pro.unlock.button", defaultValue: "Unlock Pro…", comment: "Purchase button while the price is unknown.")) {
                         presenter.dispatch(.unlockPro)
                     }
                     .accessibilityIdentifier("unlockPro")
                 } label: {
-                    Text("Pro")
-                    Text("Extra folders, 200-file list with search, full history, and rules. One-time purchase.")
+                    Text(String(localized: "settings.pro", defaultValue: "Pro"))
+                    Text(String(localized: "pro.unlock.body", defaultValue: "Extra folders, 200-file list with search, full history, and rules. One-time purchase.", comment: "What Pro adds."))
                         .foregroundStyle(.secondary)
                 }
-                Button("Restore Purchases") { presenter.dispatch(.restorePurchases) }
+                Button(String(localized: "pro.restore", defaultValue: "Restore Purchases", comment: "Standard App Store wording.")) { presenter.dispatch(.restorePurchases) }
             }
             if let toast = model.toast {
-                Text(toast.message)
+                Text(toast.text.localized)
                     .font(.caption)
                     .foregroundStyle(toast.isError ? Color.orange : Color.secondary)
             }
         } header: {
-            Text("Pro")
+            Text(String(localized: "settings.pro", defaultValue: "Pro"))
         }
         .task {
             if !model.isPro { proPrice = await (presenter.services as? MacServices)?.proPrice() }
@@ -146,8 +350,8 @@ struct SettingsView: View {
     private var historySummary: String {
         let count = model.history.count
         return count == 0
-            ? String(localized: "No files remembered yet.")
-            : String(localized: "\(count) files remembered. The History button in the inbox lists them.")
+            ? String(localized: "settings.history.empty", defaultValue: "No files remembered yet.")
+            : String(localized: "settings.history.count", defaultValue: "\(count) files remembered. The History button in the inbox lists them.", comment: "Placeholder: number of remembered files.")
     }
 
     @ViewBuilder
@@ -169,30 +373,30 @@ struct SettingsView: View {
                         .controlSize(.small)
                         Button { editingRule = rule } label: { Image(systemName: "pencil") }
                             .buttonStyle(.borderless)
-                            .help("Edit rule")
+                            .help(String(localized: "rule.edit", defaultValue: "Edit rule", comment: "Tooltip on the pencil button."))
                         Button { presenter.dispatch(.removeRule(rule.id)) } label: { Image(systemName: "minus.circle") }
                             .buttonStyle(.borderless)
-                            .help("Delete rule")
+                            .help(String(localized: "rule.delete", defaultValue: "Delete rule", comment: "Tooltip on the minus button."))
                     }
                 } label: {
                     Text(rule.name)
-                    Text(rule.summary).foregroundStyle(.secondary)
+                    Text(rule.localizedSummary).foregroundStyle(.secondary)
                 }
                 .disabled(!model.isPro)
             }
             LabeledContent {
-                Button("Add Rule…") { editingRule = Rule(name: "", action: .markSeen) }
+                Button(String(localized: "rule.add", defaultValue: "Add Rule…", comment: "Opens the rule editor (Pro).")) { editingRule = Rule(name: "", action: .markSeen) }
                     .disabled(!model.isPro)
                     .accessibilityIdentifier("addRule")
             } label: {
-                Text(model.settings.rules.isEmpty ? String(localized: "No rules yet") : String(localized: "New rule"))
+                Text(model.settings.rules.isEmpty ? String(localized: "rule.none", defaultValue: "No rules yet") : String(localized: "rule.new", defaultValue: "New rule"))
                 Text(model.isPro
-                     ? String(localized: "Sort arrivals automatically: move, trash, mark seen, or ask.")
-                     : String(localized: "Pro: sort arrivals automatically."))
+                     ? String(localized: "rule.body.pro", defaultValue: "Sort arrivals automatically: move, trash, mark seen, or ask.")
+                     : String(localized: "rule.body.free", defaultValue: "Pro: sort arrivals automatically.", comment: "Shown in the free tier; 'Pro:' marks a paid feature."))
                     .foregroundStyle(.secondary)
             }
         } header: {
-            Text("Rules")
+            Text(String(localized: "settings.rules", defaultValue: "Rules", comment: "Section title."))
         }
         .sheet(item: $editingRule) { rule in
             RuleEditor(rule: rule, isNew: !model.settings.rules.contains { $0.id == rule.id }) { saved in
@@ -231,10 +435,10 @@ struct RuleEditor: View {
         var id: String { rawValue }
         var title: String {
             switch self {
-            case .moveTo: return String(localized: "Move to a folder")
-            case .trash: return String(localized: "Move to Trash")
-            case .markSeen: return String(localized: "Mark as seen")
-            case .suggestTrash: return String(localized: "Ask whether to trash it")
+            case .moveTo: return String(localized: "rule.action.moveTo", defaultValue: "Move to a folder", comment: "Rule editor, 'Then' picker option.")
+            case .trash: return String(localized: "rule.action.trash", defaultValue: "Move to Trash", comment: "Rule editor, 'Then' picker option.")
+            case .markSeen: return String(localized: "rule.action.markSeen", defaultValue: "Mark as seen", comment: "Rule editor, 'Then' picker option.")
+            case .suggestTrash: return String(localized: "rule.action.suggestTrash", defaultValue: "Ask whether to trash it", comment: "Rule editor, 'Then' picker option: show a notice instead of acting.")
             }
         }
     }
@@ -265,35 +469,35 @@ struct RuleEditor: View {
     var body: some View {
         VStack(spacing: 0) {
             Form {
-                Section("Rule") {
-                    TextField("Name", text: $rule.name, prompt: Text("Invoices to Documents"))
-                    Picker("When", selection: $rule.trigger) {
-                        ForEach(RuleTrigger.allCases, id: \.self) { Text($0.title).tag($0) }
+                Section(String(localized: "rule.editor.section", defaultValue: "Rule", comment: "Rule editor section title.")) {
+                    TextField(String(localized: "rule.name", defaultValue: "Name"), text: $rule.name, prompt: Text(String(localized: "rule.name.prompt", defaultValue: "Invoices to Documents", comment: "Example rule name shown as a placeholder.")))
+                    Picker(String(localized: "rule.when", defaultValue: "When", comment: "Rule editor: which event triggers the rule."), selection: $rule.trigger) {
+                        ForEach(RuleTrigger.allCases, id: \.self) { Text($0.localizedTitle).tag($0) }
                     }
                 }
                 Section {
-                    Picker("Kind", selection: $rule.match.kind) {
-                        Text("Any").tag(FileKind?.none)
-                        ForEach(FileKind.allCases, id: \.self) { Text($0.label).tag(FileKind?.some($0)) }
+                    Picker(String(localized: "rule.kind", defaultValue: "Kind", comment: "Rule editor: file kind to match."), selection: $rule.match.kind) {
+                        Text(String(localized: "rule.kind.any", defaultValue: "Any", comment: "Rule editor: match every file kind.")).tag(FileKind?.none)
+                        ForEach(FileKind.allCases, id: \.self) { Text($0.localizedLabel).tag(FileKind?.some($0)) }
                     }
-                    TextField("Extension", text: optional($rule.match.fileExtension), prompt: Text("pdf"))
-                    TextField("Name contains", text: optional($rule.match.nameContains), prompt: Text("invoice"))
-                    TextField("Downloaded from", text: optional($rule.match.host), prompt: Text("example.com"))
+                    TextField(String(localized: "rule.extension", defaultValue: "Extension", comment: "Rule editor: file extension to match."), text: optional($rule.match.fileExtension), prompt: Text(verbatim: "pdf"))
+                    TextField(String(localized: "rule.nameContains", defaultValue: "Name contains"), text: optional($rule.match.nameContains), prompt: Text(String(localized: "rule.nameContains.prompt", defaultValue: "invoice", comment: "Example text shown as a placeholder.")))
+                    TextField(String(localized: "rule.host", defaultValue: "Downloaded from", comment: "Rule editor: web host the file came from."), text: optional($rule.match.host), prompt: Text(verbatim: "example.com"))
                 } header: {
-                    Text("Match")
+                    Text(String(localized: "rule.match", defaultValue: "Match", comment: "Rule editor section title: the conditions."))
                 } footer: {
-                    Text("Leave a field empty to match any file. All filled fields must match.")
+                    Text(String(localized: "rule.match.footer", defaultValue: "Leave a field empty to match any file. All filled fields must match."))
                 }
-                Section("Then") {
-                    Picker("Action", selection: $actionChoice) {
+                Section(String(localized: "rule.then", defaultValue: "Then", comment: "Rule editor section title: the action.")) {
+                    Picker(String(localized: "rule.action", defaultValue: "Action"), selection: $actionChoice) {
                         ForEach(ActionChoice.allCases) { Text($0.title).tag($0) }
                     }
                     if actionChoice == .moveTo {
-                        LabeledContent("Folder") {
+                        LabeledContent(String(localized: "rule.folder", defaultValue: "Folder", comment: "Rule editor: destination folder.")) {
                             HStack {
-                                Text(destination.isEmpty ? String(localized: "None chosen") : (destination as NSString).lastPathComponent)
+                                Text(destination.isEmpty ? String(localized: "rule.folder.none", defaultValue: "None chosen", comment: "Rule editor: no destination picked yet.") : (destination as NSString).lastPathComponent)
                                     .foregroundStyle(destination.isEmpty ? .secondary : .primary)
-                                Button("Choose…", action: chooseDestination)
+                                Button(String(localized: "rule.folder.choose", defaultValue: "Choose…"), action: chooseDestination)
                             }
                         }
                     }
@@ -301,10 +505,10 @@ struct RuleEditor: View {
             }
             .formStyle(.grouped)
             HStack {
-                Button("Cancel", role: .cancel) { finish(nil) }
+                Button(String(localized: "common.cancel", defaultValue: "Cancel"), role: .cancel) { finish(nil) }
                     .keyboardShortcut(.cancelAction)
                 Spacer()
-                Button(isNew ? "Add" : "Save") { finish(built) }
+                Button(isNew ? String(localized: "common.add", defaultValue: "Add", comment: "Rule editor: saves a new rule.") : String(localized: "common.save", defaultValue: "Save")) { finish(built) }
                     .keyboardShortcut(.defaultAction)
                     .disabled(!canSave)
             }
@@ -336,8 +540,8 @@ struct RuleEditor: View {
         panel.canChooseDirectories = true
         panel.canChooseFiles = false
         panel.canCreateDirectories = true
-        panel.prompt = String(localized: "Choose")
-        panel.message = String(localized: "Files matching this rule will be moved here.")
+        panel.prompt = String(localized: "rule.destination.prompt", defaultValue: "Choose", comment: "Folder picker button. Keep short.")
+        panel.message = String(localized: "rule.destination.message", defaultValue: "Files matching this rule will be moved here.", comment: "Folder picker heading.")
         guard panel.runModal() == .OK, let url = panel.url else { return }
         MacServices.rememberDestination(url)
         destination = url.path
@@ -362,7 +566,7 @@ struct HotkeyRecorder: View {
         Button {
             recording ? stop() : startRecording()
         } label: {
-            Text(recording ? String(localized: "Press keys…") : hotkey.display)
+            Text(recording ? String(localized: "hotkey.recording", defaultValue: "Press keys…", comment: "Shortcut recorder while it waits for a key combination.") : hotkey.display)
                 .frame(minWidth: 90)
         }
         .keyboardShortcut(recording ? nil : KeyboardShortcut(.escape, modifiers: []))

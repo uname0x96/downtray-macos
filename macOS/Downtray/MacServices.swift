@@ -13,6 +13,8 @@ final class MacServices: InboxServices {
     weak var quickLookHost: PopoverHostingController?
     var onHotkey: (() -> Void)?
     var onNotificationOpen: ((FileID) -> Void)?
+    /// A file was gone by the time Open or Reveal reached it; the row turns into a Gone row.
+    var onFileVanished: ((FileID) -> Void)?
     #if DEBUG
     /// Set by the debug bridge so a script can answer the "Move to…" panel without a human.
     var scriptedDestination: String?
@@ -32,6 +34,7 @@ final class MacServices: InboxServices {
         static let settings = "settings"
         static let bookmarks = "folderBookmarks"
         static let destinations = "destinationBookmarks"
+        static let appleLanguages = "AppleLanguages"
     }
 
     /// The one-time Pro purchase (App Store Connect product id).
@@ -54,6 +57,8 @@ final class MacServices: InboxServices {
         }
         // The system is the source of truth for the login item.
         settings.launchAtLogin = SMAppService.mainApp.status == .enabled
+        // A per-app language chosen in System Settings shows up in the picker as well.
+        if settings.language == nil, let override = languageOverride { settings.language = override }
 
         var folders = WatchedFolder.standard
         for index in folders.indices {
@@ -79,6 +84,22 @@ final class MacServices: InboxServices {
         if let data = try? JSONEncoder().encode(settings) {
             defaults.set(data, forKey: Keys.settings)
         }
+        // Foundation reads `AppleLanguages` from the app's defaults at launch; System Settings >
+        // Language & Region > Applications writes the same key, so both routes agree.
+        if let language = settings.language {
+            defaults.set([language.rawValue], forKey: Keys.appleLanguages)
+        } else {
+            defaults.removeObject(forKey: Keys.appleLanguages)
+        }
+    }
+
+    /// The language System Settings (or an earlier save) put in the app's own defaults domain.
+    /// `object(forKey:)` would fall through to the global list of system languages.
+    private var languageOverride: AppLanguage? {
+        guard let bundleID = Bundle.main.bundleIdentifier,
+              let languages = defaults.persistentDomain(forName: bundleID)?[Keys.appleLanguages] as? [String],
+              let first = languages.first else { return nil }
+        return AppLanguage(rawValue: String(first.prefix(2)))
     }
 
     private static func isReadable(_ path: String) -> Bool {
@@ -153,8 +174,8 @@ final class MacServices: InboxServices {
         panel.canChooseFiles = false
         panel.allowsMultipleSelection = false
         panel.canCreateDirectories = false
-        panel.prompt = String(localized: "Grant Access")
-        panel.message = String(localized: "Downtray needs access to your \(kind.title) folder to list new files.")
+        panel.prompt = String(localized: "access.prompt", defaultValue: "Grant Access", comment: "Folder picker button. Keep short.")
+        panel.message = String(localized: "access.message", defaultValue: "Downtray needs access to your \(kind.localizedTitle) folder to list new files.", comment: "Folder picker heading. Placeholder: Downloads or Desktop. Keep the brand name.")
         if let standard { panel.directoryURL = URL(fileURLWithPath: standard) }
         NSApp.activate()
         let response = await panel.begin()
@@ -167,7 +188,17 @@ final class MacServices: InboxServices {
 
     func open(_ files: [InboxFile]) {
         // Quarantined files go through Gatekeeper as they would from Finder.
-        for file in files { NSWorkspace.shared.open(URL(fileURLWithPath: file.path)) }
+        for file in stillPresent(files) { NSWorkspace.shared.open(URL(fileURLWithPath: file.path)) }
+    }
+
+    /// Drops files that vanished between render and click and reports each, so the watcher's
+    /// own removal event is not the first the model hears of it.
+    private func stillPresent(_ files: [InboxFile]) -> [InboxFile] {
+        files.filter { file in
+            if FileManager.default.fileExists(atPath: file.path) { return true }
+            onFileVanished?(file.id)
+            return false
+        }
     }
 
     func quickLook(_ files: [InboxFile]) {
@@ -175,7 +206,9 @@ final class MacServices: InboxServices {
     }
 
     func reveal(_ files: [InboxFile]) {
-        NSWorkspace.shared.activateFileViewerSelecting(files.map { URL(fileURLWithPath: $0.path) })
+        let urls = stillPresent(files).map { URL(fileURLWithPath: $0.path) }
+        guard !urls.isEmpty else { return }
+        NSWorkspace.shared.activateFileViewerSelecting(urls)
     }
 
     func copyToPasteboard(_ text: String) {
@@ -197,8 +230,8 @@ final class MacServices: InboxServices {
         panel.canChooseFiles = false
         panel.canCreateDirectories = true
         panel.allowsMultipleSelection = false
-        panel.prompt = String(localized: "Move")
-        panel.message = String(localized: "Choose where to move the selected files.")
+        panel.prompt = String(localized: "move.prompt", defaultValue: "Move", comment: "Folder picker button. Keep short.")
+        panel.message = String(localized: "move.message", defaultValue: "Choose where to move the selected files.", comment: "Folder picker heading.")
         NSApp.activate()
         let response = await panel.begin()
         guard response == .OK, let url = panel.url else { return nil }
@@ -255,7 +288,7 @@ final class MacServices: InboxServices {
         do {
             try FileManager.default.createDirectory(at: output, withIntermediateDirectories: false)
         } catch {
-            return .failure(ServiceError("Could not create \(output.lastPathComponent)"))
+            return .failure(ServiceError(String(localized: "error.createFolder", defaultValue: "Could not create \(output.lastPathComponent)", comment: "Error toast. Placeholder: folder name.")))
         }
         // `ditto` preserves resource forks and permissions the way Finder's Archive Utility does.
         // It runs inside the app's sandbox, so it can only write where the app can.
@@ -277,7 +310,7 @@ final class MacServices: InboxServices {
         try? FileManager.default.removeItem(at: output)
         let message = String(decoding: errors.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
             .trimmingCharacters(in: .whitespacesAndNewlines)
-        return .failure(ServiceError(message.isEmpty ? "Could not extract \(file.name)" : message))
+        return .failure(ServiceError(message.isEmpty ? String(localized: "error.extract", defaultValue: "Could not extract \(file.name)", comment: "Error toast. Placeholder: archive name.") : message))
     }
 
     func trash(_ files: [InboxFile]) async -> Result<[TrashedItem], ServiceError> {
@@ -292,7 +325,7 @@ final class MacServices: InboxServices {
                 for item in items {
                     try? FileManager.default.moveItem(atPath: item.trashedPath, toPath: item.file.path)
                 }
-                return .failure(ServiceError("Could not move \(file.name) to the Trash"))
+                return .failure(ServiceError(String(localized: "error.trash", defaultValue: "Could not move \(file.name) to the Trash", comment: "Error toast. Placeholder: file name.")))
             }
         }
         return .success(items)
@@ -365,8 +398,8 @@ final class MacServices: InboxServices {
         panel.canChooseFiles = false
         panel.canCreateDirectories = false
         panel.allowsMultipleSelection = false
-        panel.prompt = String(localized: "Watch")
-        panel.message = String(localized: "Choose a folder to watch. New files landing there will show up in the inbox.")
+        panel.prompt = String(localized: "watch.prompt", defaultValue: "Watch", comment: "Folder picker button. Keep short.")
+        panel.message = String(localized: "watch.message", defaultValue: "Choose a folder to watch. New files landing there will show up in the inbox.", comment: "Folder picker heading.")
         NSApp.activate(ignoringOtherApps: true)
         let response = await panel.begin()
         guard response == .OK, let url = panel.url else { return nil }
@@ -406,21 +439,21 @@ final class MacServices: InboxServices {
     func purchasePro() async -> Result<Bool, ServiceError> {
         do {
             guard let product = try await Product.products(for: [Self.proProductID]).first else {
-                return .failure(ServiceError(String(localized: "Pro is not available in this build.")))
+                return .failure(ServiceError(String(localized: "pro.error.unavailable", defaultValue: "Pro is not available in this build.", comment: "Purchase error when the store has no product.")))
             }
             switch try await product.purchase() {
             case .success(let verification):
                 guard case .verified(let transaction) = verification else {
-                    return .failure(ServiceError(String(localized: "The purchase could not be verified.")))
+                    return .failure(ServiceError(String(localized: "pro.error.unverified", defaultValue: "The purchase could not be verified.", comment: "Purchase error.")))
                 }
                 await transaction.finish()
                 return .success(true)
             case .userCancelled:
-                return .failure(ServiceError(String(localized: "Purchase cancelled.")))
+                return .failure(ServiceError(String(localized: "pro.error.cancelled", defaultValue: "Purchase cancelled.", comment: "Shown when the user closes the purchase sheet.")))
             case .pending:
-                return .failure(ServiceError(String(localized: "The purchase is waiting for approval.")))
+                return .failure(ServiceError(String(localized: "pro.error.pending", defaultValue: "The purchase is waiting for approval.", comment: "Purchase needs Ask to Buy approval.")))
             @unknown default:
-                return .failure(ServiceError(String(localized: "The purchase did not complete.")))
+                return .failure(ServiceError(String(localized: "pro.error.incomplete", defaultValue: "The purchase did not complete.", comment: "Purchase error.")))
             }
         } catch {
             return .failure(ServiceError(error.localizedDescription))
@@ -434,7 +467,7 @@ final class MacServices: InboxServices {
             return .failure(ServiceError(error.localizedDescription))
         }
         let owned = await proStatus()
-        return owned ? .success(true) : .failure(ServiceError(String(localized: "No Pro purchase found for this Apple Account.")))
+        return owned ? .success(true) : .failure(ServiceError(String(localized: "pro.error.notFound", defaultValue: "No Pro purchase found for this Apple Account.", comment: "Restore Purchases found nothing. 'Apple Account' is Apple's term.")))
     }
 
     /// Localized price of the Pro product, for the settings button; nil until the store answers.
@@ -457,7 +490,7 @@ final class NotificationRelay: NSObject, UNUserNotificationCenterDelegate {
         super.init()
         let center = UNUserNotificationCenter.current()
         center.delegate = self
-        let open = UNNotificationAction(identifier: Self.openAction, title: String(localized: "Open"), options: [.foreground])
+        let open = UNNotificationAction(identifier: Self.openAction, title: String(localized: "notification.open", defaultValue: "Open", comment: "Button on a notification."), options: [.foreground])
         center.setNotificationCategories([
             UNNotificationCategory(identifier: Self.category, actions: [open], intentIdentifiers: [], options: []),
         ])
@@ -478,8 +511,8 @@ final class NotificationRelay: NSObject, UNUserNotificationCenterDelegate {
         let content = UNMutableNotificationContent()
         content.title = latest.name
         content.body = burst.count == 1
-            ? String(localized: "New in \(latest.folderName)")
-            : String(localized: "and \(burst.count - 1) more new files")
+            ? String(localized: "notification.newIn", defaultValue: "New in \(latest.folderName)", comment: "Notification body. Placeholder: folder name.")
+            : String(localized: "notification.more", defaultValue: "and \(burst.count - 1) more new files", comment: "Notification body under the newest file's name. Placeholder: how many others arrived. Plural: 1 → 'and 1 more new file'.")
         content.categoryIdentifier = Self.category
         content.userInfo = ["path": latest.path]
         burst = []

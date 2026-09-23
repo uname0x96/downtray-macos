@@ -13,6 +13,8 @@ public struct Snapshot: Codable, Equatable, Sendable {
         public let showFolder: Bool
         public let size: Int64
         public let kind: String
+        /// "docs", "images", "media", "archives", "apps" or "other".
+        public let type: String
         public let source: String?
         public let addedAt: String
         public let unread: Bool
@@ -47,9 +49,20 @@ public struct Snapshot: Codable, Equatable, Sendable {
         public let hotkey: String
         public let notifications: Bool
         public let watchDesktop: Bool
+        public let includeFolders: Bool
+        /// "day", "week" or "month".
+        public let retention: String
+        public let markReadOnClose: Bool
+        public let showBadge: Bool
+        public let typeOverrides: [String: String]
+        /// The remembered chip and Type menu ("any" when none).
+        public let selectedChip: String
+        public let selectedType: String
         public let pro: Bool
         public let extraFolders: [String]
         public let rules: [RuleView]
+        /// "en", "ja", "de", "fr", or nil when the app follows macOS.
+        public let language: String?
     }
 
     public struct ToastView: Codable, Equatable, Sendable {
@@ -64,12 +77,22 @@ public struct Snapshot: Codable, Equatable, Sendable {
     }
 
     public let panelOpen: Bool
+    /// The chip: "all", "1h", "today" or "unread".
     public let filter: String
     public let filters: [String]
+    /// The Type menu: "any", or a group.
+    public let type: String
+    public let types: [String]
+    /// Inbox files per chip, before the Type menu and the search (the chip badges).
+    public let counts: [String: Int]
+    /// Unread files in the inbox (0 when the badge is switched off).
     public let badge: Int
     public let unread: Int
-    /// "needsAccess", "nothingNew", or nil when rows are shown.
+    /// "needsAccess", "nothingNew", "nothingLastHour", "nothingToday", "caughtUp",
+    /// "historyEmpty", "noMatches", or nil when rows are shown.
     public let emptyState: String?
+    /// Section header before each row in the inbox (All and Today chips), else nil.
+    public let sections: [String]?
     public let rows: [Row]
     public let selection: [FileID]
     public let focused: FileID?
@@ -79,14 +102,25 @@ public struct Snapshot: Codable, Equatable, Sendable {
     public let folders: [Folder]
     public let settings: SettingsView
     public let historyMode: Bool
+    /// "all", "available" or "gone".
+    public let historyFilter: String
     public let historyCount: Int
     public let query: String
     public let suggestion: SuggestionView?
+    /// The list ends with a "Show older files" row.
+    public let olderFiles: Bool
+    /// The Pro sheet is up.
+    public let paywall: Bool
 
     public init(_ model: InboxModel) {
         panelOpen = model.panelOpen
         filter = model.filter.rawValue
         filters = FileFilter.allCases.map(\.rawValue)
+        type = model.typeFilter?.rawValue ?? "any"
+        types = ["any"] + TypeGroup.menuCases.map(\.rawValue)
+        counts = Dictionary(uniqueKeysWithValues: FileFilter.allCases.filter { $0 != .all }.map { ($0.rawValue, model.count(for: $0)) })
+        let grouped = model.inboxSections
+        sections = grouped.isEmpty ? nil : grouped.flatMap { section in section.files.map { _ in section.section.rawValue } }
         badge = model.badgeCount
         unread = model.unreadCount
         emptyState = model.emptyState?.rawValue
@@ -99,6 +133,7 @@ public struct Snapshot: Codable, Equatable, Sendable {
                 showFolder: duplicates.contains(file.name),
                 size: file.size,
                 kind: file.kind.rawValue,
+                type: file.typeGroup(overrides: model.settings.typeOverrides).rawValue,
                 source: file.source.label,
                 addedAt: file.addedAt.formatted(.iso8601),
                 unread: file.unread,
@@ -121,14 +156,25 @@ public struct Snapshot: Codable, Equatable, Sendable {
             hotkey: model.settings.hotkey.display,
             notifications: model.settings.notificationsEnabled,
             watchDesktop: model.settings.watchDesktop,
+            includeFolders: model.settings.includeFolders,
+            retention: model.settings.retention.rawValue,
+            markReadOnClose: model.settings.markReadOnClose,
+            showBadge: model.settings.showBadge,
+            typeOverrides: model.settings.typeOverrides.mapValues(\.rawValue),
+            selectedChip: model.settings.selectedChip.rawValue,
+            selectedType: model.settings.selectedType?.rawValue ?? "any",
             pro: model.settings.proUnlocked,
             extraFolders: model.settings.extraFolders,
-            rules: model.settings.rules.map { RuleView(id: $0.id, name: $0.name, enabled: $0.enabled, summary: $0.summary) }
+            rules: model.settings.rules.map { RuleView(id: $0.id, name: $0.name, enabled: $0.enabled, summary: $0.summary) },
+            language: model.settings.language?.rawValue
         )
         historyMode = model.historyMode
+        historyFilter = model.historyFilter.rawValue
         historyCount = model.history.count
         query = model.query
         suggestion = model.suggestion.map { SuggestionView(file: ($0.fileID as NSString).lastPathComponent, message: $0.message) }
+        olderFiles = model.hasOlderFiles
+        paywall = model.paywallShown
     }
 
     public func json(pretty: Bool = true) -> String {
@@ -140,9 +186,19 @@ public struct Snapshot: Codable, Equatable, Sendable {
 
     /// One-line human readable summary.
     public var summary: String {
-        var text = "[\(panelOpen ? "open" : "closed")] \(historyMode ? "history " : "")\(filter): "
+        var text = "[\(panelOpen ? "open" : "closed")] \(historyMode ? "history " : "")\(filter)"
+        if type != "any" { text += " \(type)" }
+        text += ": "
         if let emptyState {
-            text += emptyState == "needsAccess" ? "needs access to Downloads" : "nothing new"
+            switch emptyState {
+            case "needsAccess": text += "needs access to Downloads"
+            case "historyEmpty": text += "nothing in history"
+            case "noMatches": text += "no matches"
+            case "nothingLastHour": text += "nothing in the last hour"
+            case "nothingToday": text += "nothing today"
+            case "caughtUp": text += "all caught up"
+            default: text += "no recent downloads"
+            }
         } else {
             text += "\(rows.count) rows"
             let unreadRows = rows.filter(\.unread).count
@@ -154,6 +210,7 @@ public struct Snapshot: Codable, Equatable, Sendable {
         if let undo { text += ", undo \(undo.count)\(undo.ready ? "" : " (pending)")" }
         if let toast { text += ", toast \"\(toast.message)\"" }
         if let suggestion { text += ", suggests \"\(suggestion.message)\"" }
+        if paywall { text += ", pro sheet" }
         if settings.pro { text += ", pro" }
         return text
     }

@@ -32,6 +32,8 @@ public enum InboxReducer {
             next.settings = settings
             next.folders = folders
             next.loaded = true
+            next.filter = settings.selectedChip
+            next.typeFilter = settings.selectedType
             if let index = next.folders.firstIndex(where: { $0.kind == .desktop }) {
                 next.folders[index].enabled = settings.watchDesktop
             }
@@ -65,7 +67,6 @@ public enum InboxReducer {
                 if !listing.contains(where: { $0.id == id }) {
                     next.files[id] = nil
                     next.selection.remove(id)
-                    next.badgeIDs.remove(id)
                 }
             }
             for var file in listing {
@@ -77,10 +78,18 @@ public enum InboxReducer {
                 }
                 next.files[file.id] = file
             }
+            // The launch chip: Today when today has something, else All. Decided once, on the
+            // first folder that reports, so the user's later choice is not overridden.
+            if !next.chipResolved && kind == .downloads {
+                next.chipResolved = true
+                if next.filter == .today && next.count(for: .today) == 0 { next.filter = .all }
+            }
             next.fixFocus()
 
         case .fileArrived(let file):
-            if var existing = next.files[file.id] {
+            // The same path arriving again with a later "date added" is a re-download, which
+            // the spec treats as a new arrival: unread again, at the top, in History again.
+            if var existing = next.files[file.id], file.addedAt <= existing.addedAt {
                 existing.size = file.size
                 existing.modifiedAt = file.modifiedAt
                 existing.kind = file.kind
@@ -92,7 +101,6 @@ public enum InboxReducer {
                 new.unread = true
                 new.missing = false
                 next.files[file.id] = new
-                if !next.panelOpen { next.badgeIDs.insert(file.id) }
                 let watched = next.enabledFolderPaths.contains(file.folder)
                 if next.settings.notificationsEnabled && watched {
                     effects.append(.notify(new))
@@ -126,24 +134,20 @@ public enum InboxReducer {
             guard next.files[id] != nil else { break }
             next.files[id] = nil
             next.selection.remove(id)
-            next.badgeIDs.remove(id)
             if next.suggestion?.fileID == id { next.suggestion = nil }
             next.fixFocus()
 
         case .setToday(let date):
-            next.today = date
+            next.now = date
+            next.today = Calendar.current.startOfDay(for: date)
             next.fixFocus()
 
         case .panelOpened:
+            // Opening the panel marks nothing read; the badge is the unread count.
             next.panelOpen = true
-            next.badgeIDs = []
 
         case .panelClosed:
-            next.panelOpen = false
-            next.selection = []
-            next.focused = nil
-            next.toast = nil
-            next.query = ""
+            next.closePanel()
 
         // MARK: Panel
 
@@ -152,23 +156,48 @@ public enum InboxReducer {
                 // The model leads and the UI follows, in both directions: the panel is closed
                 // here and `.hidePanel` asks the UI to catch up. The UI's own `.panelClosed`
                 // report is then a no-op instead of a late rewrite.
-                next.panelOpen = false
-                next.selection = []
-                next.focused = nil
-                next.toast = nil
-                next.query = ""
+                next.closePanel()
                 effects.append(.hidePanel)
             } else {
                 // Nothing is focused or selected on open: the pointer shows where the user is,
                 // and the first arrow key starts keyboard navigation from the top.
                 next.panelOpen = true
-                next.badgeIDs = []
                 effects.append(.showPanel)
             }
 
         case .setFilter(let filter):
             next.filter = filter
             next.fixFocus()
+            if next.settings.selectedChip != filter {
+                next.settings.selectedChip = filter
+                effects.append(.saveSettings(next.settings))
+            }
+
+        case .setTypeFilter(let type):
+            next.typeFilter = type
+            next.fixFocus()
+            if next.settings.selectedType != type {
+                next.settings.selectedType = type
+                effects.append(.saveSettings(next.settings))
+            }
+
+        case .clearList(let at):
+            next.settings.listClearedAt = at
+            next.selection = []
+            next.fixFocus()
+            effects.append(.saveSettings(next.settings))
+
+        case .showOlderFiles:
+            if next.isPro {
+                next.historyMode = true
+                next.selection = []
+                next.focused = nil
+            } else {
+                next.paywallShown = true
+            }
+
+        case .dismissPaywall:
+            next.paywallShown = false
 
         case .select(let id, let mode):
             guard next.files[id] != nil else { throw .unknownFile(id) }
@@ -211,7 +240,6 @@ public enum InboxReducer {
 
         case .markAllSeen:
             for id in next.files.keys { next.files[id]?.unread = false }
-            next.badgeIDs = []
 
         case .openWatchedFolder(let kind):
             guard let folder = next.folder(kind) else { throw .unknownFolder(kind) }
@@ -246,7 +274,20 @@ public enum InboxReducer {
             let files = try next.resolve(target)
             next.markRead(files)
             effects.append(.copyToPasteboard(files.map(\.path).joined(separator: "\n")))
-            effects.append(next.showToast(files.count == 1 ? "Path copied" : "\(files.count) paths copied"))
+            effects.append(next.showToast(.pathCopied(count: files.count)))
+
+        case .copyName(let target):
+            let files = try next.resolve(target)
+            next.markRead(files)
+            effects.append(.copyToPasteboard(files.map(\.name).joined(separator: "\n")))
+            effects.append(next.showToast(.nameCopied(count: files.count)))
+
+        case .markRead(let target):
+            next.markRead(try next.resolve(target))
+
+        case .markUnread(let target):
+            for file in try next.resolve(target) { next.files[file.id]?.unread = true }
+            next.fixFocus()
 
         case .moveTo(let target):
             let files = try next.resolve(target)
@@ -272,7 +313,6 @@ public enum InboxReducer {
             guard next.files[id] != nil else { throw .unknownFile(id) }
             next.files[id] = nil
             next.selection.remove(id)
-            next.badgeIDs.remove(id)
             next.fixFocus()
 
         // MARK: Outcomes
@@ -291,23 +331,20 @@ public enum InboxReducer {
             for id in succeeded {
                 next.files[id] = nil
                 next.selection.remove(id)
-                next.badgeIDs.remove(id)
             }
             next.fixFocus()
             let folderName = (destination as NSString).lastPathComponent
             if failed.isEmpty {
-                let what = succeeded.count == 1
-                    ? (succeeded.first.map { ($0 as NSString).lastPathComponent } ?? "1 file")
-                    : "\(succeeded.count) files"
-                effects.append(next.showToast("Moved \(what) to \(folderName)"))
+                let names = succeeded.map { ($0 as NSString).lastPathComponent }
+                effects.append(next.showToast(.moved(names: names, folder: folderName)))
             } else {
-                effects.append(next.showToast("Could not move \(failed.count) of \(succeeded.count + failed.count) files", isError: true))
+                effects.append(next.showToast(.moveFailed(failed: failed.count, total: succeeded.count + failed.count), isError: true))
             }
 
         case .unzipped(let id, let outputPath):
             let name = (id as NSString).lastPathComponent
             let output = (outputPath as NSString).lastPathComponent
-            effects.append(next.showToast("Extracted \(name) to \(output)"))
+            effects.append(next.showToast(.extracted(name: name, folder: output)))
 
         case .trashed(let token, let items):
             guard next.undo?.token == token else { break }
@@ -347,7 +384,7 @@ public enum InboxReducer {
             // An outcome of the folder panel: nobody is waiting for a thrown error, so tell the
             // user through the toast instead.
             if next.folders.contains(where: { $0.path == path }) {
-                effects.append(next.showToast(EventError.folderAlreadyWatched(path).description, isError: true))
+                effects.append(next.showToast(.folderAlreadyWatched(name: (path as NSString).lastPathComponent), isError: true))
                 break
             }
             let folder = WatchedFolder.custom(path)
@@ -367,9 +404,10 @@ public enum InboxReducer {
             let changed = next.settings.proUnlocked != owned
             next.settings.proUnlocked = owned
             if !owned && next.historyMode { next.historyMode = false }
+            if owned { next.paywallShown = false }
             if changed {
                 effects.append(.saveSettings(next.settings))
-                if owned { effects.append(next.showToast("Pro unlocked. Thank you!")) }
+                if owned { effects.append(next.showToast(.proUnlocked)) }
             }
             next.fixFocus()
 
@@ -406,6 +444,40 @@ public enum InboxReducer {
             effects.append(.saveSettings(next.settings))
             if enabled { effects.append(.requestNotificationPermission) }
 
+        case .setLanguage(let language):
+            next.settings.language = language
+            effects.append(.saveSettings(next.settings))
+
+        case .setIncludeFolders(let on):
+            next.settings.includeFolders = on
+            next.fixFocus()
+            effects.append(.saveSettings(next.settings))
+
+        case .setRetention(let retention):
+            next.settings.retention = retention
+            next.fixFocus()
+            effects.append(.saveSettings(next.settings))
+
+        case .setMarkReadOnClose(let on):
+            next.settings.markReadOnClose = on
+            effects.append(.saveSettings(next.settings))
+
+        case .setShowBadge(let on):
+            next.settings.showBadge = on
+            effects.append(.saveSettings(next.settings))
+
+        case .setTypeOverride(let ext, let group):
+            let key = ext.lowercased().trimmingCharacters(in: CharacterSet(charactersIn: ". "))
+            guard !key.isEmpty else { throw .invalidExtension(ext) }
+            next.settings.typeOverrides[key] = group
+            next.fixFocus()
+            effects.append(.saveSettings(next.settings))
+
+        case .resetTypeOverrides:
+            next.settings.typeOverrides = [:]
+            next.fixFocus()
+            effects.append(.saveSettings(next.settings))
+
         case .grantAccess(let kind):
             guard next.folder(kind) != nil else { throw .unknownFolder(kind) }
             effects.append(.requestAccess(kind))
@@ -432,7 +504,6 @@ public enum InboxReducer {
             for id in next.files.keys where next.files[id]?.folder == path {
                 next.files[id] = nil
                 next.selection.remove(id)
-                next.badgeIDs.remove(id)
             }
             next.fixFocus()
             effects.append(.stopWatching(kind))
@@ -443,6 +514,8 @@ public enum InboxReducer {
             next.historyMode = on
             next.selection = []
             next.focused = nil
+            // Each panel has its own search: a query never carries over between them.
+            next.query = ""
 
         case .setQuery(let text):
             next.query = text
@@ -452,6 +525,17 @@ public enum InboxReducer {
             next.history = []
             next.fixFocus()
             effects.append(.saveHistory([]))
+
+        case .setHistoryFilter(let filter):
+            next.historyFilter = filter
+            next.fixFocus()
+
+        case .removeFromHistory(let id):
+            guard next.history.contains(where: { $0.id == id }) else { throw .unknownFile(id) }
+            next.history.removeAll { $0.id == id }
+            next.selection.remove(id)
+            next.fixFocus()
+            effects.append(.saveHistory(next.history))
 
         case .addRule(let rule):
             guard next.isPro else { throw .proRequired(.rules) }
@@ -523,10 +607,23 @@ extension InboxModel {
     }
 
     fileprivate mutating func markRead(_ files: [InboxFile]) {
-        for file in files {
-            self.files[file.id]?.unread = false
-            badgeIDs.remove(file.id)
+        for file in files { self.files[file.id]?.unread = false }
+        // Under the Unread chip a read row leaves the list; keep focus on what is left.
+        fixFocus()
+    }
+
+    /// What every close does. With "Mark visible as read when popover closes" on, the rows
+    /// that were on screen are read now.
+    fileprivate mutating func closePanel() {
+        if settings.markReadOnClose && !historyMode {
+            for file in visibleFiles { files[file.id]?.unread = false }
         }
+        panelOpen = false
+        selection = []
+        focused = nil
+        toast = nil
+        query = ""
+        paywallShown = false
     }
 
     /// Removes the rows and asks the file system to trash them, with the 5 s undo window.
@@ -535,7 +632,6 @@ extension InboxModel {
         for file in files {
             self.files[file.id] = nil
             selection.remove(file.id)
-            badgeIDs.remove(file.id)
             if suggestion?.fileID == file.id { suggestion = nil }
         }
         undo = TrashUndo(token: token, files: files)
@@ -548,7 +644,7 @@ extension InboxModel {
     fileprivate mutating func apply(_ rule: Rule, to file: InboxFile) -> [InboxEffect] {
         switch rule.action {
         case .suggestTrash:
-            suggestion = Suggestion(fileID: file.id, message: "\(rule.name): move \(file.name) to the Trash?", action: .trash)
+            suggestion = Suggestion(fileID: file.id, ruleName: rule.name, action: .trash)
             return []
         default:
             return perform(rule.action, on: file)
@@ -575,8 +671,12 @@ extension InboxModel {
     }
 
     fileprivate mutating func showToast(_ message: String, isError: Bool = false) -> InboxEffect {
+        showToast(.text(message), isError: isError)
+    }
+
+    fileprivate mutating func showToast(_ text: ToastText, isError: Bool = false) -> InboxEffect {
         let token = takeToken()
-        toast = Toast(token: token, message: message, isError: isError)
+        toast = Toast(token: token, text: text, isError: isError)
         return .scheduleToastDismiss(token: token)
     }
 

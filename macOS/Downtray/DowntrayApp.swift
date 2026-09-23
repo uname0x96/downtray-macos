@@ -1,4 +1,5 @@
 import AppKit
+import os
 import SwiftUI
 import InboxCore
 
@@ -32,24 +33,59 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, Pan
     #endif
 
     override init() {
-        presenter = InboxPresenter(model: InboxModel(folders: WatchedFolder.standard), services: services)
+        var model = InboxModel(folders: WatchedFolder.standard)
+        // The search field matches the group names the user sees ("Bilder"), not only the
+        // English ones the core knows.
+        model.typeLabels = Dictionary(uniqueKeysWithValues: TypeGroup.allCases.map { ($0, $0.localizedTitle) })
+        presenter = InboxPresenter(model: model, services: services)
         super.init()
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // One instance only. macOS stops the same bundle from launching twice, but two copies
         // at different paths (an Xcode run and a build from `.build`) both get a status item and
-        // both fight over the debug bridge port. The newcomer hands over and quits.
+        // both fight over the debug bridge port. The newcomer hands over and quits, unless it is
+        // the second half of `relaunch()`: then the old instance is on its way out, and this one
+        // waits for it (the status item and the bridge port must be free) rather than quitting.
         let others = NSRunningApplication.runningApplications(withBundleIdentifier: Bundle.main.bundleIdentifier ?? "")
             .filter { $0.processIdentifier != ProcessInfo.processInfo.processIdentifier }
-        if let other = others.first {
+        let leaving = UserDefaults.standard.integer(forKey: Self.relaunchingKey)
+        Self.log.info("launch pid \(ProcessInfo.processInfo.processIdentifier, privacy: .public) others=\(others.map(\.processIdentifier), privacy: .public) leaving=\(leaving, privacy: .public)")
+        guard let other = others.first else { return finishLaunching() }
+        guard other.processIdentifier == leaving else {
             other.activate()
             NSApp.terminate(nil)
             return
         }
+        Task { @MainActor in
+            for _ in 0..<30 where !other.isTerminated { try? await Task.sleep(for: .milliseconds(100)) }
+            if !other.isTerminated {
+                // It said it was leaving; a quit stuck behind a closing sheet gets a push.
+                other.forceTerminate()
+                for _ in 0..<20 where !other.isTerminated { try? await Task.sleep(for: .milliseconds(100)) }
+            }
+            Self.log.info("old instance \(other.processIdentifier, privacy: .public) terminated=\(other.isTerminated, privacy: .public)")
+            if other.isTerminated {
+                finishLaunching()
+            } else {
+                other.activate()
+                NSApp.terminate(nil)
+            }
+        }
+    }
+
+    /// Defaults key holding the pid of an instance that is quitting in favor of the one it just
+    /// launched. Shared through the container, unlike launch arguments, which LaunchServices
+    /// does not deliver to a sandboxed app.
+    private static let relaunchingKey = "relaunchingFromPID"
+    private nonisolated static let log = Logger(subsystem: "app.downtray.mac", category: "launch")
+
+    private func finishLaunching() {
+        UserDefaults.standard.removeObject(forKey: Self.relaunchingKey)
         services.panelController = self
         services.onHotkey = { [weak self] in self?.presenter.dispatch(.hotkeyPressed) }
         services.onNotificationOpen = { [weak self] path in self?.presenter.dispatch(.open(.files([path]))) }
+        services.onFileVanished = { [weak self] id in self?.presenter.dispatch(.fileRemoved(id)) }
         setUpStatusItem()
         setUpPopover()
         presenter.start()
@@ -90,7 +126,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, Pan
     private static var menuBarIcon: NSImage? {
         let image = NSImage(named: "MenuBarIcon")
         image?.isTemplate = true
-        image?.accessibilityDescription = "Downtray"
+        image?.accessibilityDescription = appName
         return image
     }
 
@@ -117,11 +153,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, Pan
         guard let button = statusItem?.button else { return }
         closePopover()
         let menu = NSMenu()
-        let settings = NSMenuItem(title: String(localized: "Settings…"), action: #selector(menuOpenSettings), keyEquivalent: ",")
+        let settings = NSMenuItem(title: String(localized: "menu.settings", defaultValue: "Settings…", comment: "Status item menu."), action: #selector(menuOpenSettings), keyEquivalent: ",")
         settings.target = self
         menu.addItem(settings)
         menu.addItem(.separator())
-        let quit = NSMenuItem(title: String(localized: "Quit Downtray"), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        let quit = NSMenuItem(title: String(localized: "app.quit", defaultValue: "Quit Downtray"), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         quit.target = NSApp
         menu.addItem(quit)
         menu.popUp(positioning: nil, at: NSPoint(x: 0, y: button.bounds.height + 4), in: button)
@@ -149,7 +185,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, Pan
     private func renderBadge(_ count: Int) {
         guard let button = statusItem?.button else { return }
         button.title = count == 0 ? "" : (count > 9 ? "9+" : "\(count)")
-        button.toolTip = count == 0 ? "Downtray" : "\(count) new file\(count == 1 ? "" : "s")"
+        button.toolTip = count == 0
+            ? appName
+            : String(localized: "statusItem.unreadFiles", defaultValue: "\(count) unread files", comment: "Tooltip on the menu bar icon while the badge shows. Plural: 1 → '1 unread file'.")
     }
 
     // MARK: Popover
@@ -170,11 +208,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, Pan
         popover.animates = false
         popover.delegate = self
         self.hosting = hosting
+        // A transient popover closes on a click outside only while this app has no other
+        // window. Once Settings has been opened, a click in another app deactivates Downtray
+        // but AppKit leaves the popover on screen, so the deactivation closes it here. Quick
+        // Look switches the behavior to `.applicationDefined` and is left alone.
+        NotificationCenter.default.addObserver(forName: NSApplication.didResignActiveNotification, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated {
+                guard let self, self.popover.behavior == .transient else { return }
+                self.closePopover()
+            }
+        }
     }
 
     func showPopover() {
         guard let button = statusItem?.button, !popover.isShown else { return }
-        presenter.dispatch(.setToday(Calendar.current.startOfDay(for: Date())))
+        // The moment of opening: "1h", "Just now" and the day boundary all count from it.
+        presenter.dispatch(.setToday(Date()))
         // A status-item click does not activate an accessory app, and the cooperative
         // `activate()` may be refused while another app is frontmost. Without activation the
         // popover window cannot become key, and the first click inside it is spent on that
@@ -206,6 +255,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, Pan
         return Self.flipped(window.frame)
     }
 
+    var panelContentView: NSView? { popover.isShown ? popover.contentViewController?.view : nil }
+
     /// AppKit screen coordinates have their origin at the bottom left of the main screen.
     private static func flipped(_ rect: CGRect) -> CGRect {
         let height = NSScreen.screens.first?.frame.height ?? 0
@@ -232,6 +283,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, Pan
         presenter.dispatch(.panelClosed)
     }
 
+    // MARK: Relaunch
+
+    /// Starts a second instance and quits this one once it is running. Used after the language
+    /// changed: Foundation picks the UI language at launch. The marker in defaults tells the new
+    /// instance to wait for this one to exit instead of treating it as the instance to hand over to.
+    static func relaunch() {
+        UserDefaults.standard.set(ProcessInfo.processInfo.processIdentifier, forKey: relaunchingKey)
+        let configuration = NSWorkspace.OpenConfiguration()
+        configuration.createsNewApplicationInstance = true
+        NSWorkspace.shared.openApplication(at: Bundle.main.bundleURL, configuration: configuration) { app, error in
+            log.info("relaunch: new pid \(app?.processIdentifier ?? -1, privacy: .public) error=\(error.map { "\($0)" } ?? "none", privacy: .public)")
+            guard error == nil else {
+                UserDefaults.standard.removeObject(forKey: relaunchingKey)
+                return
+            }
+            Task { @MainActor in NSApp.terminate(nil) }
+        }
+    }
+
     // MARK: Settings
 
     func openSettings() {
@@ -244,7 +314,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, Pan
             // Pre-macOS 14 fallbacks; private selectors, so only tried when the action is missing.
             _ = NSApp.sendAction(Selector(("showPreferencesWindow:")), to: nil, from: nil)
         }
-        if let window = NSApp.windows.first(where: { $0.isVisible && $0.title.localizedCaseInsensitiveContains("settings") }) {
+        let title = String(localized: "settings.title", defaultValue: "Downtray Settings", comment: "Window title. Keep the brand name.")
+        if let window = NSApp.windows.first(where: { $0.isVisible && $0.title == title }) {
             // The Settings scene comes with an empty unified toolbar, which pushes the title to
             // the left on macOS 26+. Without a toolbar the title is centered.
             window.toolbar = nil
@@ -264,4 +335,6 @@ protocol PanelController: AnyObject {
     /// that drive the app with real mouse clicks. Nil when not on screen.
     var statusItemFrame: CGRect? { get }
     var panelFrame: CGRect? { get }
+    /// The popover's content view while it is on screen (its window is not in `NSApp.windows`).
+    var panelContentView: NSView? { get }
 }

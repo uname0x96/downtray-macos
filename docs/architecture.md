@@ -83,13 +83,34 @@ Mobius.swift is used as the loop runtime, not as the design. The design is the r
 
 ## Reading the model
 
-`InboxModel` keeps `files` keyed by POSIX path. The panel lists `visibleFiles`: enabled folders
-only, filtered by `filter`, newest first, capped at `listLimit` (20). The badge counts files
-that arrived while the panel was closed; opening the panel clears it. `unread` is per file and
-is cleared by any action on that file or by "Mark all seen". A file whose watcher reports it
-gone leaves the list at once (`fileRemoved`); the user moved or deleted it themselves, so
-there is nothing to announce. Only History (Pro) keeps a greyed row for it, without actions.
-`InboxFile.missing` and `dismiss` remain for those history rows and for scripts.
+`InboxModel` keeps `files` keyed by POSIX path. `recentFiles` are the candidates: enabled
+folders only, files (folders too with `settings.includeFolders`), younger than
+`settings.retention` (24 h / 7 d / 30 d, default 7 d) and newer than `settings.listClearedAt`
+("Clear List" in Settings). The panel lists `visibleFiles`: `recentFiles` through the chip
+(`filter`: All, 1h, Today, Unread), the Type menu (`typeFilter`: Docs, Images, Media, Archives,
+Apps, from `TypeGroup.forExtension` plus `settings.typeOverrides`) and the Pro `query`, all
+ANDed, newest first, capped at `listLimit` (20, Pro 200). The query matches the name, the
+extension with or without its dot, the group's English name or its localized label
+(`typeLabels`, injected by the app) and the web host. With the All or Today chip and no query
+the list is grouped by `inboxSections` (Just now < 15 min, Earlier today, Yesterday, This week,
+Earlier; Today shows the first two); 1h, Unread and a search are flat. The chip and type are
+saved (`selectedChip`, `selectedType`); at launch Today falls back to All once the Downloads
+scan shows nothing from today (`chipResolved`). `now` is the moment the panel opened
+(`setToday(Date)`), so "1h" and "Just now" count from it.
+
+The badge is the number of unread files in `recentFiles` (`badgeCount`, off with
+`settings.showBadge`). `unread` is per file and is cleared by Open, Show in Finder, Mark as
+Read, "Mark all seen", or, with `settings.markReadOnClose`, for the visible rows when the
+panel closes; opening the panel alone never clears it, and Mark as Unread puts it back. A
+download that lands again at the same path (`fileArrived` with a newer `addedAt`) is a new
+arrival: unread again, back at the top. A file whose watcher reports it gone leaves the list at
+once (`fileRemoved`); the user moved or deleted it themselves, so there is nothing to
+announce. Only History (Pro) keeps a "Gone" row for it. `InboxFile.missing` marks those rows;
+`dismiss` remains for scripts.
+
+Empty states (`emptyState`): `needsAccess`; `nothingNew` when `recentFiles` is empty ("No
+recent downloads" with an Open Downloads Folder button); `noMatches` when a query or a type
+hides everything; otherwise per chip `nothingLastHour`, `nothingToday`, `caughtUp`.
 
 ### Pro
 
@@ -103,8 +124,23 @@ error: extra folders (`addFolder`, `removeFolder`), a 200-file list with a name 
   join `folders` at load from `settings.extraFolders` and are watched like Downloads.
 - **History** is `[HistoryEntry]`, one line per file that ever arrived in a watched folder
   (path, size, kind, source, date), recorded in `fileArrived` and saved after each arrival. In
-  history mode the same list, filter chips and query apply to `historyFiles` instead of
-  `recentFiles`; rows for files no longer on disk show as missing.
+  history mode the same panel gets its own chrome per `specs/history-spec.md`: a back button,
+  a "History" title, Done, a search field and an All / Available / Gone segment
+  (`historyFilter`, event `setHistoryFilter`); no inbox chips, no footer, no gear. It lists
+  `historyFiles` (files only, never folders) newest first, grouped by local calendar day with
+  "Today" / "Yesterday" / weekday / date headers from Foundation. An Available row is an inbox
+  row without the unread dot; a Gone row (`missing`) is shorter and secondary, shows
+  "relative time · Moved or deleted", cannot be opened, and has one action, "Remove from
+  history" (`removeFromHistory`, also on click and ⌫). If Open or Reveal finds the file gone,
+  the row turns Gone in place (`onFileVanished` → `fileRemoved`). Empty states are
+  `historyEmpty` ("Nothing in history yet.") and `noMatches`. The inbox shows the same search
+  field with Pro, whose list holds 200 files (the free inbox of 20 has none, per the popover
+  spec); a query with no hits there is `noMatches` too. Entering or leaving History clears the
+  query, so each panel starts its search empty, and leaving History marks nothing seen. History
+  is reached from the gear menu (Pro) or the "Show older files" row that ends the list when
+  the folders hold more than it shows (`hasOlderFiles`); without Pro that row and the gear's
+  "Downtray Pro…" open the Pro sheet drawn inside the panel (`paywallShown`, events
+  `showOlderFiles` / `dismissPaywall`). "Clear history" lives only in Settings.
 - **Rules** are `Rule { trigger, match, action }`. The trigger is arrival or "after opened";
   the match is any subset of kind, host, name substring and extension; the action is move to
   a folder, trash, mark seen, or `suggestTrash`, which puts a `Suggestion` on the model that
@@ -118,8 +154,13 @@ over the bridge, and in `scripts/test-inbox.sh`. Files are addressed by name whe
 by full path. `arrive` and `vanish` simulate the watcher and exist for the headless target;
 the attached target sees real files.
 
+Filter lines: `filter all|1h|today|unread`, `type any|docs|images|media|archives|apps`,
+`type map <ext> <group|none>`, `type reset`, `search <text>`. Row actions: `open`, `reveal`,
+`copy-path`, `copy-name`, `read`, `unread`, `trash`, `move`, `unzip`. Settings: `folders on|off`,
+`keep day|week|month`, `read-on-close on|off`, `badge on|off`, `clear-list`, `seen` (mark all).
+
 Pro events have their own lines: `pro on|off` (stands in for the store), `folder add`,
-`folder remove <name>`, `history on|off|clear`, `search <text>`,
+`folder remove <name>`, `history on|off|all|available|gone|clear`, `forget <file>`, `search <text>`,
 `rule add <name> [kind=pdf] [host=example.com] [name=invoice] [ext=pdf] [on=arrival|opened] then move <path>|trash|seen|suggest-trash`,
 `rule remove|enable|disable <name>`, `accept`, `dismiss-suggestion`, `unlock`, `restore`.
 
@@ -203,5 +244,34 @@ send the next line as soon as the panel is really there (rule 11). The debug ent
   headless tier covers it with `pro on` and the fake store, and the real app is exercised the
   same way through the bridge. `Pro.storekit` in the scheme gives a local sandbox purchase when
   the app is run from Xcode.
-- **Localization** goes through `Localizable.xcstrings` with `SWIFT_EMIT_LOC_STRINGS`, so every
-  user-facing string is exported from day one.
+- **Localization: the core speaks English, the app speaks the user's language.** Toasts and
+  suggestions are data (`ToastText`, `Suggestion`) whose English `message` is what the
+  snapshot reports, so the CLI, the scripts and the tests keep asserting on one wording
+  regardless of locale. The app maps each case, and every enum label (`FileFilter`,
+  `FileKind`, `FolderKind`, rule summaries), to the string catalog in
+  `macOS/Downtray/Localized.swift`. Every UI string is `String(localized: "dotted.key",
+  defaultValue: "English", comment: …)`; the one catalog, `Localizable.xcstrings`, holds
+  English, Japanese, German and French, with plural variants where a count is shown. Dates
+  and sizes come from Foundation formatters, so they follow the locale for free. The brand
+  name, shortcut glyphs, file extensions and the debug bridge stay untranslated.
+  `scripts/check-strings.sh` fails when code and catalog drift or a language misses a key.
+  The language picker in Settings > General is a setting like any other (`Settings.language`,
+  event `setLanguage`, grammar `language ja|system`); `saveSettings` mirrors it into the app's
+  `AppleLanguages` default, the key System Settings > Language & Region > Applications writes,
+  so both routes agree and Foundation picks the language at the next launch. Picking a language
+  that differs from the localization the running process shows only asks, with the alert System
+  Settings itself uses: Relaunch Now saves the choice and restarts, Later discards it, so the
+  picker never shows a language the app is not displaying. `AppDelegate.relaunch()` opens a second
+  instance and quits; the newcomer normally hands over to a running copy, so the leaving one first
+  writes its pid to defaults (launch arguments do not reach a sandboxed app), and the newcomer
+  waits for that pid to exit, forcing it if a closing sheet stalls the quit.
+  The four filter chips (All, 1h, Today, Unread) and the Type menu button sit on one row at
+  360 pt in every language: a chip hugs its label and never wraps, so a label that does not
+  fit is shortened in the catalog. The Type button is Liquid Glass on macOS 26 and later
+  (`.glass`, `.glassProminent` while a type is selected) and a tinted capsule before that. A row's
+  second line is `time · size · kind`, where the kind is the system's name for image, archive,
+  disk image, package, application and media types and the uppercase extension otherwise
+  (`InboxFile.rowKind`), falling back to the extension when the line would overflow; the
+  source (host or AirDrop) moved to the row's tooltip and menu caption. The bridge's `screenshot [dir]`
+  renders the popover and the visible windows to PNG from inside the app (no screen-recording
+  permission), which is how each locale's layout was checked.

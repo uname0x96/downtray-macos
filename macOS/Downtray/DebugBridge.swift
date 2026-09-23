@@ -20,6 +20,10 @@ import InboxCore
 ///   settings       open the Settings window (what the gear button does)
 ///   windows        list visible windows (for checking that Settings opened)
 ///   frames         status item and popover rectangles, top-left origin, as JSON in `error`
+///   screenshot [dir]  write the popover (if open) and every visible window as PNGs into <dir>
+///                  (default: the app's temporary directory; the sandbox allows ~/Downloads);
+///                  the paths come back in `error`. Rendered by the app itself, so it needs
+///                  no screen-recording permission. Used to check localized layouts.
 /// Listens on 127.0.0.1 only. The debug entitlements add `network.server` for this.
 @MainActor
 final class DebugBridge {
@@ -115,6 +119,8 @@ final class DebugBridge {
         case "settings":
             panel?.openSettings()
             await Self.waitForRender()
+        case "relaunch":
+            AppDelegate.relaunch()
         case "frames":
             func text(_ rect: CGRect?) -> String {
                 guard let rect else { return "null" }
@@ -139,6 +145,11 @@ final class DebugBridge {
                     String(request.dropFirst(5)).trimmingCharacters(in: .whitespaces)
                 break
             }
+            if request == "screenshot" || request.hasPrefix("screenshot ") {
+                let directory = String(request.dropFirst("screenshot".count)).trimmingCharacters(in: .whitespaces)
+                let written = writeWindowImages(to: directory.isEmpty ? NSTemporaryDirectory() : directory)
+                return BridgeResponse(ok: !written.isEmpty, error: written.joined(separator: " | "), snapshot: presenter.model.snapshot).json()
+            }
             do {
                 let event = try Event.parse(request, context: ParseContext(model: presenter.model))
                 try presenter.send(event)
@@ -149,6 +160,40 @@ final class DebugBridge {
             await waitForPanelSync()
         }
         return BridgeResponse(ok: failure == nil, error: failure, snapshot: presenter.model.snapshot).json()
+    }
+
+    /// Renders each visible window's content view into a PNG. Used to check localized layouts
+    /// (clipping, wrapping) without a human at the screen.
+    private func writeWindowImages(to directory: String) -> [String] {
+        var views: [(String, NSView)] = []
+        if let view = panel?.panelContentView { views.append(("panel", view)) }
+        for window in NSApp.windows where window.isVisible && !(window is NSPanel) && window.className != "NSStatusBarWindow" {
+            if let view = window.contentView { views.append((window.title.isEmpty ? window.className : window.title, view)) }
+        }
+        let folder = URL(fileURLWithPath: directory, isDirectory: true)
+        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        var written: [String] = []
+        for (name, view) in views {
+            // Drawn onto an opaque background: vibrant label text blends with what is behind it
+            // and vanishes on a transparent bitmap.
+            guard let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds),
+                  let context = NSGraphicsContext(bitmapImageRep: rep) else { continue }
+            NSGraphicsContext.saveGraphicsState()
+            NSGraphicsContext.current = context
+            NSColor.windowBackgroundColor.setFill()
+            view.bounds.fill()
+            view.displayIgnoringOpacity(view.bounds, in: context)
+            NSGraphicsContext.restoreGraphicsState()
+            guard let png = rep.representation(using: .png, properties: [:]) else { continue }
+            let url = folder.appendingPathComponent(name.replacingOccurrences(of: "/", with: "-") + ".png")
+            do {
+                try png.write(to: url)
+                written.append(url.path)
+            } catch {
+                Self.log.error("screenshot: \(error.localizedDescription, privacy: .public)")
+            }
+        }
+        return written
     }
 
     /// SwiftUI commits state changes on the next run loop turn. Waiting two turns means the
