@@ -204,6 +204,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, Pan
         popover.animates = false
         popover.delegate = self
         self.hosting = hosting
+        // A transient popover closes on a click outside only while this app has no other
+        // window. Once Settings has been opened, a click in another app deactivates Downtray
+        // but AppKit leaves the popover on screen, so the deactivation closes it here. Quick
+        // Look switches the behavior to `.applicationDefined` and is left alone.
+        NotificationCenter.default.addObserver(forName: NSApplication.didResignActiveNotification, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated {
+                guard let self, self.popover.behavior == .transient else { return }
+                self.closePopover()
+            }
+        }
     }
 
     func showPopover() {
