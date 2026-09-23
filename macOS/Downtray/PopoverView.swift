@@ -37,7 +37,7 @@ struct PopoverView: View {
 
     private var header: some View {
         HStack {
-            Text("Arrivals")
+            Text("Downtray")
                 .font(.headline)
             Spacer()
             Button(action: openSettings) {
@@ -200,7 +200,7 @@ struct PopoverView: View {
             Button("Move to…") { presenter.dispatch(.moveTo(.selection)) }.keyboardShortcut("m", modifiers: .command)
             Button("Unzip Here") { presenter.dispatch(.unzip(.selection)) }.keyboardShortcut("u", modifiers: .command)
             Button("Select All") { selectAll() }.keyboardShortcut("a", modifiers: .command)
-            Button("Quit Arrivals") { NSApp.terminate(nil) }.keyboardShortcut("q", modifiers: .command)
+            Button("Quit Downtray") { NSApp.terminate(nil) }.keyboardShortcut("q", modifiers: .command)
         }
         .frame(width: 0, height: 0)
         .opacity(0)
@@ -412,7 +412,7 @@ struct EmptyStateView: View {
                 Text("New downloads will show up here.")
                     .foregroundStyle(.secondary)
             case .needsAccess:
-                Text("Arrivals can't see your Downloads folder.")
+                Text("Downtray can't see your Downloads folder.")
                     .multilineTextAlignment(.center)
                 Button("Grant access to Downloads", action: grant)
                     .accessibilityIdentifier("grantAccess")

@@ -7,7 +7,7 @@ OUT=${1:?usage: gen-gemini.sh <out.png> [style]}
 STYLE=${2:-}
 : "${GEMINI_API_KEY:?set GEMINI_API_KEY}"
 MODEL=${GEMINI_MODEL:-gemini-2.5-flash-image}
-PROMPT="A macOS app icon for a menu bar utility called Arrivals. A single rounded-square tile \
+PROMPT="A macOS app icon for a menu bar utility called Downtray. A single rounded-square tile \
 in the modern macOS style (like Apple's Mail or Finder icons), filling most of a square canvas, on a \
 plain white background. Inside: a clean white inbox tray with a document dropping into it, a small \
 downward arrow, and one small red notification dot at the top right. Blue gradient background, soft \

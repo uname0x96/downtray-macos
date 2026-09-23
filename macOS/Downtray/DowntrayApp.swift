@@ -6,7 +6,7 @@ import InboxCore
 /// Settings scene. Everything the UI does goes through `InboxPresenter`; the views only send
 /// events and render the model.
 @main
-struct ArrivalsApp: App {
+struct DowntrayApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
 
     var body: some Scene {
@@ -90,7 +90,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, Pan
     private static var menuBarIcon: NSImage? {
         let image = NSImage(named: "MenuBarIcon")
         image?.isTemplate = true
-        image?.accessibilityDescription = "Arrivals"
+        image?.accessibilityDescription = "Downtray"
         return image
     }
 
@@ -121,7 +121,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, Pan
         settings.target = self
         menu.addItem(settings)
         menu.addItem(.separator())
-        let quit = NSMenuItem(title: String(localized: "Quit Arrivals"), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        let quit = NSMenuItem(title: String(localized: "Quit Downtray"), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         quit.target = NSApp
         menu.addItem(quit)
         menu.popUp(positioning: nil, at: NSPoint(x: 0, y: button.bounds.height + 4), in: button)
@@ -149,7 +149,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, Pan
     private func renderBadge(_ count: Int) {
         guard let button = statusItem?.button else { return }
         button.title = count == 0 ? "" : (count > 9 ? "9+" : "\(count)")
-        button.toolTip = count == 0 ? "Arrivals" : "\(count) new file\(count == 1 ? "" : "s")"
+        button.toolTip = count == 0 ? "Downtray" : "\(count) new file\(count == 1 ? "" : "s")"
     }
 
     // MARK: Popover

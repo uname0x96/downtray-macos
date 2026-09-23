@@ -1,6 +1,6 @@
-name: Arrivals
+name: Downtray
 options:
-  bundleIdPrefix: app.arrivals
+  bundleIdPrefix: app.downtray
   deploymentTarget:
     macOS: "14.0"
   xcodeVersion: "26.0"
@@ -10,11 +10,11 @@ packages:
   InboxCore:
     path: ..
 targets:
-  Arrivals:
+  Downtray:
     type: application
     platform: macOS
     sources:
-      - path: Arrivals
+      - path: Downtray
         excludes:
           - "*.entitlements"
           - "*.storekit"
@@ -22,21 +22,21 @@ targets:
       - package: InboxCore
         product: InboxCore
     info:
-      path: Arrivals/Info.plist
+      path: Downtray/Info.plist
       properties:
-        CFBundleDisplayName: Arrivals
-        CFBundleName: Arrivals
+        CFBundleDisplayName: Downtray
+        CFBundleName: Downtray
         CFBundleShortVersionString: "1.0.0"
         CFBundleVersion: "1"
         LSMinimumSystemVersion: "14.0"
         LSUIElement: true
         LSApplicationCategoryType: public.app-category.productivity
-        NSHumanReadableCopyright: "Copyright © 2026 Arrivals. All rights reserved."
+        NSHumanReadableCopyright: "Copyright © 2026 Downtray. All rights reserved."
         # Shown in the macOS privacy prompts. Without them the prompt has an empty line and
         # App Review rejects the build.
-        NSDownloadsFolderUsageDescription: Arrivals lists the files that land in your Downloads folder so you can open, move or trash them from the menu bar.
-        NSDesktopFolderUsageDescription: Arrivals can also list files that land on your Desktop, if you turn that on in Settings.
-        NSDocumentsFolderUsageDescription: Arrivals moves files here only when you choose this folder in a rule or a "Move to…" panel.
+        NSDownloadsFolderUsageDescription: Downtray lists the files that land in your Downloads folder so you can open, move or trash them from the menu bar.
+        NSDesktopFolderUsageDescription: Downtray can also list files that land on your Desktop, if you turn that on in Settings.
+        NSDocumentsFolderUsageDescription: Downtray moves files here only when you choose this folder in a rule or a "Move to…" panel.
         NSSupportsAutomaticTermination: false
         NSSupportsSuddenTermination: false
     settings:
@@ -44,7 +44,7 @@ targets:
         SWIFT_VERSION: "6.0"
         SWIFT_STRICT_CONCURRENCY: complete
         SWIFT_EMIT_LOC_STRINGS: YES
-        PRODUCT_BUNDLE_IDENTIFIER: app.arrivals.mac
+        PRODUCT_BUNDLE_IDENTIFIER: app.downtray.mac
         MACOSX_DEPLOYMENT_TARGET: "14.0"
         ARCHS: arm64 x86_64
         ENABLE_HARDENED_RUNTIME: YES
@@ -60,19 +60,19 @@ targets:
         DEVELOPMENT_TEAM: 8NA28XPH84
       configs:
         Debug:
-          CODE_SIGN_ENTITLEMENTS: Arrivals/Arrivals.debug.entitlements
+          CODE_SIGN_ENTITLEMENTS: Downtray/Downtray.debug.entitlements
         Release:
-          CODE_SIGN_ENTITLEMENTS: Arrivals/Arrivals.entitlements
+          CODE_SIGN_ENTITLEMENTS: Downtray/Downtray.entitlements
 schemes:
-  Arrivals:
+  Downtray:
     build:
       targets:
-        Arrivals: all
+        Downtray: all
     run:
       config: Debug
       # Local StoreKit testing: "Unlock Pro" shows the sandbox purchase sheet when the app is
       # run from this scheme. A build launched with `open` has no store and shows
       # "Pro is not available in this build"; scripts use `pro on` instead.
-      storeKitConfiguration: Arrivals/Pro.storekit
+      storeKitConfiguration: Downtray/Pro.storekit
     archive:
       config: Release

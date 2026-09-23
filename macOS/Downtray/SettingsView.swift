@@ -22,7 +22,7 @@ struct SettingsView: View {
                         Button("Grant Access…") { presenter.dispatch(.grantAccess(.downloads)) }
                     } label: {
                         Text("Access needed")
-                        Text("macOS has not allowed Arrivals to read this folder.").foregroundStyle(.secondary)
+                        Text("macOS has not allowed Downtray to read this folder.").foregroundStyle(.secondary)
                     }
                 }
                 Toggle(isOn: binding(\.watchDesktop) { .setWatchDesktop($0) }) {
@@ -35,7 +35,7 @@ struct SettingsView: View {
                         Button("Grant Access…") { presenter.dispatch(.grantAccess(.desktop)) }
                     } label: {
                         Text("Access needed")
-                        Text("Choose the Desktop folder to let Arrivals watch it.").foregroundStyle(.secondary)
+                        Text("Choose the Desktop folder to let Downtray watch it.").foregroundStyle(.secondary)
                     }
                 }
                 ForEach(model.customFolders, id: \.kind) { folder in
@@ -81,7 +81,7 @@ struct SettingsView: View {
                 }
                 Toggle("Notify on new file", isOn: binding(\.notificationsEnabled) { .setNotifications($0) })
                 LabeledContent {
-                    Button("Quit Arrivals") { NSApp.terminate(nil) }
+                    Button("Quit Downtray") { NSApp.terminate(nil) }
                 } label: {
                     Text("Quit")
                     Text("Also in the menu bar icon's right-click menu, or ⌘Q while the inbox is open.")
@@ -95,7 +95,7 @@ struct SettingsView: View {
         .formStyle(.grouped)
         .frame(width: 440)
         .fixedSize(horizontal: false, vertical: true)
-        .navigationTitle("Arrivals Settings")
+        .navigationTitle("Downtray Settings")
     }
 
     // MARK: Pro

@@ -4,7 +4,7 @@
 set -euo pipefail
 SRC=${1:?usage: make-iconset.sh <1024.png>}
 ROOT=$(cd "$(dirname "$0")/../.." && pwd)
-DEST="$ROOT/macOS/Arrivals/Assets.xcassets/AppIcon.appiconset"
+DEST="$ROOT/macOS/Downtray/Assets.xcassets/AppIcon.appiconset"
 mkdir -p "$DEST"
 rm -f "$DEST"/*.png
 entries=()
