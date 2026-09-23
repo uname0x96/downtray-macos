@@ -246,7 +246,7 @@ public enum InboxReducer {
             let files = try next.resolve(target)
             next.markRead(files)
             effects.append(.copyToPasteboard(files.map(\.path).joined(separator: "\n")))
-            effects.append(next.showToast(files.count == 1 ? "Path copied" : "\(files.count) paths copied"))
+            effects.append(next.showToast(.pathCopied(count: files.count)))
 
         case .moveTo(let target):
             let files = try next.resolve(target)
@@ -296,18 +296,16 @@ public enum InboxReducer {
             next.fixFocus()
             let folderName = (destination as NSString).lastPathComponent
             if failed.isEmpty {
-                let what = succeeded.count == 1
-                    ? (succeeded.first.map { ($0 as NSString).lastPathComponent } ?? "1 file")
-                    : "\(succeeded.count) files"
-                effects.append(next.showToast("Moved \(what) to \(folderName)"))
+                let names = succeeded.map { ($0 as NSString).lastPathComponent }
+                effects.append(next.showToast(.moved(names: names, folder: folderName)))
             } else {
-                effects.append(next.showToast("Could not move \(failed.count) of \(succeeded.count + failed.count) files", isError: true))
+                effects.append(next.showToast(.moveFailed(failed: failed.count, total: succeeded.count + failed.count), isError: true))
             }
 
         case .unzipped(let id, let outputPath):
             let name = (id as NSString).lastPathComponent
             let output = (outputPath as NSString).lastPathComponent
-            effects.append(next.showToast("Extracted \(name) to \(output)"))
+            effects.append(next.showToast(.extracted(name: name, folder: output)))
 
         case .trashed(let token, let items):
             guard next.undo?.token == token else { break }
@@ -347,7 +345,7 @@ public enum InboxReducer {
             // An outcome of the folder panel: nobody is waiting for a thrown error, so tell the
             // user through the toast instead.
             if next.folders.contains(where: { $0.path == path }) {
-                effects.append(next.showToast(EventError.folderAlreadyWatched(path).description, isError: true))
+                effects.append(next.showToast(.folderAlreadyWatched(name: (path as NSString).lastPathComponent), isError: true))
                 break
             }
             let folder = WatchedFolder.custom(path)
@@ -369,7 +367,7 @@ public enum InboxReducer {
             if !owned && next.historyMode { next.historyMode = false }
             if changed {
                 effects.append(.saveSettings(next.settings))
-                if owned { effects.append(next.showToast("Pro unlocked. Thank you!")) }
+                if owned { effects.append(next.showToast(.proUnlocked)) }
             }
             next.fixFocus()
 
@@ -548,7 +546,7 @@ extension InboxModel {
     fileprivate mutating func apply(_ rule: Rule, to file: InboxFile) -> [InboxEffect] {
         switch rule.action {
         case .suggestTrash:
-            suggestion = Suggestion(fileID: file.id, message: "\(rule.name): move \(file.name) to the Trash?", action: .trash)
+            suggestion = Suggestion(fileID: file.id, ruleName: rule.name, action: .trash)
             return []
         default:
             return perform(rule.action, on: file)
@@ -575,8 +573,12 @@ extension InboxModel {
     }
 
     fileprivate mutating func showToast(_ message: String, isError: Bool = false) -> InboxEffect {
+        showToast(.text(message), isError: isError)
+    }
+
+    fileprivate mutating func showToast(_ text: ToastText, isError: Bool = false) -> InboxEffect {
         let token = takeToken()
-        toast = Toast(token: token, message: message, isError: isError)
+        toast = Toast(token: token, text: text, isError: isError)
         return .scheduleToastDismiss(token: token)
     }
 

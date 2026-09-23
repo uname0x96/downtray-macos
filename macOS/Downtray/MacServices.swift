@@ -153,8 +153,8 @@ final class MacServices: InboxServices {
         panel.canChooseFiles = false
         panel.allowsMultipleSelection = false
         panel.canCreateDirectories = false
-        panel.prompt = String(localized: "Grant Access")
-        panel.message = String(localized: "Downtray needs access to your \(kind.title) folder to list new files.")
+        panel.prompt = String(localized: "access.prompt", defaultValue: "Grant Access", comment: "Folder picker button. Keep short.")
+        panel.message = String(localized: "access.message", defaultValue: "Downtray needs access to your \(kind.localizedTitle) folder to list new files.", comment: "Folder picker heading. Placeholder: Downloads or Desktop. Keep the brand name.")
         if let standard { panel.directoryURL = URL(fileURLWithPath: standard) }
         NSApp.activate()
         let response = await panel.begin()
@@ -197,8 +197,8 @@ final class MacServices: InboxServices {
         panel.canChooseFiles = false
         panel.canCreateDirectories = true
         panel.allowsMultipleSelection = false
-        panel.prompt = String(localized: "Move")
-        panel.message = String(localized: "Choose where to move the selected files.")
+        panel.prompt = String(localized: "move.prompt", defaultValue: "Move", comment: "Folder picker button. Keep short.")
+        panel.message = String(localized: "move.message", defaultValue: "Choose where to move the selected files.", comment: "Folder picker heading.")
         NSApp.activate()
         let response = await panel.begin()
         guard response == .OK, let url = panel.url else { return nil }
@@ -255,7 +255,7 @@ final class MacServices: InboxServices {
         do {
             try FileManager.default.createDirectory(at: output, withIntermediateDirectories: false)
         } catch {
-            return .failure(ServiceError("Could not create \(output.lastPathComponent)"))
+            return .failure(ServiceError(String(localized: "error.createFolder", defaultValue: "Could not create \(output.lastPathComponent)", comment: "Error toast. Placeholder: folder name.")))
         }
         // `ditto` preserves resource forks and permissions the way Finder's Archive Utility does.
         // It runs inside the app's sandbox, so it can only write where the app can.
@@ -277,7 +277,7 @@ final class MacServices: InboxServices {
         try? FileManager.default.removeItem(at: output)
         let message = String(decoding: errors.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
             .trimmingCharacters(in: .whitespacesAndNewlines)
-        return .failure(ServiceError(message.isEmpty ? "Could not extract \(file.name)" : message))
+        return .failure(ServiceError(message.isEmpty ? String(localized: "error.extract", defaultValue: "Could not extract \(file.name)", comment: "Error toast. Placeholder: archive name.") : message))
     }
 
     func trash(_ files: [InboxFile]) async -> Result<[TrashedItem], ServiceError> {
@@ -292,7 +292,7 @@ final class MacServices: InboxServices {
                 for item in items {
                     try? FileManager.default.moveItem(atPath: item.trashedPath, toPath: item.file.path)
                 }
-                return .failure(ServiceError("Could not move \(file.name) to the Trash"))
+                return .failure(ServiceError(String(localized: "error.trash", defaultValue: "Could not move \(file.name) to the Trash", comment: "Error toast. Placeholder: file name.")))
             }
         }
         return .success(items)
@@ -365,8 +365,8 @@ final class MacServices: InboxServices {
         panel.canChooseFiles = false
         panel.canCreateDirectories = false
         panel.allowsMultipleSelection = false
-        panel.prompt = String(localized: "Watch")
-        panel.message = String(localized: "Choose a folder to watch. New files landing there will show up in the inbox.")
+        panel.prompt = String(localized: "watch.prompt", defaultValue: "Watch", comment: "Folder picker button. Keep short.")
+        panel.message = String(localized: "watch.message", defaultValue: "Choose a folder to watch. New files landing there will show up in the inbox.", comment: "Folder picker heading.")
         NSApp.activate(ignoringOtherApps: true)
         let response = await panel.begin()
         guard response == .OK, let url = panel.url else { return nil }
@@ -406,21 +406,21 @@ final class MacServices: InboxServices {
     func purchasePro() async -> Result<Bool, ServiceError> {
         do {
             guard let product = try await Product.products(for: [Self.proProductID]).first else {
-                return .failure(ServiceError(String(localized: "Pro is not available in this build.")))
+                return .failure(ServiceError(String(localized: "pro.error.unavailable", defaultValue: "Pro is not available in this build.", comment: "Purchase error when the store has no product.")))
             }
             switch try await product.purchase() {
             case .success(let verification):
                 guard case .verified(let transaction) = verification else {
-                    return .failure(ServiceError(String(localized: "The purchase could not be verified.")))
+                    return .failure(ServiceError(String(localized: "pro.error.unverified", defaultValue: "The purchase could not be verified.", comment: "Purchase error.")))
                 }
                 await transaction.finish()
                 return .success(true)
             case .userCancelled:
-                return .failure(ServiceError(String(localized: "Purchase cancelled.")))
+                return .failure(ServiceError(String(localized: "pro.error.cancelled", defaultValue: "Purchase cancelled.", comment: "Shown when the user closes the purchase sheet.")))
             case .pending:
-                return .failure(ServiceError(String(localized: "The purchase is waiting for approval.")))
+                return .failure(ServiceError(String(localized: "pro.error.pending", defaultValue: "The purchase is waiting for approval.", comment: "Purchase needs Ask to Buy approval.")))
             @unknown default:
-                return .failure(ServiceError(String(localized: "The purchase did not complete.")))
+                return .failure(ServiceError(String(localized: "pro.error.incomplete", defaultValue: "The purchase did not complete.", comment: "Purchase error.")))
             }
         } catch {
             return .failure(ServiceError(error.localizedDescription))
@@ -434,7 +434,7 @@ final class MacServices: InboxServices {
             return .failure(ServiceError(error.localizedDescription))
         }
         let owned = await proStatus()
-        return owned ? .success(true) : .failure(ServiceError(String(localized: "No Pro purchase found for this Apple Account.")))
+        return owned ? .success(true) : .failure(ServiceError(String(localized: "pro.error.notFound", defaultValue: "No Pro purchase found for this Apple Account.", comment: "Restore Purchases found nothing. 'Apple Account' is Apple's term.")))
     }
 
     /// Localized price of the Pro product, for the settings button; nil until the store answers.
@@ -457,7 +457,7 @@ final class NotificationRelay: NSObject, UNUserNotificationCenterDelegate {
         super.init()
         let center = UNUserNotificationCenter.current()
         center.delegate = self
-        let open = UNNotificationAction(identifier: Self.openAction, title: String(localized: "Open"), options: [.foreground])
+        let open = UNNotificationAction(identifier: Self.openAction, title: String(localized: "notification.open", defaultValue: "Open", comment: "Button on a notification."), options: [.foreground])
         center.setNotificationCategories([
             UNNotificationCategory(identifier: Self.category, actions: [open], intentIdentifiers: [], options: []),
         ])
@@ -478,8 +478,8 @@ final class NotificationRelay: NSObject, UNUserNotificationCenterDelegate {
         let content = UNMutableNotificationContent()
         content.title = latest.name
         content.body = burst.count == 1
-            ? String(localized: "New in \(latest.folderName)")
-            : String(localized: "and \(burst.count - 1) more new files")
+            ? String(localized: "notification.newIn", defaultValue: "New in \(latest.folderName)", comment: "Notification body. Placeholder: folder name.")
+            : String(localized: "notification.more", defaultValue: "and \(burst.count - 1) more new files", comment: "Notification body under the newest file's name. Placeholder: how many others arrived. Plural: 1 → 'and 1 more new file'.")
         content.categoryIdentifier = Self.category
         content.userInfo = ["path": latest.path]
         burst = []

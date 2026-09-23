@@ -307,15 +307,28 @@ public struct Rule: Equatable, Codable, Sendable, Identifiable, Hashable {
 }
 
 /// A rule asked for confirmation ("offer to Trash it"); shown as a notice with a button.
+/// `message` is the English wording the snapshot reports; the app renders its own localized
+/// text from `ruleName` and `fileID`.
 public struct Suggestion: Equatable, Sendable {
     public var fileID: FileID
-    public var message: String
+    public var ruleName: String
     public var action: RuleAction
 
-    public init(fileID: FileID, message: String, action: RuleAction) {
+    public init(fileID: FileID, ruleName: String, action: RuleAction) {
         self.fileID = fileID
-        self.message = message
+        self.ruleName = ruleName
         self.action = action
+    }
+
+    public var fileName: String { (fileID as NSString).lastPathComponent }
+
+    public var message: String {
+        switch action {
+        case .trash: return "\(ruleName): move \(fileName) to the Trash?"
+        case .moveTo(let path): return "\(ruleName): move \(fileName) to \((path as NSString).lastPathComponent)?"
+        case .markSeen: return "\(ruleName): mark \(fileName) as seen?"
+        case .suggestTrash: return "\(ruleName): move \(fileName) to the Trash?"
+        }
     }
 }
 
@@ -407,16 +420,63 @@ public enum ProFeature: String, Sendable, Equatable {
 
 // MARK: - Transient UI state that still lives in the model
 
+/// What a toast says, as data. `message` is the English wording; it is the contract the CLI,
+/// the scripts and the tests read through the snapshot, so it never changes with the locale.
+/// The app maps each case to its string catalog and shows that instead.
+public enum ToastText: Equatable, Sendable {
+    /// One or more paths were put on the pasteboard.
+    case pathCopied(count: Int)
+    /// Files were moved; `names` has one entry per file, `folder` is the destination's name.
+    case moved(names: [String], folder: String)
+    /// Some of the files could not be moved.
+    case moveFailed(failed: Int, total: Int)
+    /// A zip was extracted into a folder next to it.
+    case extracted(name: String, folder: String)
+    case proUnlocked
+    /// The user picked a folder that is already in the list.
+    case folderAlreadyWatched(name: String)
+    /// Text that is final already: a service reported it in the user's language.
+    case text(String)
+
+    public var message: String {
+        switch self {
+        case .pathCopied(let count):
+            return count == 1 ? "Path copied" : "\(count) paths copied"
+        case .moved(let names, let folder):
+            let what = names.count == 1 ? names[0] : "\(names.count) files"
+            return "Moved \(what) to \(folder)"
+        case .moveFailed(let failed, let total):
+            return "Could not move \(failed) of \(total) files"
+        case .extracted(let name, let folder):
+            return "Extracted \(name) to \(folder)"
+        case .proUnlocked:
+            return "Pro unlocked. Thank you!"
+        case .folderAlreadyWatched(let name):
+            return "'\(name)' is already watched"
+        case .text(let text):
+            return text
+        }
+    }
+}
+
 public struct Toast: Equatable, Sendable {
     public var token: Int
-    public var message: String
+    public var text: ToastText
     public var isError: Bool
 
-    public init(token: Int, message: String, isError: Bool = false) {
+    public init(token: Int, text: ToastText, isError: Bool = false) {
         self.token = token
-        self.message = message
+        self.text = text
         self.isError = isError
     }
+
+    /// A toast whose wording is already final (a service error, or a test fixture).
+    public init(token: Int, message: String, isError: Bool = false) {
+        self.init(token: token, text: .text(message), isError: isError)
+    }
+
+    /// The English wording, as reported by the snapshot.
+    public var message: String { text.message }
 }
 
 /// A file that was moved to the Trash by the inbox, with the location it landed at so it can be

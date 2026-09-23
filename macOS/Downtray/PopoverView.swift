@@ -37,14 +37,14 @@ struct PopoverView: View {
 
     private var header: some View {
         HStack {
-            Text("Downtray")
+            Text(appName)
                 .font(.headline)
             Spacer()
             Button(action: openSettings) {
                 Image(systemName: "gearshape")
             }
             .buttonStyle(.borderless)
-            .help("Settings")
+            .help(String(localized: "inbox.settings", defaultValue: "Settings", comment: "Tooltip on the gear button that opens Settings."))
             .accessibilityIdentifier("settings")
         }
         .padding(.horizontal, 14)
@@ -52,17 +52,17 @@ struct PopoverView: View {
         .padding(.bottom, 8)
     }
 
+    /// Chips wrap to a second line when a locale's labels do not fit in one (French does
+    /// at 360 pt); a chip is never truncated or scrolled out of view.
     private var chips: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 6) {
-                ForEach(FileFilter.allCases, id: \.self) { filter in
-                    FilterChip(title: filter.title, selected: model.filter == filter) {
-                        presenter.dispatch(.setFilter(filter))
-                    }
+        FlowLayout(spacing: 6) {
+            ForEach(FileFilter.allCases, id: \.self) { filter in
+                FilterChip(title: filter.localizedTitle, id: filter.rawValue, selected: model.filter == filter) {
+                    presenter.dispatch(.setFilter(filter))
                 }
             }
-            .padding(.horizontal, 14)
         }
+        .padding(.horizontal, 14)
         .padding(.bottom, 8)
     }
 
@@ -71,7 +71,9 @@ struct PopoverView: View {
         HStack(spacing: 6) {
             Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
             TextField(
-                model.historyMode ? String(localized: "Search history") : String(localized: "Search"),
+                model.historyMode
+                    ? String(localized: "inbox.search.history", defaultValue: "Search history", comment: "Placeholder of the search field while History is shown.")
+                    : String(localized: "inbox.search", defaultValue: "Search", comment: "Placeholder of the search field."),
                 text: Binding(get: { presenter.model.query }, set: { presenter.dispatch(.setQuery($0)) })
             )
             .textFieldStyle(.plain)
@@ -128,15 +130,17 @@ struct PopoverView: View {
 
     private var footer: some View {
         HStack {
-            Button("Open Downloads in Finder") { presenter.dispatch(.openWatchedFolder(.downloads)) }
+            Button(String(localized: "inbox.footer.openDownloads", defaultValue: "Open Downloads in Finder", comment: "Footer link button. Keep short: it shares one line with two other buttons.")) { presenter.dispatch(.openWatchedFolder(.downloads)) }
             Spacer()
             if model.isPro {
-                Button(model.historyMode ? String(localized: "Recent") : String(localized: "History")) {
+                Button(model.historyMode
+                       ? String(localized: "inbox.footer.recent", defaultValue: "Recent", comment: "Footer button: switch from History back to the current files.")
+                       : String(localized: "inbox.footer.history", defaultValue: "History", comment: "Footer button: show every file that ever arrived (Pro).")) {
                     presenter.dispatch(.setHistoryMode(!model.historyMode))
                 }
                 .accessibilityIdentifier("historyToggle")
             }
-            Button("Mark all seen") { presenter.dispatch(.markAllSeen) }
+            Button(String(localized: "inbox.footer.markAllSeen", defaultValue: "Mark all seen", comment: "Footer button: clears the unread dots and the badge.")) { presenter.dispatch(.markAllSeen) }
                 .disabled(model.unreadCount == 0 && model.badgeCount == 0)
         }
         .buttonStyle(.link)
@@ -151,23 +155,23 @@ struct PopoverView: View {
     private var notices: some View {
         if let suggestion = model.suggestion {
             NoticeView(
-                message: suggestion.message,
+                message: suggestion.localizedMessage,
                 isError: false,
-                action: (String(localized: "Yes"), { presenter.dispatch(.acceptSuggestion) }),
+                action: (String(localized: "notice.yes", defaultValue: "Yes", comment: "Button that confirms a rule's suggestion."), { presenter.dispatch(.acceptSuggestion) }),
                 dismiss: { presenter.dispatch(.dismissSuggestion) }
             )
             .accessibilityIdentifier("suggestion")
         } else if let undo = model.undo {
             NoticeView(
                 message: undo.files.count == 1
-                    ? String(localized: "Moved \(undo.files[0].name) to Trash")
-                    : String(localized: "Moved \(undo.files.count) files to Trash"),
+                    ? String(localized: "undo.trashedOne", defaultValue: "Moved \(undo.files[0].name) to Trash", comment: "Notice with an Undo button. Placeholder: file name.")
+                    : String(localized: "undo.trashedMany", defaultValue: "Moved \(undo.files.count) files to Trash", comment: "Notice with an Undo button. Placeholder: number of files."),
                 isError: false,
-                action: undo.ready ? (String(localized: "Undo"), { presenter.dispatch(.undoTrash) }) : nil
+                action: undo.ready ? (String(localized: "notice.undo", defaultValue: "Undo", comment: "Button that puts trashed files back."), { presenter.dispatch(.undoTrash) }) : nil
             )
             .accessibilityIdentifier("undoToast")
         } else if let toast = model.toast {
-            NoticeView(message: toast.message, isError: toast.isError, action: nil)
+            NoticeView(message: toast.text.localized, isError: toast.isError, action: nil)
                 .onTapGesture { presenter.dispatch(.dismissToast) }
                 .accessibilityIdentifier("toast")
         }
@@ -195,12 +199,12 @@ struct PopoverView: View {
 
     private var hiddenShortcuts: some View {
         Group {
-            Button("Reveal in Finder") { presenter.dispatch(.reveal(.selection)) }.keyboardShortcut("r", modifiers: .command)
-            Button("Copy Path") { presenter.dispatch(.copyPath(.selection)) }.keyboardShortcut("c", modifiers: .command)
-            Button("Move to…") { presenter.dispatch(.moveTo(.selection)) }.keyboardShortcut("m", modifiers: .command)
-            Button("Unzip Here") { presenter.dispatch(.unzip(.selection)) }.keyboardShortcut("u", modifiers: .command)
-            Button("Select All") { selectAll() }.keyboardShortcut("a", modifiers: .command)
-            Button("Quit Downtray") { NSApp.terminate(nil) }.keyboardShortcut("q", modifiers: .command)
+            Button(String(localized: "action.reveal", defaultValue: "Reveal in Finder", comment: "Menu item and ⌘R.")) { presenter.dispatch(.reveal(.selection)) }.keyboardShortcut("r", modifiers: .command)
+            Button(String(localized: "action.copyPath", defaultValue: "Copy Path", comment: "Menu item and ⌘C: puts the file's path on the clipboard.")) { presenter.dispatch(.copyPath(.selection)) }.keyboardShortcut("c", modifiers: .command)
+            Button(String(localized: "action.move", defaultValue: "Move to…", comment: "Menu item and ⌘M: opens a folder picker.")) { presenter.dispatch(.moveTo(.selection)) }.keyboardShortcut("m", modifiers: .command)
+            Button(String(localized: "action.unzip", defaultValue: "Unzip Here", comment: "Menu item and ⌘U: extracts a zip next to itself.")) { presenter.dispatch(.unzip(.selection)) }.keyboardShortcut("u", modifiers: .command)
+            Button(String(localized: "action.selectAll", defaultValue: "Select All", comment: "⌘A.")) { selectAll() }.keyboardShortcut("a", modifiers: .command)
+            Button(String(localized: "app.quit", defaultValue: "Quit Downtray", comment: "Menu item and ⌘Q. Keep the brand name as is.")) { NSApp.terminate(nil) }.keyboardShortcut("q", modifiers: .command)
         }
         .frame(width: 0, height: 0)
         .opacity(0)
@@ -295,7 +299,7 @@ struct FileRowView: View {
                 Circle()
                     .fill(Color.accentColor)
                     .frame(width: 7, height: 7)
-                    .accessibilityLabel("Unread")
+                    .accessibilityLabel(String(localized: "row.unread", defaultValue: "Unread", comment: "Accessibility label of the dot on a file the user has not acted on."))
             }
             // Rows for gone files exist only in History; they carry no actions.
             if !file.missing {
@@ -327,7 +331,7 @@ struct FileRowView: View {
         .onTapGesture { actions.click() }
         .onHover { hovering = $0 }
         .contextMenu { menuItems }
-        .help(file.missing ? String(localized: "This file was moved or deleted. History keeps it so you can see where it came from.") : file.path)
+        .help(file.missing ? String(localized: "row.missing.help", defaultValue: "This file was moved or deleted. History keeps it so you can see where it came from.", comment: "Tooltip on a greyed-out History row.") : file.path)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(file.name)
         .accessibilityIdentifier("row")
@@ -337,35 +341,72 @@ struct FileRowView: View {
         var parts: [String] = []
         parts.append(file.addedAt.formatted(.relative(presentation: .named)))
         if file.kind != .folder { parts.append(file.size.formatted(.byteCount(style: .file))) }
-        parts.append(file.kind.label)
+        parts.append(file.kind.localizedLabel)
         if let source = file.source.label { parts.append(source) }
         if showFolder { parts.append(file.folderName) }
-        if file.missing { parts.append(String(localized: "moved or deleted")) }
+        if file.missing { parts.append(String(localized: "row.missing", defaultValue: "moved or deleted", comment: "Meta line fragment on a History row whose file is gone.")) }
         return parts.joined(separator: " · ")
     }
 
     @ViewBuilder
     private var menuItems: some View {
         if !file.missing {
-            Button("Open") { actions.open() }
-            Button("Quick Look") { actions.quickLook() }
-            Button("Reveal in Finder") { actions.reveal() }
-            Button("Copy Path") { actions.copyPath() }
+            Button(String(localized: "action.open", defaultValue: "Open", comment: "Menu item: open the file in its default app.")) { actions.open() }
+            Button(String(localized: "action.quickLook", defaultValue: "Quick Look", comment: "Menu item: the macOS Quick Look preview. Use the system's name for it.")) { actions.quickLook() }
+            Button(String(localized: "action.reveal", defaultValue: "Reveal in Finder")) { actions.reveal() }
+            Button(String(localized: "action.copyPath", defaultValue: "Copy Path")) { actions.copyPath() }
             Divider()
-            Button("Move to…") { actions.moveTo() }
+            Button(String(localized: "action.move", defaultValue: "Move to…")) { actions.moveTo() }
             if file.isZip {
-                Button("Unzip Here") { actions.unzip() }
+                Button(String(localized: "action.unzip", defaultValue: "Unzip Here")) { actions.unzip() }
             }
             Divider()
-            Button("Move to Trash") { actions.trash() }
+            Button(String(localized: "action.trash", defaultValue: "Move to Trash", comment: "Menu item and ⌫.")) { actions.trash() }
         }
     }
 }
 
 // MARK: - Pieces
 
+/// Left to right, wrapping to the next line when the width runs out.
+struct FlowLayout: Layout {
+    var spacing: CGFloat = 6
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        arrange(width: proposal.width ?? .infinity, subviews: subviews).size
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let origins = arrange(width: bounds.width, subviews: subviews).origins
+        for (subview, origin) in zip(subviews, origins) {
+            subview.place(at: CGPoint(x: bounds.minX + origin.x, y: bounds.minY + origin.y), proposal: .unspecified)
+        }
+    }
+
+    private func arrange(width: CGFloat, subviews: Subviews) -> (size: CGSize, origins: [CGPoint]) {
+        var origins: [CGPoint] = []
+        var x: CGFloat = 0, y: CGFloat = 0, rowHeight: CGFloat = 0, widest: CGFloat = 0
+        for subview in subviews {
+            let size = subview.sizeThatFits(.unspecified)
+            if x > 0, x + size.width > width {
+                x = 0
+                y += rowHeight + spacing
+                rowHeight = 0
+            }
+            origins.append(CGPoint(x: x, y: y))
+            rowHeight = max(rowHeight, size.height)
+            x += size.width + spacing
+            widest = max(widest, x - spacing)
+        }
+        // Fill the proposed width so the rows stay left-aligned inside a wider container.
+        return (CGSize(width: width.isFinite ? width : widest, height: y + rowHeight), origins)
+    }
+}
+
 struct FilterChip: View {
     let title: String
+    /// Locale-independent id for the accessibility identifier ("filter-pdf").
+    let id: String
     let selected: Bool
     let action: () -> Void
 
@@ -380,7 +421,7 @@ struct FilterChip: View {
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(selected ? .isSelected : [])
-        .accessibilityIdentifier("filter-\(title)")
+        .accessibilityIdentifier("filter-\(id)")
     }
 }
 
@@ -398,23 +439,23 @@ struct EmptyStateView: View {
                 .foregroundStyle(.secondary)
             switch state {
             case .nothingNew where searching:
-                Text("No matches.")
+                Text(String(localized: "inbox.empty.noMatches", defaultValue: "No matches.", comment: "Empty state while a search finds nothing."))
                     .font(.headline)
             case .nothingNew where history:
-                Text("No history yet.")
+                Text(String(localized: "inbox.empty.history.title", defaultValue: "No history yet.", comment: "Empty state of the History list."))
                     .font(.headline)
-                Text("Every file that lands in a watched folder is remembered here.")
+                Text(String(localized: "inbox.empty.history.body", defaultValue: "Every file that lands in a watched folder is remembered here."))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
             case .nothingNew:
-                Text("Nothing new.")
+                Text(String(localized: "inbox.empty.title", defaultValue: "Nothing new.", comment: "Empty state of the inbox."))
                     .font(.headline)
-                Text("New downloads will show up here.")
+                Text(String(localized: "inbox.empty.body", defaultValue: "New downloads will show up here."))
                     .foregroundStyle(.secondary)
             case .needsAccess:
-                Text("Downtray can't see your Downloads folder.")
+                Text(String(localized: "inbox.permission.title", defaultValue: "Downtray can't see your Downloads folder.", comment: "Empty state when macOS denied access. Keep the brand name."))
                     .multilineTextAlignment(.center)
-                Button("Grant access to Downloads", action: grant)
+                Button(String(localized: "inbox.permission.button", defaultValue: "Grant access to Downloads", comment: "Opens the folder picker that grants access."), action: grant)
                     .accessibilityIdentifier("grantAccess")
             }
             Spacer()
@@ -446,7 +487,7 @@ struct NoticeView: View {
                 Button(action: dismiss) { Image(systemName: "xmark") }
                     .buttonStyle(.plain)
                     .foregroundStyle(.secondary)
-                    .accessibilityLabel("Dismiss")
+                    .accessibilityLabel(String(localized: "notice.dismiss", defaultValue: "Dismiss", comment: "Accessibility label of the × on a notice."))
             }
         }
         .font(.callout)

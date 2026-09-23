@@ -203,5 +203,18 @@ send the next line as soon as the panel is really there (rule 11). The debug ent
   headless tier covers it with `pro on` and the fake store, and the real app is exercised the
   same way through the bridge. `Pro.storekit` in the scheme gives a local sandbox purchase when
   the app is run from Xcode.
-- **Localization** goes through `Localizable.xcstrings` with `SWIFT_EMIT_LOC_STRINGS`, so every
-  user-facing string is exported from day one.
+- **Localization: the core speaks English, the app speaks the user's language.** Toasts and
+  suggestions are data (`ToastText`, `Suggestion`) whose English `message` is what the
+  snapshot reports, so the CLI, the scripts and the tests keep asserting on one wording
+  regardless of locale. The app maps each case, and every enum label (`FileFilter`,
+  `FileKind`, `FolderKind`, rule summaries), to the string catalog in
+  `macOS/Downtray/Localized.swift`. Every UI string is `String(localized: "dotted.key",
+  defaultValue: "English", comment: …)`; the one catalog, `Localizable.xcstrings`, holds
+  English, Japanese, German and French, with plural variants where a count is shown. Dates
+  and sizes come from Foundation formatters, so they follow the locale for free. The brand
+  name, shortcut glyphs, file extensions and the debug bridge stay untranslated.
+  `scripts/check-strings.sh` fails when code and catalog drift or a language misses a key.
+  Filter chips use a wrapping `FlowLayout` rather than a horizontal scroll view: French needs
+  two lines at 360 pt, and a chip must never be cut mid-word. The bridge's `screenshot [dir]`
+  renders the popover and the visible windows to PNG from inside the app (no screen-recording
+  permission), which is how each locale's layout was checked.

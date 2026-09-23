@@ -90,7 +90,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, Pan
     private static var menuBarIcon: NSImage? {
         let image = NSImage(named: "MenuBarIcon")
         image?.isTemplate = true
-        image?.accessibilityDescription = "Downtray"
+        image?.accessibilityDescription = appName
         return image
     }
 
@@ -117,11 +117,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, Pan
         guard let button = statusItem?.button else { return }
         closePopover()
         let menu = NSMenu()
-        let settings = NSMenuItem(title: String(localized: "Settings…"), action: #selector(menuOpenSettings), keyEquivalent: ",")
+        let settings = NSMenuItem(title: String(localized: "menu.settings", defaultValue: "Settings…", comment: "Status item menu."), action: #selector(menuOpenSettings), keyEquivalent: ",")
         settings.target = self
         menu.addItem(settings)
         menu.addItem(.separator())
-        let quit = NSMenuItem(title: String(localized: "Quit Downtray"), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        let quit = NSMenuItem(title: String(localized: "app.quit", defaultValue: "Quit Downtray"), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         quit.target = NSApp
         menu.addItem(quit)
         menu.popUp(positioning: nil, at: NSPoint(x: 0, y: button.bounds.height + 4), in: button)
@@ -149,7 +149,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, Pan
     private func renderBadge(_ count: Int) {
         guard let button = statusItem?.button else { return }
         button.title = count == 0 ? "" : (count > 9 ? "9+" : "\(count)")
-        button.toolTip = count == 0 ? "Downtray" : "\(count) new file\(count == 1 ? "" : "s")"
+        button.toolTip = count == 0
+            ? appName
+            : String(localized: "statusItem.newFiles", defaultValue: "\(count) new files", comment: "Tooltip on the menu bar icon while the badge shows. Plural: 1 → '1 new file'.")
     }
 
     // MARK: Popover
@@ -206,6 +208,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, Pan
         return Self.flipped(window.frame)
     }
 
+    var panelContentView: NSView? { popover.isShown ? popover.contentViewController?.view : nil }
+
     /// AppKit screen coordinates have their origin at the bottom left of the main screen.
     private static func flipped(_ rect: CGRect) -> CGRect {
         let height = NSScreen.screens.first?.frame.height ?? 0
@@ -244,7 +248,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, Pan
             // Pre-macOS 14 fallbacks; private selectors, so only tried when the action is missing.
             _ = NSApp.sendAction(Selector(("showPreferencesWindow:")), to: nil, from: nil)
         }
-        if let window = NSApp.windows.first(where: { $0.isVisible && $0.title.localizedCaseInsensitiveContains("settings") }) {
+        let title = String(localized: "settings.title", defaultValue: "Downtray Settings", comment: "Window title. Keep the brand name.")
+        if let window = NSApp.windows.first(where: { $0.isVisible && $0.title == title }) {
             // The Settings scene comes with an empty unified toolbar, which pushes the title to
             // the left on macOS 26+. Without a toolbar the title is centered.
             window.toolbar = nil
@@ -264,4 +269,6 @@ protocol PanelController: AnyObject {
     /// that drive the app with real mouse clicks. Nil when not on screen.
     var statusItemFrame: CGRect? { get }
     var panelFrame: CGRect? { get }
+    /// The popover's content view while it is on screen (its window is not in `NSApp.windows`).
+    var panelContentView: NSView? { get }
 }
