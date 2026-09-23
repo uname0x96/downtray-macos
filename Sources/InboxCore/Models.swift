@@ -676,7 +676,8 @@ public struct InboxModel: Equatable, Sendable {
     }
 
     /// The rows on screen. The inbox applies the type chip; History applies its
-    /// All / Available / Gone segment instead. Both apply the search text and the list limit.
+    /// All / Available / Gone segment instead. Both apply the search text (the inbox shows
+    /// its field with Pro, whose list holds 200 files) and the list limit.
     public var visibleFiles: [InboxFile] {
         let base = historyMode ? historyFiles : recentFiles
         let needle = query.trimmingCharacters(in: .whitespaces)
@@ -720,7 +721,9 @@ public struct InboxModel: Equatable, Sendable {
             return historyFiles.isEmpty ? .historyEmpty : .noMatches
         }
         if let downloads, downloads.access == .denied { return .needsAccess }
-        return visibleFiles.isEmpty ? .nothingNew : nil
+        guard visibleFiles.isEmpty else { return nil }
+        // A Pro inbox has a search field; a query with no hits is "No matches", not "Nothing new".
+        return query.trimmingCharacters(in: .whitespaces).isEmpty ? .nothingNew : .noMatches
     }
 
     /// Enabled rules for a trigger, in order; the first match wins.

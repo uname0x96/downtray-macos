@@ -145,7 +145,16 @@ import MobiusTest
         #expect(m.visibleFiles.count == 2)
         m.panelOpen = true
         m = try InboxReducer.reduce(m, .setQuery("zzz")).model
-        #expect(m.emptyState == .nothingNew)
+        #expect(m.emptyState == .noMatches, "the Pro inbox has a search field, so no hits is No matches")
+        m = try InboxReducer.reduce(m, .setQuery("")).model
+        #expect(m.emptyState == nil)
+        m = try InboxReducer.reduce(m, .setQuery("inv")).model
+        m = try InboxReducer.reduce(m, .setHistoryMode(true)).model
+        #expect(m.query.isEmpty, "entering History starts with an empty search")
+        m = try InboxReducer.reduce(m, .setQuery("zzz")).model
+        m = try InboxReducer.reduce(m, .setHistoryMode(false)).model
+        #expect(m.query.isEmpty, "leaving History clears its search")
+        m = try InboxReducer.reduce(m, .setQuery("zzz")).model
         m = try InboxReducer.reduce(m, .hotkeyPressed).model
         #expect(m.query.isEmpty, "closing the panel clears the search")
     }

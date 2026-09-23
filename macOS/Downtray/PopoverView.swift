@@ -24,6 +24,8 @@ struct PopoverView: View {
             } else {
                 header
                 chips
+                // Pro lists 200 files, which is too many to scan by eye; free stops at 20.
+                if model.isPro { searchField }
                 Divider()
                 content
                 Divider()
@@ -134,12 +136,14 @@ struct PopoverView: View {
         .padding(.bottom, 8)
     }
 
-    /// History only: filters the list by file name. The inbox has no search.
+    /// Filters the list by file name: on History, and on the inbox with Pro.
     private var searchField: some View {
         HStack(spacing: 6) {
             Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
             TextField(
-                String(localized: "history.search", defaultValue: "Search history", comment: "Placeholder of the search field on the History panel."),
+                model.historyMode
+                    ? String(localized: "history.search", defaultValue: "Search history", comment: "Placeholder of the search field on the History panel.")
+                    : String(localized: "inbox.search", defaultValue: "Search", comment: "Placeholder of the search field on the inbox (Pro)."),
                 text: Binding(get: { presenter.model.query }, set: { presenter.dispatch(.setQuery($0)) })
             )
             .textFieldStyle(.plain)
@@ -649,7 +653,7 @@ struct EmptyStateView: View {
                 .foregroundStyle(.secondary)
             switch state {
             case .noMatches:
-                Text(String(localized: "history.empty.noMatches", defaultValue: "No matches.", comment: "History panel while the search or segment finds nothing."))
+                Text(String(localized: "empty.noMatches", defaultValue: "No matches.", comment: "Inbox (Pro) or History while the search finds nothing."))
                     .font(.headline)
             case .historyEmpty:
                 Text(String(localized: "history.empty", defaultValue: "Nothing in history yet.", comment: "History panel before any file has been recorded."))

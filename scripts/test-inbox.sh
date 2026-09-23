@@ -175,8 +175,11 @@ headless_scenario() {
     send "arrive /Users/sample/Scans/scan.pdf 9k"
     expect "$(row scan.pdf) | .folder == \"Scans\"" "a file in the extra folder shows up"
 
+    send "search scan"
+    expect '.query == "scan" and (.rows | length) == 1 and .rows[0].name == "scan.pdf"' "the Pro inbox searches by name"
+    send "search zzz";  expect '.emptyState == "noMatches"' "no hits in the inbox is No matches, not Nothing new"
     send "history on"
-    expect '.historyMode and (.rows | map(.name) | index("archive.zip")) != null' "history still lists the moved archive"
+    expect '.historyMode and .query == "" and (.rows | map(.name) | index("archive.zip")) != null' "history still lists the moved archive and starts with an empty search"
     send "search scan"
     expect '.query == "scan" and (.rows | length) == 1 and .rows[0].name == "scan.pdf"'
     send "search zzz";  expect '.emptyState == "noMatches"' "a search with no hits is History's own empty state"

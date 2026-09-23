@@ -112,8 +112,10 @@ error: extra folders (`addFolder`, `removeFolder`), a 200-file list with a name 
   "relative time · Moved or deleted", cannot be opened, and has one action, "Remove from
   history" (`removeFromHistory`, also on click and ⌫). If Open or Reveal finds the file gone,
   the row turns Gone in place (`onFileVanished` → `fileRemoved`). Empty states are
-  `historyEmpty` ("Nothing in history yet.") and `noMatches`. The inbox itself has no search
-  (`setHistoryMode(false)` clears the query), and leaving History marks nothing seen. History
+  `historyEmpty` ("Nothing in history yet.") and `noMatches`. The inbox shows the same search
+  field with Pro, whose list holds 200 files (the free inbox of 20 has none, per the popover
+  spec); a query with no hits there is `noMatches` too. Entering or leaving History clears the
+  query, so each panel starts its search empty, and leaving History marks nothing seen. History
   is reached from the gear menu (Pro) or the "Show older files" row that ends the list when
   the folders hold more than it shows (`hasOlderFiles`); without Pro that row and the gear's
   "Downtray Pro…" open the Pro sheet drawn inside the panel (`paywallShown`, events

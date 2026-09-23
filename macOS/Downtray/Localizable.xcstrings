@@ -429,6 +429,35 @@
         }
       }
     },
+    "empty.noMatches": {
+      "comment": "Inbox (Pro) or History while the search finds nothing.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Treffer."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No matches."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun résultat."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一致するものはありません。"
+          }
+        }
+      }
+    },
     "error.createFolder": {
       "comment": "Error toast. Placeholder: folder name.",
       "localizations": {
@@ -802,35 +831,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "履歴はまだありません。"
-          }
-        }
-      }
-    },
-    "history.empty.noMatches": {
-      "comment": "History panel while the search or segment finds nothing.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Keine Treffer."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No matches."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aucun résultat."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "一致するものはありません。"
           }
         }
       }
@@ -1265,6 +1265,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "Downtray はダウンロードフォルダを読み取れません。"
+          }
+        }
+      }
+    },
+    "inbox.search": {
+      "comment": "Placeholder of the search field on the inbox (Pro).",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suchen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rechercher"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "検索"
           }
         }
       }

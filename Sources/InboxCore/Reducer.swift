@@ -460,8 +460,8 @@ public enum InboxReducer {
             next.historyMode = on
             next.selection = []
             next.focused = nil
-            // Search lives on the History panel only; the inbox is never left filtered by it.
-            if !on { next.query = "" }
+            // Each panel has its own search: a query never carries over between them.
+            next.query = ""
 
         case .setQuery(let text):
             next.query = text
