@@ -119,6 +119,8 @@ final class DebugBridge {
         case "settings":
             panel?.openSettings()
             await Self.waitForRender()
+        case "relaunch":
+            AppDelegate.relaunch()
         case "frames":
             func text(_ rect: CGRect?) -> String {
                 guard let rect else { return "null" }

@@ -297,7 +297,7 @@ do {
             print(command.padding(toLength: 34, withPad: " ", startingAt: 0), description)
         }
         print("")
-        print("session:                           state | reset | settle | dest <path> | pick <path> | settings | windows | frames | screenshot [dir]")
+        print("session:                           state | reset | settle | dest <path> | pick <path> | settings | relaunch | windows | frames | screenshot [dir]")
 
     default:
         print("""

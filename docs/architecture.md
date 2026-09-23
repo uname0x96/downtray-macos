@@ -217,8 +217,13 @@ send the next line as soon as the panel is really there (rule 11). The debug ent
   The language picker in Settings > General is a setting like any other (`Settings.language`,
   event `setLanguage`, grammar `language ja|system`); `saveSettings` mirrors it into the app's
   `AppleLanguages` default, the key System Settings > Language & Region > Applications writes,
-  so both routes agree and Foundation picks the language at the next launch. The row shows a
-  Relaunch button while the choice differs from the localization the running process shows.
+  so both routes agree and Foundation picks the language at the next launch. Picking a language
+  that differs from the localization the running process shows only asks, with the alert System
+  Settings itself uses: Relaunch Now saves the choice and restarts, Later discards it, so the
+  picker never shows a language the app is not displaying. `AppDelegate.relaunch()` opens a second
+  instance and quits; the newcomer normally hands over to a running copy, so the leaving one first
+  writes its pid to defaults (launch arguments do not reach a sandboxed app), and the newcomer
+  waits for that pid to exit, forcing it if a closing sheet stalls the quit.
   Filter chips use a wrapping `FlowLayout` rather than a horizontal scroll view: French needs
   two lines at 360 pt, and a chip must never be cut mid-word. The bridge's `screenshot [dir]`
   renders the popover and the visible windows to PNG from inside the app (no screen-recording

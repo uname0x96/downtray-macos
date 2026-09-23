@@ -99,26 +99,47 @@ struct SettingsView: View {
 
     // MARK: Language
 
+    /// A pick that needs a relaunch, waiting for the alert's answer. `.some(nil)` is "System".
+    /// Relaunch Now saves it and restarts; Later drops it, so the picker stays where it was.
+    @State private var relaunchPrompt: AppLanguage?? = nil
+
     @ViewBuilder
     private var languageRow: some View {
         Picker(
             String(localized: "settings.language", defaultValue: "Language", comment: "Picker label in General."),
-            selection: Binding(get: { presenter.model.settings.language }, set: { presenter.dispatch(.setLanguage($0)) })
+            selection: Binding(get: { presenter.model.settings.language }, set: { choice in
+                if Self.languageAtNextLaunch(for: choice) == Self.runningLanguage {
+                    presenter.dispatch(.setLanguage(choice))
+                } else {
+                    relaunchPrompt = .some(choice)
+                }
+            })
         ) {
             Text(String(localized: "settings.language.system", defaultValue: "System", comment: "Picker option: follow the macOS language.")).tag(AppLanguage?.none)
             Divider()
             ForEach(AppLanguage.allCases, id: \.self) { Text(verbatim: $0.endonym).tag(AppLanguage?.some($0)) }
         }
         .accessibilityIdentifier("language")
-        if Self.languageAtNextLaunch(for: model.settings.language) != Self.runningLanguage {
-            LabeledContent {
-                Button(String(localized: "settings.language.relaunch", defaultValue: "Relaunch", comment: "Button that restarts the app to apply the language.")) { AppDelegate.relaunch() }
-                    .accessibilityIdentifier("relaunch")
-            } label: {
-                Text(String(localized: "settings.language.relaunchNeeded", defaultValue: "Relaunch Downtray to switch the language.", comment: "Shown after the language picker changed. Keep the brand name."))
-                    .foregroundStyle(.secondary)
+        .alert(
+            String(localized: "settings.language.alert.title", defaultValue: "Relaunch Downtray to switch to \(Self.name(of: relaunchPrompt ?? nil))?", comment: "Alert after the language picker changed. Placeholder: the chosen language's own name (日本語) or 'System'. Keep the brand name."),
+            isPresented: Binding(get: { relaunchPrompt != nil }, set: { if !$0 { relaunchPrompt = nil } })
+        ) {
+            Button(String(localized: "settings.language.relaunchNow", defaultValue: "Relaunch Now", comment: "Alert button: save the language and restart the app.")) {
+                if let choice = relaunchPrompt {
+                    presenter.dispatch(.setLanguage(choice))
+                    // After the alert has closed: a quit requested while a sheet is closing stalls.
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { AppDelegate.relaunch() }
+                }
             }
+            Button(String(localized: "settings.language.later", defaultValue: "Later", comment: "Alert button: keep the current language; the pick is discarded."), role: .cancel) {}
+        } message: {
+            Text(String(localized: "settings.language.alert.message", defaultValue: "The language changes when Downtray restarts. Later keeps the current language.", comment: "Alert body under the relaunch question. Keep the brand name."))
         }
+    }
+
+    /// What the alert calls the choice: the endonym, or the "System" option's label.
+    private static func name(of choice: AppLanguage?) -> String {
+        choice?.endonym ?? String(localized: "settings.language.system", defaultValue: "System")
     }
 
     /// The localization this process shows ("ja"). Foundation picks it once, at launch.

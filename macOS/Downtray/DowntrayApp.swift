@@ -1,4 +1,5 @@
 import AppKit
+import os
 import SwiftUI
 import InboxCore
 
@@ -39,14 +40,44 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, Pan
     func applicationDidFinishLaunching(_ notification: Notification) {
         // One instance only. macOS stops the same bundle from launching twice, but two copies
         // at different paths (an Xcode run and a build from `.build`) both get a status item and
-        // both fight over the debug bridge port. The newcomer hands over and quits.
+        // both fight over the debug bridge port. The newcomer hands over and quits, unless it is
+        // the second half of `relaunch()`: then the old instance is on its way out, and this one
+        // waits for it (the status item and the bridge port must be free) rather than quitting.
         let others = NSRunningApplication.runningApplications(withBundleIdentifier: Bundle.main.bundleIdentifier ?? "")
             .filter { $0.processIdentifier != ProcessInfo.processInfo.processIdentifier }
-        if let other = others.first {
+        let leaving = UserDefaults.standard.integer(forKey: Self.relaunchingKey)
+        Self.log.info("launch pid \(ProcessInfo.processInfo.processIdentifier, privacy: .public) others=\(others.map(\.processIdentifier), privacy: .public) leaving=\(leaving, privacy: .public)")
+        guard let other = others.first else { return finishLaunching() }
+        guard other.processIdentifier == leaving else {
             other.activate()
             NSApp.terminate(nil)
             return
         }
+        Task { @MainActor in
+            for _ in 0..<30 where !other.isTerminated { try? await Task.sleep(for: .milliseconds(100)) }
+            if !other.isTerminated {
+                // It said it was leaving; a quit stuck behind a closing sheet gets a push.
+                other.forceTerminate()
+                for _ in 0..<20 where !other.isTerminated { try? await Task.sleep(for: .milliseconds(100)) }
+            }
+            Self.log.info("old instance \(other.processIdentifier, privacy: .public) terminated=\(other.isTerminated, privacy: .public)")
+            if other.isTerminated {
+                finishLaunching()
+            } else {
+                other.activate()
+                NSApp.terminate(nil)
+            }
+        }
+    }
+
+    /// Defaults key holding the pid of an instance that is quitting in favor of the one it just
+    /// launched. Shared through the container, unlike launch arguments, which LaunchServices
+    /// does not deliver to a sandboxed app.
+    private static let relaunchingKey = "relaunchingFromPID"
+    private nonisolated static let log = Logger(subsystem: "app.downtray.mac", category: "launch")
+
+    private func finishLaunching() {
+        UserDefaults.standard.removeObject(forKey: Self.relaunchingKey)
         services.panelController = self
         services.onHotkey = { [weak self] in self?.presenter.dispatch(.hotkeyPressed) }
         services.onNotificationOpen = { [weak self] path in self?.presenter.dispatch(.open(.files([path]))) }
@@ -239,12 +270,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, Pan
     // MARK: Relaunch
 
     /// Starts a second instance and quits this one once it is running. Used after the language
-    /// changed: Foundation picks the UI language at launch.
+    /// changed: Foundation picks the UI language at launch. The marker in defaults tells the new
+    /// instance to wait for this one to exit instead of treating it as the instance to hand over to.
     static func relaunch() {
+        UserDefaults.standard.set(ProcessInfo.processInfo.processIdentifier, forKey: relaunchingKey)
         let configuration = NSWorkspace.OpenConfiguration()
         configuration.createsNewApplicationInstance = true
-        NSWorkspace.shared.openApplication(at: Bundle.main.bundleURL, configuration: configuration) { _, error in
-            guard error == nil else { return }
+        NSWorkspace.shared.openApplication(at: Bundle.main.bundleURL, configuration: configuration) { app, error in
+            log.info("relaunch: new pid \(app?.processIdentifier ?? -1, privacy: .public) error=\(error.map { "\($0)" } ?? "none", privacy: .public)")
+            guard error == nil else {
+                UserDefaults.standard.removeObject(forKey: relaunchingKey)
+                return
+            }
             Task { @MainActor in NSApp.terminate(nil) }
         }
     }

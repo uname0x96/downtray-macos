@@ -3782,60 +3782,118 @@
         }
       }
     },
-    "settings.language.relaunch": {
-      "comment": "Button that restarts the app to apply the language.",
+    "settings.language.alert.message": {
+      "comment": "Alert body under the relaunch question. Keep the brand name.",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Neu starten"
+            "value": "Die Sprache wechselt beim Neustart von Downtray. „Später“ behält die aktuelle Sprache."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Relaunch"
+            "value": "The language changes when Downtray restarts. Later keeps the current language."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Relancer"
+            "value": "La langue change au redémarrage de Downtray. « Plus tard » conserve la langue actuelle."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "再起動"
+            "value": "言語は Downtray の再起動時に切り替わります。「あとで」を選ぶと現在の言語のままです。"
           }
         }
       }
     },
-    "settings.language.relaunchNeeded": {
-      "comment": "Shown after the language picker changed. Keep the brand name.",
+    "settings.language.alert.title": {
+      "comment": "Alert after the language picker changed. Placeholder: the chosen language's own name (日本語) or 'System'. Keep the brand name.",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Starte Downtray neu, um die Sprache zu wechseln."
+            "value": "Downtray neu starten, um zu %@ zu wechseln?"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Relaunch Downtray to switch the language."
+            "value": "Relaunch Downtray to switch to %@?"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Relancez Downtray pour changer de langue."
+            "value": "Relancer Downtray pour passer à %@ ?"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "言語を切り替えるには Downtray を再起動してください。"
+            "value": "Downtray を再起動して %@ に切り替えますか?"
+          }
+        }
+      }
+    },
+    "settings.language.later": {
+      "comment": "Alert button: keep the current language; the pick is discarded.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Später"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Later"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plus tard"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "あとで"
+          }
+        }
+      }
+    },
+    "settings.language.relaunchNow": {
+      "comment": "Alert button: save the language and restart the app.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jetzt neu starten"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Relaunch Now"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Relancer maintenant"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今すぐ再起動"
           }
         }
       }
