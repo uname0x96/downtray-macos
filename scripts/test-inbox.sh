@@ -147,6 +147,8 @@ headless_scenario() {
     send "hotkey-set cmd+shift+space"
     expect '.settings.hotkey == "⇧⌘Space"'
     send "notify on";  expect '.settings.notifications'
+    send "language ja"; expect '.settings.language == "ja"' "a UI language is a setting"
+    send "language system"; expect '.settings.language == null'
 
     send "seen"
     expect '.unread == 0'

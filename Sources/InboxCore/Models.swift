@@ -363,6 +363,16 @@ public struct HistoryEntry: Equatable, Codable, Sendable, Identifiable, Hashable
 
 // MARK: - Settings
 
+/// The languages the app ships. `nil` in `Settings.language` follows macOS.
+public enum AppLanguage: String, Codable, Sendable, CaseIterable, Equatable {
+    case en, ja, de, fr
+
+    /// The language's own name ("日本語"), which is how every picker on the Mac lists languages.
+    public var endonym: String {
+        Locale(identifier: rawValue).localizedString(forLanguageCode: rawValue)?.capitalized(with: Locale(identifier: rawValue)) ?? rawValue
+    }
+}
+
 public struct Settings: Equatable, Codable, Sendable {
     public var launchAtLogin: Bool
     public var hotkey: Hotkey
@@ -373,6 +383,8 @@ public struct Settings: Equatable, Codable, Sendable {
     public var extraFolders: [String]
     /// Pro: rules applied on arrival or after opening.
     public var rules: [Rule]
+    /// UI language chosen in Settings; nil follows macOS. Applied at the next launch.
+    public var language: AppLanguage?
 
     public init(
         launchAtLogin: Bool = false,
@@ -381,7 +393,8 @@ public struct Settings: Equatable, Codable, Sendable {
         watchDesktop: Bool = false,
         proUnlocked: Bool = false,
         extraFolders: [String] = [],
-        rules: [Rule] = []
+        rules: [Rule] = [],
+        language: AppLanguage? = nil
     ) {
         self.launchAtLogin = launchAtLogin
         self.hotkey = hotkey
@@ -390,6 +403,7 @@ public struct Settings: Equatable, Codable, Sendable {
         self.proUnlocked = proUnlocked
         self.extraFolders = extraFolders
         self.rules = rules
+        self.language = language
     }
 
     // Settings saved by older versions have no Pro fields.
@@ -402,6 +416,7 @@ public struct Settings: Equatable, Codable, Sendable {
         proUnlocked = try c.decodeIfPresent(Bool.self, forKey: .proUnlocked) ?? false
         extraFolders = try c.decodeIfPresent([String].self, forKey: .extraFolders) ?? []
         rules = try c.decodeIfPresent([Rule].self, forKey: .rules) ?? []
+        language = try c.decodeIfPresent(AppLanguage.self, forKey: .language)
     }
 }
 

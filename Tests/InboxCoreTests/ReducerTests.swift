@@ -422,6 +422,17 @@ func model(_ files: [InboxFile] = [], open: Bool = false) -> InboxModel {
             #expect(result.model.settings.notificationsEnabled)
             #expect(result.lastNext.effects == [.saveSettings(result.model.settings), .requestNotificationPermission])
         }
+        spec.given(model()).when(.setLanguage(.ja)).then { result in
+            #expect(result.model.settings.language == .ja)
+            #expect(result.lastNext.effects == [.saveSettings(result.model.settings)])
+            #expect(result.model.snapshot.settings.language == "ja")
+        }
+        var german = model()
+        german.settings.language = .de
+        spec.given(german).when(.setLanguage(nil)).then { result in
+            #expect(result.model.settings.language == nil)
+            #expect(result.model.snapshot.settings.language == nil)
+        }
         spec.given(model()).when(.unlockPro).then(assertThatNext(
             hasNoModel(), hasExactlyEffects([.purchasePro]), failFunction: recordFailure))
         spec.given(model()).when(.proStatusChanged(true)).then { result in

@@ -404,6 +404,10 @@ public enum InboxReducer {
             effects.append(.saveSettings(next.settings))
             if enabled { effects.append(.requestNotificationPermission) }
 
+        case .setLanguage(let language):
+            next.settings.language = language
+            effects.append(.saveSettings(next.settings))
+
         case .grantAccess(let kind):
             guard next.folder(kind) != nil else { throw .unknownFolder(kind) }
             effects.append(.requestAccess(kind))

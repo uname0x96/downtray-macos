@@ -69,6 +69,8 @@ public enum Event: Equatable, Sendable {
     case setLaunchAtLogin(Bool)
     case setHotkey(Hotkey)
     case setNotifications(Bool)
+    /// UI language; nil follows macOS. Takes effect at the next launch.
+    case setLanguage(AppLanguage?)
     case grantAccess(FolderKind)
     case unlockPro
     case restorePurchases

@@ -214,6 +214,11 @@ send the next line as soon as the panel is really there (rule 11). The debug ent
   and sizes come from Foundation formatters, so they follow the locale for free. The brand
   name, shortcut glyphs, file extensions and the debug bridge stay untranslated.
   `scripts/check-strings.sh` fails when code and catalog drift or a language misses a key.
+  The language picker in Settings > General is a setting like any other (`Settings.language`,
+  event `setLanguage`, grammar `language ja|system`); `saveSettings` mirrors it into the app's
+  `AppleLanguages` default, the key System Settings > Language & Region > Applications writes,
+  so both routes agree and Foundation picks the language at the next launch. The row shows a
+  Relaunch button while the choice differs from the localization the running process shows.
   Filter chips use a wrapping `FlowLayout` rather than a horizontal scroll view: French needs
   two lines at 360 pt, and a chip must never be cut mid-word. The bridge's `screenshot [dir]`
   renders the popover and the visible windows to PNG from inside the app (no screen-recording

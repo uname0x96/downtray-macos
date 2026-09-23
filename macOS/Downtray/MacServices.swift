@@ -32,6 +32,7 @@ final class MacServices: InboxServices {
         static let settings = "settings"
         static let bookmarks = "folderBookmarks"
         static let destinations = "destinationBookmarks"
+        static let appleLanguages = "AppleLanguages"
     }
 
     /// The one-time Pro purchase (App Store Connect product id).
@@ -54,6 +55,8 @@ final class MacServices: InboxServices {
         }
         // The system is the source of truth for the login item.
         settings.launchAtLogin = SMAppService.mainApp.status == .enabled
+        // A per-app language chosen in System Settings shows up in the picker as well.
+        if settings.language == nil, let override = languageOverride { settings.language = override }
 
         var folders = WatchedFolder.standard
         for index in folders.indices {
@@ -79,6 +82,22 @@ final class MacServices: InboxServices {
         if let data = try? JSONEncoder().encode(settings) {
             defaults.set(data, forKey: Keys.settings)
         }
+        // Foundation reads `AppleLanguages` from the app's defaults at launch; System Settings >
+        // Language & Region > Applications writes the same key, so both routes agree.
+        if let language = settings.language {
+            defaults.set([language.rawValue], forKey: Keys.appleLanguages)
+        } else {
+            defaults.removeObject(forKey: Keys.appleLanguages)
+        }
+    }
+
+    /// The language System Settings (or an earlier save) put in the app's own defaults domain.
+    /// `object(forKey:)` would fall through to the global list of system languages.
+    private var languageOverride: AppLanguage? {
+        guard let bundleID = Bundle.main.bundleIdentifier,
+              let languages = defaults.persistentDomain(forName: bundleID)?[Keys.appleLanguages] as? [String],
+              let first = languages.first else { return nil }
+        return AppLanguage(rawValue: String(first.prefix(2)))
     }
 
     private static func isReadable(_ path: String) -> Bool {

@@ -13,7 +13,7 @@ import Testing
             "panel open", "panel close", "hotkey", "filter today", "select a.pdf", "select a.pdf toggle",
             "select b.zip range", "focus a.pdf", "up", "down", "deselect", "open", "open a.pdf b.zip", "ql a.pdf",
             "reveal", "copy a.pdf", "move", "unzip b.zip", "trash a.pdf", "undo", "dismiss a.pdf", "seen",
-            "finder downloads", "desktop on", "login off", "notify on", "hotkey-set ctrl+alt+d",
+            "finder downloads", "desktop on", "login off", "notify on", "language ja", "language system", "hotkey-set ctrl+alt+d",
             "grant desktop", "unlock", "today 2026-09-23", "vanish b.zip",
         ]
         for line in lines {

@@ -236,6 +236,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, Pan
         presenter.dispatch(.panelClosed)
     }
 
+    // MARK: Relaunch
+
+    /// Starts a second instance and quits this one once it is running. Used after the language
+    /// changed: Foundation picks the UI language at launch.
+    static func relaunch() {
+        let configuration = NSWorkspace.OpenConfiguration()
+        configuration.createsNewApplicationInstance = true
+        NSWorkspace.shared.openApplication(at: Bundle.main.bundleURL, configuration: configuration) { _, error in
+            guard error == nil else { return }
+            Task { @MainActor in NSApp.terminate(nil) }
+        }
+    }
+
     // MARK: Settings
 
     func openSettings() {

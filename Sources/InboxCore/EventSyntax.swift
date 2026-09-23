@@ -80,6 +80,7 @@ extension Event {
         ("desktop on|off", "watch the Desktop folder too"),
         ("login on|off", "launch at login"),
         ("notify on|off", "notification on new file"),
+        ("language en|ja|de|fr|system", "UI language (system: follow macOS); applies at the next launch"),
         ("hotkey-set <combo>", "e.g. ctrl+alt+d, cmd+shift+space"),
         ("grant downloads|desktop", "ask for folder access"),
         ("unlock", "buy Pro through the store"),
@@ -198,6 +199,11 @@ extension Event {
         case "desktop": return .setWatchDesktop(try onOff())
         case "login": return .setLaunchAtLogin(try onOff())
         case "notify": return .setNotifications(try onOff())
+        case "language":
+            let code = try required().lowercased()
+            if code == "system" { return .setLanguage(nil) }
+            guard let language = AppLanguage(rawValue: code) else { throw .invalidArgument(code) }
+            return .setLanguage(language)
         case "hotkey-set":
             let combo = try required()
             guard let hotkey = Hotkey.parse(combo) else { throw .invalidArgument(combo) }
@@ -309,6 +315,7 @@ extension Event {
         case .setWatchDesktop(let on): return "desktop \(on ? "on" : "off")"
         case .setLaunchAtLogin(let on): return "login \(on ? "on" : "off")"
         case .setNotifications(let on): return "notify \(on ? "on" : "off")"
+        case .setLanguage(let language): return "language \(language?.rawValue ?? "system")"
         case .setHotkey(let hotkey): return "hotkey-set \(hotkey.commandLine)"
         case .grantAccess(let kind): return "grant \(kind.rawValue)"
         case .unlockPro: return "unlock"

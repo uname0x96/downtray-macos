@@ -50,6 +50,8 @@ public struct Snapshot: Codable, Equatable, Sendable {
         public let pro: Bool
         public let extraFolders: [String]
         public let rules: [RuleView]
+        /// "en", "ja", "de", "fr", or nil when the app follows macOS.
+        public let language: String?
     }
 
     public struct ToastView: Codable, Equatable, Sendable {
@@ -123,7 +125,8 @@ public struct Snapshot: Codable, Equatable, Sendable {
             watchDesktop: model.settings.watchDesktop,
             pro: model.settings.proUnlocked,
             extraFolders: model.settings.extraFolders,
-            rules: model.settings.rules.map { RuleView(id: $0.id, name: $0.name, enabled: $0.enabled, summary: $0.summary) }
+            rules: model.settings.rules.map { RuleView(id: $0.id, name: $0.name, enabled: $0.enabled, summary: $0.summary) },
+            language: model.settings.language?.rawValue
         )
         historyMode = model.historyMode
         historyCount = model.history.count

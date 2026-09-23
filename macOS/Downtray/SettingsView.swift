@@ -78,6 +78,7 @@ struct SettingsView: View {
                     HotkeyRecorder(hotkey: model.settings.hotkey) { presenter.dispatch(.setHotkey($0)) }
                 }
                 Toggle(String(localized: "settings.notifications", defaultValue: "Notify on new file", comment: "Toggle for system notifications."), isOn: binding(\.notificationsEnabled) { .setNotifications($0) })
+                languageRow
                 LabeledContent {
                     Button(String(localized: "app.quit", defaultValue: "Quit Downtray")) { NSApp.terminate(nil) }
                 } label: {
@@ -94,6 +95,42 @@ struct SettingsView: View {
         .frame(width: 440)
         .fixedSize(horizontal: false, vertical: true)
         .navigationTitle(String(localized: "settings.title", defaultValue: "Downtray Settings", comment: "Window title. Keep the brand name."))
+    }
+
+    // MARK: Language
+
+    @ViewBuilder
+    private var languageRow: some View {
+        Picker(
+            String(localized: "settings.language", defaultValue: "Language", comment: "Picker label in General."),
+            selection: Binding(get: { presenter.model.settings.language }, set: { presenter.dispatch(.setLanguage($0)) })
+        ) {
+            Text(String(localized: "settings.language.system", defaultValue: "System", comment: "Picker option: follow the macOS language.")).tag(AppLanguage?.none)
+            Divider()
+            ForEach(AppLanguage.allCases, id: \.self) { Text(verbatim: $0.endonym).tag(AppLanguage?.some($0)) }
+        }
+        .accessibilityIdentifier("language")
+        if Self.languageAtNextLaunch(for: model.settings.language) != Self.runningLanguage {
+            LabeledContent {
+                Button(String(localized: "settings.language.relaunch", defaultValue: "Relaunch", comment: "Button that restarts the app to apply the language.")) { AppDelegate.relaunch() }
+                    .accessibilityIdentifier("relaunch")
+            } label: {
+                Text(String(localized: "settings.language.relaunchNeeded", defaultValue: "Relaunch Downtray to switch the language.", comment: "Shown after the language picker changed. Keep the brand name."))
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    /// The localization this process shows ("ja"). Foundation picks it once, at launch.
+    private static let runningLanguage = Bundle.main.preferredLocalizations.first ?? "en"
+
+    /// The localization the next launch will show: the choice, or for "System" the first of the
+    /// user's macOS languages that the app ships. The system list is read from the global domain,
+    /// since inside the app `Locale.preferredLanguages` already reflects the app's own override.
+    private static func languageAtNextLaunch(for choice: AppLanguage?) -> String {
+        if let choice { return choice.rawValue }
+        let system = UserDefaults.standard.persistentDomain(forName: UserDefaults.globalDomain)?["AppleLanguages"] as? [String] ?? []
+        return Bundle.preferredLocalizations(from: Bundle.main.localizations, forPreferences: system).first ?? "en"
     }
 
     // MARK: Pro
