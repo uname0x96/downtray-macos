@@ -144,6 +144,7 @@ public enum InboxReducer {
             next.focused = nil
             next.toast = nil
             next.query = ""
+            next.paywallShown = false
 
         // MARK: Panel
 
@@ -157,6 +158,7 @@ public enum InboxReducer {
                 next.focused = nil
                 next.toast = nil
                 next.query = ""
+                next.paywallShown = false
                 effects.append(.hidePanel)
             } else {
                 // Nothing is focused or selected on open: the pointer shows where the user is,
@@ -169,6 +171,18 @@ public enum InboxReducer {
         case .setFilter(let filter):
             next.filter = filter
             next.fixFocus()
+
+        case .showOlderFiles:
+            if next.isPro {
+                next.historyMode = true
+                next.selection = []
+                next.focused = nil
+            } else {
+                next.paywallShown = true
+            }
+
+        case .dismissPaywall:
+            next.paywallShown = false
 
         case .select(let id, let mode):
             guard next.files[id] != nil else { throw .unknownFile(id) }
@@ -365,6 +379,7 @@ public enum InboxReducer {
             let changed = next.settings.proUnlocked != owned
             next.settings.proUnlocked = owned
             if !owned && next.historyMode { next.historyMode = false }
+            if owned { next.paywallShown = false }
             if changed {
                 effects.append(.saveSettings(next.settings))
                 if owned { effects.append(next.showToast(.proUnlocked)) }
@@ -445,6 +460,8 @@ public enum InboxReducer {
             next.historyMode = on
             next.selection = []
             next.focused = nil
+            // Search lives on the History panel only; the inbox is never left filtered by it.
+            if !on { next.query = "" }
 
         case .setQuery(let text):
             next.query = text

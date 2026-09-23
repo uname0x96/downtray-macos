@@ -99,8 +99,10 @@ public struct InboxFile: Identifiable, Equatable, Codable, Sendable, Hashable {
 
 // MARK: - Filters
 
+/// The five chips. Exactly five so they sit on one row at 360 pt in every language; archives
+/// and installers keep their `FileKind` (unzip, rules, row kind) but share the Other chip.
 public enum FileFilter: String, CaseIterable, Codable, Sendable, Equatable {
-    case all, today, pdf, images, archives, installers
+    case all, today, pdf, images, other
 
     public var title: String {
         switch self {
@@ -108,8 +110,7 @@ public enum FileFilter: String, CaseIterable, Codable, Sendable, Equatable {
         case .today: return "Today"
         case .pdf: return "PDF"
         case .images: return "Images"
-        case .archives: return "Archives"
-        case .installers: return "Installers"
+        case .other: return "Other"
         }
     }
 
@@ -119,8 +120,7 @@ public enum FileFilter: String, CaseIterable, Codable, Sendable, Equatable {
         case .today: return file.addedAt >= today
         case .pdf: return file.kind == .pdf
         case .images: return file.kind == .image
-        case .archives: return file.kind == .archive
-        case .installers: return file.kind == .installer
+        case .other: return file.kind != .pdf && file.kind != .image
         }
     }
 }
@@ -578,6 +578,8 @@ public struct InboxModel: Equatable, Sendable {
     public var query: String
     /// A rule waiting for the user's confirmation.
     public var suggestion: Suggestion?
+    /// The Pro sheet is up in the panel (free tier, after "Show older files").
+    public var paywallShown: Bool
 
     public static let proListLimit = 200
     public static let historyLimit = 1000
@@ -608,6 +610,7 @@ public struct InboxModel: Equatable, Sendable {
         self.historyMode = false
         self.query = ""
         self.suggestion = nil
+        self.paywallShown = false
     }
 
     // MARK: Derived
@@ -660,6 +663,12 @@ public struct InboxModel: Equatable, Sendable {
     }
 
     public var visibleIDs: [FileID] { visibleFiles.map(\.id) }
+
+    /// The watched folders hold more files than the list shows: the inbox ends with a
+    /// "Show older files" row, which opens History (Pro) or the Pro sheet.
+    public var hasOlderFiles: Bool {
+        !historyMode && recentFiles.count > effectiveListLimit
+    }
 
     public var badgeCount: Int { badgeIDs.count }
 

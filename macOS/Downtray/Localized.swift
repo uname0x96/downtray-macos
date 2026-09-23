@@ -1,5 +1,6 @@
 import Foundation
 import InboxCore
+import UniformTypeIdentifiers
 
 // Localized wording for the values `InboxCore` describes in English. The core's text is the
 // snapshot contract that scripts and tests read; these extensions are what the UI shows.
@@ -12,8 +13,7 @@ extension FileFilter {
         case .today: String(localized: "filter.today", defaultValue: "Today", comment: "Filter chip: files that arrived today.")
         case .pdf: String(localized: "filter.pdf", defaultValue: "PDF", comment: "Filter chip: PDF documents. Keep short.")
         case .images: String(localized: "filter.images", defaultValue: "Images", comment: "Filter chip: pictures. Keep short.")
-        case .archives: String(localized: "filter.archives", defaultValue: "Archives", comment: "Filter chip: zip and other archives. Keep short.")
-        case .installers: String(localized: "filter.installers", defaultValue: "Installers", comment: "Filter chip: dmg, pkg and app bundles. Keep short.")
+        case .other: String(localized: "filter.other", defaultValue: "Other", comment: "Filter chip: everything that is not a PDF or an image. Keep short; the five chips share one row.")
         }
     }
 }
@@ -45,6 +45,50 @@ extension FolderKind {
 
 extension WatchedFolder {
     var localizedTitle: String { kind.isCustom ? title : kind.localizedTitle }
+}
+
+extension InboxFile {
+    /// The kind on a row's meta line: the system's name for the type where that name says
+    /// something ("Disk Image", "ZIP archive", "PNG image"), otherwise the uppercase extension
+    /// ("MD", "CSV", "DOCX"). Never "File" or "Document". Nil for an extensionless file.
+    var rowKind: String? {
+        switch kind {
+        case .pdf: return FileKind.pdf.localizedLabel
+        case .folder: return FileKind.folder.localizedLabel
+        default: break
+        }
+        if let type = UTType(filenameExtension: fileExtension), !type.isDynamic,
+           Self.describedFamilies.contains(where: { type.conforms(to: $0) }),
+           let description = type.localizedDescription {
+            return description
+        }
+        return shortKind
+    }
+
+    /// The row's fallback when the system name does not fit line 2: the uppercase extension.
+    var shortKind: String? {
+        switch kind {
+        case .pdf: return FileKind.pdf.localizedLabel
+        case .folder: return FileKind.folder.localizedLabel
+        default: return fileExtension.isEmpty ? nil : fileExtension.uppercased()
+        }
+    }
+
+    /// Families whose system description is a kind a user recognizes. Text, data and source
+    /// code are left out: their descriptions are "Document", "Data" or a long phrase, and the
+    /// extension says more.
+    private static let describedFamilies: [UTType] = [.image, .archive, .diskImage, .package, .application, .movie, .audio, .font]
+}
+
+extension FileSource {
+    /// Where the file came from, for the row's tooltip and menu caption; nil when unknown.
+    var localizedDescription: String? {
+        switch self {
+        case .web(let host): String(localized: "row.source.web", defaultValue: "From \(host)", comment: "Row tooltip and menu caption. Placeholder: web host such as dropbox.com.")
+        case .airDrop: String(localized: "row.source.airDrop", defaultValue: "Received via AirDrop", comment: "Row tooltip and menu caption. Keep 'AirDrop' as Apple spells it.")
+        case .unknown: nil
+        }
+    }
 }
 
 extension RuleTrigger {

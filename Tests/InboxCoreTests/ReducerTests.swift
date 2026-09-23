@@ -173,8 +173,36 @@ func model(_ files: [InboxFile] = [], open: Bool = false) -> InboxModel {
         #expect(names(.today) == ["a.pdf", "b.png", "c.zip", "d.dmg", "e.txt"])
         #expect(names(.pdf) == ["a.pdf", "old.pdf"])
         #expect(names(.images) == ["b.png"])
-        #expect(names(.archives) == ["c.zip"])
-        #expect(names(.installers) == ["d.dmg"])
+        #expect(names(.other) == ["c.zip", "d.dmg", "e.txt"], "archives, installers and plain files share the Other chip")
+    }
+
+    @Test func showOlderFilesOpensHistoryWithProAndTheProSheetWithout() throws {
+        let files = (0..<25).map { file("f\($0).pdf", minutesAgo: Double($0)) }
+        var free = model(files)
+        #expect(free.hasOlderFiles, "25 files in the folder, 20 on the list")
+        #expect(free.snapshot.olderFiles)
+        free = try InboxReducer.reduce(free, .showOlderFiles).model
+        #expect(free.paywallShown && !free.historyMode)
+        #expect(free.snapshot.paywall)
+        free = try InboxReducer.reduce(free, .dismissPaywall).model
+        #expect(!free.paywallShown)
+        free = try InboxReducer.reduce(free, .showOlderFiles).model
+        free = try InboxReducer.reduce(free, .panelClosed).model
+        #expect(!free.paywallShown, "closing the panel drops the sheet")
+
+        var pro = model(files)
+        pro.settings.proUnlocked = true
+        #expect(!pro.hasOlderFiles, "Pro lists all 25")
+        pro = try InboxReducer.reduce(pro, .showOlderFiles).model
+        #expect(pro.historyMode && !pro.paywallShown)
+        pro = try InboxReducer.reduce(pro, .setQuery("f1")).model
+        pro = try InboxReducer.reduce(pro, .setHistoryMode(false)).model
+        #expect(pro.query.isEmpty, "leaving History clears the search")
+
+        var buying = model(files)
+        buying = try InboxReducer.reduce(buying, .showOlderFiles).model
+        buying = try InboxReducer.reduce(buying, .proStatusChanged(true)).model
+        #expect(!buying.paywallShown, "a purchase closes the sheet")
     }
 
     @Test func settingAFilterDropsFocusFromAHiddenRow() {

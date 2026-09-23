@@ -61,7 +61,9 @@ extension Event {
     public static let grammar: [(command: String, description: String)] = [
         ("panel open|close", "open or close the popover (what the status item click does)"),
         ("hotkey", "press the global hotkey: opens the panel focused on the first unread row, or closes it"),
-        ("filter <name>", "all, today, pdf, images, archives, installers"),
+        ("filter <name>", "all, today, pdf, images, other"),
+        ("older", "the 'Show older files' row: History with Pro, the Pro sheet without"),
+        ("paywall off", "dismiss the Pro sheet"),
         ("select <file> [toggle|range]", "click, ⌘-click or ⇧-click a row"),
         ("focus <file>", "move keyboard focus to a row"),
         ("up | down", "move focus (and single selection) with the arrow keys"),
@@ -233,6 +235,10 @@ extension Event {
             case let other: throw .invalidArgument(other)
             }
         case "search": return .setQuery(argument ?? "")
+        case "older": return .showOlderFiles
+        case "paywall":
+            guard try required().lowercased() == "off" else { throw .invalidArgument(argument ?? "") }
+            return .dismissPaywall
         case "rule":
             guard let verb = words.first?.lowercased() else { throw .missingArgument(command) }
             let rest = Array(words.dropFirst())
@@ -296,6 +302,8 @@ extension Event {
         case .panelClosed: return "panel close"
         case .hotkeyPressed: return "hotkey"
         case .setFilter(let filter): return "filter \(filter.rawValue)"
+        case .showOlderFiles: return "older"
+        case .dismissPaywall: return "paywall off"
         case .select(let id, let mode): return "select \(name(id))" + (mode == .replace ? "" : " \(mode.rawValue)")
         case .focus(let id): return "focus \(name(id))"
         case .moveFocus(let direction): return direction.rawValue

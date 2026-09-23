@@ -84,6 +84,10 @@ public struct Snapshot: Codable, Equatable, Sendable {
     public let historyCount: Int
     public let query: String
     public let suggestion: SuggestionView?
+    /// The list ends with a "Show older files" row.
+    public let olderFiles: Bool
+    /// The Pro sheet is up.
+    public let paywall: Bool
 
     public init(_ model: InboxModel) {
         panelOpen = model.panelOpen
@@ -132,6 +136,8 @@ public struct Snapshot: Codable, Equatable, Sendable {
         historyCount = model.history.count
         query = model.query
         suggestion = model.suggestion.map { SuggestionView(file: ($0.fileID as NSString).lastPathComponent, message: $0.message) }
+        olderFiles = model.hasOlderFiles
+        paywall = model.paywallShown
     }
 
     public func json(pretty: Bool = true) -> String {
@@ -157,6 +163,7 @@ public struct Snapshot: Codable, Equatable, Sendable {
         if let undo { text += ", undo \(undo.count)\(undo.ready ? "" : " (pending)")" }
         if let toast { text += ", toast \"\(toast.message)\"" }
         if let suggestion { text += ", suggests \"\(suggestion.message)\"" }
+        if paywall { text += ", pro sheet" }
         if settings.pro { text += ", pro" }
         return text
     }

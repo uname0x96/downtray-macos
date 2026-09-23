@@ -103,8 +103,13 @@ error: extra folders (`addFolder`, `removeFolder`), a 200-file list with a name 
   join `folders` at load from `settings.extraFolders` and are watched like Downloads.
 - **History** is `[HistoryEntry]`, one line per file that ever arrived in a watched folder
   (path, size, kind, source, date), recorded in `fileArrived` and saved after each arrival. In
-  history mode the same list, filter chips and query apply to `historyFiles` instead of
-  `recentFiles`; rows for files no longer on disk show as missing.
+  history mode the same panel shows `historyFiles` instead of `recentFiles` under a "History"
+  title with a Done button, the chips still apply, and the search field appears; the inbox
+  itself has no search (`setHistoryMode(false)` clears the query). History is reached from the
+  gear menu (Pro) or the "Show older files" row that ends the list when the folders hold more
+  than it shows (`hasOlderFiles`); without Pro that row and the gear's "Downtray Pro…" open the
+  Pro sheet drawn inside the panel (`paywallShown`, events `showOlderFiles` / `dismissPaywall`).
+  Rows for files no longer on disk show as missing.
 - **Rules** are `Rule { trigger, match, action }`. The trigger is arrival or "after opened";
   the match is any subset of kind, host, name substring and extension; the action is move to
   a folder, trash, mark seen, or `suggestTrash`, which puts a `Suggestion` on the model that
@@ -224,7 +229,12 @@ send the next line as soon as the panel is really there (rule 11). The debug ent
   instance and quits; the newcomer normally hands over to a running copy, so the leaving one first
   writes its pid to defaults (launch arguments do not reach a sandboxed app), and the newcomer
   waits for that pid to exit, forcing it if a closing sheet stalls the quit.
-  Filter chips use a wrapping `FlowLayout` rather than a horizontal scroll view: French needs
-  two lines at 360 pt, and a chip must never be cut mid-word. The bridge's `screenshot [dir]`
+  The five filter chips (All, Today, PDF, Images, Other; archives and installers keep their
+  `FileKind` but share Other) sit on one row at 360 pt in every language: a chip hugs its
+  label and never wraps, so a label that does not fit is shortened in the catalog. A row's
+  second line is `time · size · kind`, where the kind is the system's name for image, archive,
+  disk image, package, application and media types and the uppercase extension otherwise
+  (`InboxFile.rowKind`), falling back to the extension when the line would overflow; the
+  source (host or AirDrop) moved to the row's tooltip and menu caption. The bridge's `screenshot [dir]`
   renders the popover and the visible windows to PNG from inside the app (no screen-recording
   permission), which is how each locale's layout was checked.

@@ -15,7 +15,7 @@ struct PopoverView: View {
         VStack(spacing: 0) {
             header
             chips
-            if model.isPro { searchField }
+            if model.historyMode { searchField }
             Divider()
             content
             Divider()
@@ -23,6 +23,7 @@ struct PopoverView: View {
         }
         .frame(width: 360, height: 520)
         .overlay(alignment: .bottom) { notices }
+        .overlay { if model.paywallShown { PaywallView(presenter: presenter) } }
         .background(hiddenShortcuts)
         .background(SettingsOpener())
         .focusable()
@@ -35,45 +36,72 @@ struct PopoverView: View {
 
     // MARK: Header
 
+    /// The inbox shows the brand and a gear menu; History (Pro, same panel) swaps the title
+    /// and adds a Done button, since the footer no longer links the two.
     private var header: some View {
-        HStack {
-            Text(appName)
+        HStack(spacing: 10) {
+            Text(model.historyMode
+                 ? String(localized: "inbox.history.title", defaultValue: "History", comment: "Panel title while the History list is shown (Pro).")
+                 : appName)
                 .font(.headline)
             Spacer()
-            Button(action: openSettings) {
+            if model.historyMode {
+                Button(String(localized: "inbox.history.done", defaultValue: "Done", comment: "Button that leaves History and shows the inbox again.")) {
+                    presenter.dispatch(.setHistoryMode(false))
+                }
+                .buttonStyle(.link)
+                .font(.callout)
+                .accessibilityIdentifier("historyDone")
+            }
+            Menu {
+                Button(String(localized: "menu.settings", defaultValue: "Settings…"), action: openSettings)
+                    .accessibilityIdentifier("settings")
+                if model.isPro {
+                    Button(String(localized: "menu.history", defaultValue: "History…", comment: "Gear menu item (Pro): opens the History list.")) {
+                        presenter.dispatch(.setHistoryMode(true))
+                    }
+                    .accessibilityIdentifier("historyToggle")
+                } else {
+                    Button(String(localized: "menu.pro", defaultValue: "Downtray Pro…", comment: "Gear menu item for free users: opens the Pro sheet. Keep the brand name.")) {
+                        presenter.dispatch(.showOlderFiles)
+                    }
+                    .accessibilityIdentifier("proMenuItem")
+                }
+            } label: {
                 Image(systemName: "gearshape")
             }
-            .buttonStyle(.borderless)
+            .menuStyle(.borderlessButton)
+            .menuIndicator(.hidden)
+            .fixedSize()
             .help(String(localized: "inbox.settings", defaultValue: "Settings", comment: "Tooltip on the gear button that opens Settings."))
-            .accessibilityIdentifier("settings")
+            .accessibilityIdentifier("gear")
         }
         .padding(.horizontal, 14)
         .padding(.top, 12)
         .padding(.bottom, 8)
     }
 
-    /// Chips wrap to a second line when a locale's labels do not fit in one (French does
-    /// at 360 pt); a chip is never truncated or scrolled out of view.
+    /// Exactly five chips on one row at 360 pt in every language: a chip hugs its label and
+    /// never wraps or truncates, so a label that does not fit is shortened in the catalog.
     private var chips: some View {
-        FlowLayout(spacing: 6) {
+        HStack(spacing: 6) {
             ForEach(FileFilter.allCases, id: \.self) { filter in
                 FilterChip(title: filter.localizedTitle, id: filter.rawValue, selected: model.filter == filter) {
                     presenter.dispatch(.setFilter(filter))
                 }
             }
+            Spacer(minLength: 0)
         }
         .padding(.horizontal, 14)
         .padding(.bottom, 8)
     }
 
-    /// Pro: filters the visible list (recent or history) by file name.
+    /// History only: filters the list by file name. The inbox has no search.
     private var searchField: some View {
         HStack(spacing: 6) {
             Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
             TextField(
-                model.historyMode
-                    ? String(localized: "inbox.search.history", defaultValue: "Search history", comment: "Placeholder of the search field while History is shown.")
-                    : String(localized: "inbox.search", defaultValue: "Search", comment: "Placeholder of the search field."),
+                String(localized: "inbox.search.history", defaultValue: "Search history", comment: "Placeholder of the search field on the History panel."),
                 text: Binding(get: { presenter.model.query }, set: { presenter.dispatch(.setQuery($0)) })
             )
             .textFieldStyle(.plain)
@@ -109,11 +137,30 @@ struct PopoverView: View {
                             FileRowView(
                                 file: file,
                                 showFolder: model.duplicateNames.contains(file.name),
+                                showUnread: !model.historyMode,
                                 selected: model.selection.contains(file.id),
                                 focused: model.focused == file.id,
                                 actions: RowActions(presenter: presenter, file: file, selection: model.selection)
                             )
                             .id(file.id)
+                        }
+                        if model.hasOlderFiles {
+                            Button {
+                                presenter.dispatch(.showOlderFiles)
+                            } label: {
+                                HStack {
+                                    Spacer()
+                                    Text(String(localized: "inbox.olderFiles", defaultValue: "Show older files", comment: "Last row of the inbox when the folders hold more than the list shows. Opens History (Pro) or the Pro sheet."))
+                                    Image(systemName: "chevron.right").font(.caption2)
+                                    Spacer()
+                                }
+                                .font(.callout)
+                                .foregroundStyle(.secondary)
+                                .padding(.vertical, 10)
+                                .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityIdentifier("olderFiles")
                         }
                     }
                     .padding(.horizontal, 8)
@@ -128,22 +175,17 @@ struct PopoverView: View {
 
     // MARK: Footer
 
+    /// Exactly two text buttons. History is not a footer link: it lives behind the gear (Pro)
+    /// and the "Show older files" row.
     private var footer: some View {
         HStack {
-            Button(String(localized: "inbox.footer.openDownloads", defaultValue: "Open Downloads in Finder", comment: "Footer link button. Keep short: it shares one line with two other buttons.")) { presenter.dispatch(.openWatchedFolder(.downloads)) }
+            Button(String(localized: "inbox.footer.openDownloads", defaultValue: "Open Downloads in Finder", comment: "Footer link button, leading. Shares one line with 'Mark all seen'.")) { presenter.dispatch(.openWatchedFolder(.downloads)) }
             Spacer()
-            if model.isPro {
-                Button(model.historyMode
-                       ? String(localized: "inbox.footer.recent", defaultValue: "Recent", comment: "Footer button: switch from History back to the current files.")
-                       : String(localized: "inbox.footer.history", defaultValue: "History", comment: "Footer button: show every file that ever arrived (Pro).")) {
-                    presenter.dispatch(.setHistoryMode(!model.historyMode))
-                }
-                .accessibilityIdentifier("historyToggle")
-            }
             Button(String(localized: "inbox.footer.markAllSeen", defaultValue: "Mark all seen", comment: "Footer button: clears the unread dots and the badge.")) { presenter.dispatch(.markAllSeen) }
                 .disabled(model.unreadCount == 0 && model.badgeCount == 0)
         }
         .buttonStyle(.link)
+        .foregroundStyle(.secondary)
         .font(.caption)
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
@@ -190,6 +232,10 @@ struct PopoverView: View {
         case .downArrow: presenter.dispatch(.moveFocus(.down)); return .handled
         case .delete, .deleteForward: presenter.dispatch(.trash(.selection)); return .handled
         case .escape:
+            if model.paywallShown {
+                presenter.dispatch(.dismissPaywall)
+                return .handled
+            }
             if model.selection.isEmpty { return .ignored }
             presenter.dispatch(.clearSelection)
             return .handled
@@ -274,33 +320,38 @@ struct RowActions {
 struct FileRowView: View {
     let file: InboxFile
     let showFolder: Bool
+    /// History shows no dots; the column stays so both lists share one row shape.
+    var showUnread = true
     let selected: Bool
     let focused: Bool
     let actions: RowActions
     @State private var hovering = false
 
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 8) {
+            // The dot keeps its column when hidden, so rows do not shift as files are seen.
+            let dot = showUnread && file.unread && !file.missing
+            Circle()
+                .fill(Color.accentColor)
+                .frame(width: 6, height: 6)
+                .opacity(dot ? 1 : 0)
+                .accessibilityLabel(String(localized: "row.unread", defaultValue: "Unread", comment: "Accessibility label of the dot on a file the user has not acted on."))
+                .accessibilityHidden(!dot)
             ThumbnailView(file: file)
-                .frame(width: 36, height: 36)
+                .frame(width: 32, height: 32)
             VStack(alignment: .leading, spacing: 2) {
                 Text(file.name)
                     .font(.body)
                     .lineLimit(1)
                     .truncationMode(.middle)
-                Text(meta)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
+                // The system kind when the line fits, the extension when it does not
+                // ("Image disque" after a French "la semaine dernière" is one line too many).
+                ViewThatFits(in: .horizontal) {
+                    metaText(kind: file.rowKind)
+                    metaText(kind: file.shortKind)
+                }
             }
             Spacer(minLength: 4)
-            if file.unread && !file.missing {
-                Circle()
-                    .fill(Color.accentColor)
-                    .frame(width: 7, height: 7)
-                    .accessibilityLabel(String(localized: "row.unread", defaultValue: "Unread", comment: "Accessibility label of the dot on a file the user has not acted on."))
-            }
             // Rows for gone files exist only in History; they carry no actions.
             if !file.missing {
                 Menu {
@@ -331,26 +382,46 @@ struct FileRowView: View {
         .onTapGesture { actions.click() }
         .onHover { hovering = $0 }
         .contextMenu { menuItems }
-        .help(file.missing ? String(localized: "row.missing.help", defaultValue: "This file was moved or deleted. History keeps it so you can see where it came from.", comment: "Tooltip on a greyed-out History row.") : file.path)
+        .help(tooltip)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(file.name)
         .accessibilityIdentifier("row")
     }
 
-    private var meta: String {
+    private func metaText(kind: String?) -> some View {
+        Text(meta(kind: kind))
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
+            .truncationMode(.tail)
+    }
+
+    /// `relative time · size · kind`. The source is not here (it truncated the line); it is in
+    /// the tooltip and the menu. A duplicate name adds its folder, a gone History row its note.
+    private func meta(kind: String?) -> String {
         var parts: [String] = []
         parts.append(file.addedAt.formatted(.relative(presentation: .named)))
         if file.kind != .folder { parts.append(file.size.formatted(.byteCount(style: .file))) }
-        parts.append(file.kind.localizedLabel)
-        if let source = file.source.label { parts.append(source) }
+        if let kind { parts.append(kind) }
         if showFolder { parts.append(file.folderName) }
         if file.missing { parts.append(String(localized: "row.missing", defaultValue: "moved or deleted", comment: "Meta line fragment on a History row whose file is gone.")) }
         return parts.joined(separator: " · ")
     }
 
+    private var tooltip: String {
+        if file.missing {
+            return String(localized: "row.missing.help", defaultValue: "This file was moved or deleted. History keeps it so you can see where it came from.", comment: "Tooltip on a greyed-out History row.")
+        }
+        return [file.source.localizedDescription, file.path].compactMap { $0 }.joined(separator: "\n")
+    }
+
     @ViewBuilder
     private var menuItems: some View {
         if !file.missing {
+            if let source = file.source.localizedDescription {
+                Text(source)
+                Divider()
+            }
             Button(String(localized: "action.open", defaultValue: "Open", comment: "Menu item: open the file in its default app.")) { actions.open() }
             Button(String(localized: "action.quickLook", defaultValue: "Quick Look", comment: "Menu item: the macOS Quick Look preview. Use the system's name for it.")) { actions.quickLook() }
             Button(String(localized: "action.reveal", defaultValue: "Reveal in Finder")) { actions.reveal() }
@@ -368,41 +439,7 @@ struct FileRowView: View {
 
 // MARK: - Pieces
 
-/// Left to right, wrapping to the next line when the width runs out.
-struct FlowLayout: Layout {
-    var spacing: CGFloat = 6
-
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        arrange(width: proposal.width ?? .infinity, subviews: subviews).size
-    }
-
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        let origins = arrange(width: bounds.width, subviews: subviews).origins
-        for (subview, origin) in zip(subviews, origins) {
-            subview.place(at: CGPoint(x: bounds.minX + origin.x, y: bounds.minY + origin.y), proposal: .unspecified)
-        }
-    }
-
-    private func arrange(width: CGFloat, subviews: Subviews) -> (size: CGSize, origins: [CGPoint]) {
-        var origins: [CGPoint] = []
-        var x: CGFloat = 0, y: CGFloat = 0, rowHeight: CGFloat = 0, widest: CGFloat = 0
-        for subview in subviews {
-            let size = subview.sizeThatFits(.unspecified)
-            if x > 0, x + size.width > width {
-                x = 0
-                y += rowHeight + spacing
-                rowHeight = 0
-            }
-            origins.append(CGPoint(x: x, y: y))
-            rowHeight = max(rowHeight, size.height)
-            x += size.width + spacing
-            widest = max(widest, x - spacing)
-        }
-        // Fill the proposed width so the rows stay left-aligned inside a wider container.
-        return (CGSize(width: width.isFinite ? width : widest, height: y + rowHeight), origins)
-    }
-}
-
+/// One filter chip: hugs its label, 28 pt tall, filled accent when selected.
 struct FilterChip: View {
     let title: String
     /// Locale-independent id for the accessibility identifier ("filter-pdf").
@@ -414,10 +451,13 @@ struct FilterChip: View {
         Button(action: action) {
             Text(title)
                 .font(.caption.weight(.medium))
+                .lineLimit(1)
+                .fixedSize()
                 .padding(.horizontal, 10)
-                .padding(.vertical, 4)
+                .frame(minHeight: 28)
                 .background(Capsule().fill(selected ? Color.accentColor : Color.primary.opacity(0.08)))
                 .foregroundStyle(selected ? Color.white : Color.primary)
+                .contentShape(Capsule())
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(selected ? .isSelected : [])
@@ -463,6 +503,58 @@ struct EmptyStateView: View {
         .padding(24)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .accessibilityIdentifier("emptyState")
+    }
+}
+
+/// The Pro sheet, drawn inside the panel (a popover cannot host a window sheet). One sentence,
+/// a purchase button, a way out, and the App Store's Restore.
+struct PaywallView: View {
+    let presenter: InboxPresenter
+    @State private var price: String?
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.35)
+                .onTapGesture { presenter.dispatch(.dismissPaywall) }
+            VStack(spacing: 14) {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 28))
+                    .foregroundStyle(Color.accentColor)
+                Text(String(localized: "paywall.title", defaultValue: "Downtray Pro", comment: "Title of the Pro sheet. Keep the brand name."))
+                    .font(.headline)
+                Text(String(localized: "paywall.body", defaultValue: "History, extra folders, and rules. Pay once.", comment: "The one sentence on the Pro sheet."))
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(.secondary)
+                Button(price.map { String(localized: "pro.unlock.buttonWithPrice", defaultValue: "Unlock Pro — \($0)") }
+                       ?? String(localized: "pro.unlock.button", defaultValue: "Unlock Pro…")) {
+                    presenter.dispatch(.unlockPro)
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+                .accessibilityIdentifier("paywallUnlock")
+                Button(String(localized: "paywall.notNow", defaultValue: "Not now", comment: "Secondary button on the Pro sheet: closes it.")) {
+                    presenter.dispatch(.dismissPaywall)
+                }
+                .buttonStyle(.link)
+                .accessibilityIdentifier("paywallDismiss")
+                Button(String(localized: "pro.restore", defaultValue: "Restore Purchases")) { presenter.dispatch(.restorePurchases) }
+                    .buttonStyle(.link)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                if let toast = presenter.model.toast, toast.isError {
+                    Text(toast.text.localized)
+                        .font(.caption)
+                        .foregroundStyle(Color.orange)
+                        .multilineTextAlignment(.center)
+                }
+            }
+            .padding(24)
+            .frame(width: 300)
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .shadow(color: .black.opacity(0.25), radius: 14, y: 4)
+        }
+        .task { price = await (presenter.services as? MacServices)?.proPrice() }
+        .accessibilityIdentifier("paywall")
     }
 }
 

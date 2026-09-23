@@ -550,35 +550,6 @@
         }
       }
     },
-    "filter.archives": {
-      "comment": "Filter chip: zip and other archives. Keep short.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Archive"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Archives"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Archives"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "アーカイブ"
-          }
-        }
-      }
-    },
     "filter.images": {
       "comment": "Filter chip: pictures. Keep short.",
       "localizations": {
@@ -608,31 +579,31 @@
         }
       }
     },
-    "filter.installers": {
-      "comment": "Filter chip: dmg, pkg and app bundles. Keep short.",
+    "filter.other": {
+      "comment": "Filter chip: everything that is not a PDF or an image. Keep short; the five chips share one row.",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Installer"
+            "value": "Andere"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Installers"
+            "value": "Other"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Installateurs"
+            "value": "Autres"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "インストーラ"
+            "value": "その他"
           }
         }
       }
@@ -925,35 +896,6 @@
         }
       }
     },
-    "inbox.footer.history": {
-      "comment": "Footer button: show every file that ever arrived (Pro).",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Verlauf"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "History"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Historique"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "履歴"
-          }
-        }
-      }
-    },
     "inbox.footer.markAllSeen": {
       "comment": "Footer button: clears the unread dots and the badge.",
       "localizations": {
@@ -984,7 +926,7 @@
       }
     },
     "inbox.footer.openDownloads": {
-      "comment": "Footer link button. Keep short: it shares one line with two other buttons.",
+      "comment": "Footer link button, leading. Shares one line with 'Mark all seen'.",
       "localizations": {
         "de": {
           "stringUnit": {
@@ -1012,31 +954,89 @@
         }
       }
     },
-    "inbox.footer.recent": {
-      "comment": "Footer button: switch from History back to the current files.",
+    "inbox.history.done": {
+      "comment": "Button that leaves History and shows the inbox again.",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aktuell"
+            "value": "Fertig"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Recent"
+            "value": "Done"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Récents"
+            "value": "OK"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "最近"
+            "value": "完了"
+          }
+        }
+      }
+    },
+    "inbox.history.title": {
+      "comment": "Panel title while the History list is shown (Pro).",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verlauf"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "History"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Historique"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "履歴"
+          }
+        }
+      }
+    },
+    "inbox.olderFiles": {
+      "comment": "Last row of the inbox when the folders hold more than the list shows. Opens History (Pro) or the Pro sheet.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ältere Dateien anzeigen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show older files"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afficher les fichiers plus anciens"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "以前のファイルを表示"
           }
         }
       }
@@ -1099,37 +1099,8 @@
         }
       }
     },
-    "inbox.search": {
-      "comment": "Placeholder of the search field.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Suchen"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Search"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rechercher"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "検索"
-          }
-        }
-      }
-    },
     "inbox.search.history": {
-      "comment": "Placeholder of the search field while History is shown.",
+      "comment": "Placeholder of the search field on the History panel.",
       "localizations": {
         "de": {
           "stringUnit": {
@@ -1356,6 +1327,64 @@
           "stringUnit": {
             "state": "translated",
             "value": "PDF"
+          }
+        }
+      }
+    },
+    "menu.history": {
+      "comment": "Gear menu item (Pro): opens the History list.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verlauf …"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "History…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Historique…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "履歴…"
+          }
+        }
+      }
+    },
+    "menu.pro": {
+      "comment": "Gear menu item for free users: opens the Pro sheet. Keep the brand name.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downtray Pro …"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downtray Pro…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downtray Pro…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downtray Pro…"
           }
         }
       }
@@ -1659,6 +1688,93 @@
           "stringUnit": {
             "state": "translated",
             "value": "開く"
+          }
+        }
+      }
+    },
+    "paywall.body": {
+      "comment": "The one sentence on the Pro sheet.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verlauf, weitere Ordner und Regeln. Einmal zahlen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "History, extra folders, and rules. Pay once."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Historique, dossiers supplémentaires et règles. Un seul paiement."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "履歴、追加フォルダ、ルール。買い切りです。"
+          }
+        }
+      }
+    },
+    "paywall.notNow": {
+      "comment": "Secondary button on the Pro sheet: closes it.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nicht jetzt"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not now"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plus tard"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "あとで"
+          }
+        }
+      }
+    },
+    "paywall.title": {
+      "comment": "Title of the Pro sheet. Keep the brand name.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downtray Pro"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downtray Pro"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downtray Pro"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downtray Pro"
           }
         }
       }
@@ -2007,6 +2123,64 @@
           "stringUnit": {
             "state": "translated",
             "value": "このファイルは移動または削除されました。どこから来たかを確認できるように履歴に残しています。"
+          }
+        }
+      }
+    },
+    "row.source.airDrop": {
+      "comment": "Row tooltip and menu caption. Keep 'AirDrop' as Apple spells it.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Per AirDrop empfangen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Received via AirDrop"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reçu par AirDrop"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AirDrop で受信"
+          }
+        }
+      }
+    },
+    "row.source.web": {
+      "comment": "Row tooltip and menu caption. Placeholder: web host such as dropbox.com.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Von %@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Depuis %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ から"
           }
         }
       }

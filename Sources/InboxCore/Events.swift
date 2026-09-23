@@ -29,6 +29,9 @@ public enum Event: Equatable, Sendable {
     case markAllSeen
     case openWatchedFolder(FolderKind)
     case dismissToast
+    /// The "Show older files" row: History with Pro, the Pro sheet without.
+    case showOlderFiles
+    case dismissPaywall
 
     // MARK: File actions
 

@@ -111,6 +111,7 @@ headless_scenario() {
 
     send "filter pdf";    expect '(.rows | length) == 1 and .rows[0].name == "report.pdf"'
     send "filter images"; expect '(.rows | length) == 1 and .rows[0].name == "photo.png"'
+    send "filter other";  expect '(.rows | length) == 1 and .rows[0].name == "archive.zip"' "archives share the Other chip"
     send "filter all";    expect '(.rows | length) == 3'
 
     send "open report.pdf"
@@ -160,6 +161,8 @@ headless_scenario() {
 
     # --- Pro: gated until the (fake) store confirms the purchase --------------------------
     send "history on";  expect_error "needs Pro"
+    send "older";       expect '.paywall and .historyMode == false' "Show older files is the Pro sheet without Pro"
+    send "paywall off"; expect '.paywall == false'
     send "folder add";  expect_error "needs Pro"
     send "unlock"
     expect '.settings.pro and .toast.message == "Pro unlocked. Thank you!"' "the fake purchase unlocks Pro"

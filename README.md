@@ -3,7 +3,7 @@
 A menu bar inbox for the files that land in `~/Downloads` (and, optionally, the Desktop).
 Press ⌃⌥D, see the latest twenty, act on them with one key: open, Quick Look, reveal, copy
 path, move, unzip, trash with undo. Pro (one-time purchase) adds any extra folders, a 200-file
-list with search, a full history, and rules that sort arrivals automatically. macOS 14+,
+list, a searchable history, and rules that sort arrivals automatically. macOS 14+,
 sandboxed, no network. English, Japanese, German and French; the app follows the macOS
 language, and Settings > General has a Language picker for choosing one of the four directly.
 
@@ -103,8 +103,8 @@ specs/                   the product spec
 
 ## Status
 
-MVP per `specs/mvp-spec.md`, plus the Pro tier: extra folders, 200-file
-list with search, history, rules, unlocked through StoreKit 2 (product
+MVP per `specs/mvp-spec.md` with the popover per `specs/popover-spec.md`, plus the Pro tier:
+extra folders, 200-file list, searchable history, rules, unlocked through StoreKit 2 (product
 `app.downtray.mac.pro`, to be created in App Store Connect, see `docs/app-store.md`).
 Icon, privacy manifest, usage strings, four languages and a signed App Store export are in place. Running the app from the
 Xcode scheme uses `macOS/Downtray/Pro.storekit` for a local sandbox purchase; a build
