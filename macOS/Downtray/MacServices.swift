@@ -13,6 +13,8 @@ final class MacServices: InboxServices {
     weak var quickLookHost: PopoverHostingController?
     var onHotkey: (() -> Void)?
     var onNotificationOpen: ((FileID) -> Void)?
+    /// A file was gone by the time Open or Reveal reached it; the row turns into a Gone row.
+    var onFileVanished: ((FileID) -> Void)?
     #if DEBUG
     /// Set by the debug bridge so a script can answer the "Move to…" panel without a human.
     var scriptedDestination: String?
@@ -186,7 +188,17 @@ final class MacServices: InboxServices {
 
     func open(_ files: [InboxFile]) {
         // Quarantined files go through Gatekeeper as they would from Finder.
-        for file in files { NSWorkspace.shared.open(URL(fileURLWithPath: file.path)) }
+        for file in stillPresent(files) { NSWorkspace.shared.open(URL(fileURLWithPath: file.path)) }
+    }
+
+    /// Drops files that vanished between render and click and reports each, so the watcher's
+    /// own removal event is not the first the model hears of it.
+    private func stillPresent(_ files: [InboxFile]) -> [InboxFile] {
+        files.filter { file in
+            if FileManager.default.fileExists(atPath: file.path) { return true }
+            onFileVanished?(file.id)
+            return false
+        }
     }
 
     func quickLook(_ files: [InboxFile]) {
@@ -194,7 +206,9 @@ final class MacServices: InboxServices {
     }
 
     func reveal(_ files: [InboxFile]) {
-        NSWorkspace.shared.activateFileViewerSelecting(files.map { URL(fileURLWithPath: $0.path) })
+        let urls = stillPresent(files).map { URL(fileURLWithPath: $0.path) }
+        guard !urls.isEmpty else { return }
+        NSWorkspace.shared.activateFileViewerSelecting(urls)
     }
 
     func copyToPasteboard(_ text: String) {

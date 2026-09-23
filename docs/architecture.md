@@ -88,8 +88,8 @@ only, filtered by `filter`, newest first, capped at `listLimit` (20). The badge 
 that arrived while the panel was closed; opening the panel clears it. `unread` is per file and
 is cleared by any action on that file or by "Mark all seen". A file whose watcher reports it
 gone leaves the list at once (`fileRemoved`); the user moved or deleted it themselves, so
-there is nothing to announce. Only History (Pro) keeps a greyed row for it, without actions.
-`InboxFile.missing` and `dismiss` remain for those history rows and for scripts.
+there is nothing to announce. Only History (Pro) keeps a "Gone" row for it.
+`InboxFile.missing` marks those rows; `dismiss` remains for scripts.
 
 ### Pro
 
@@ -103,13 +103,21 @@ error: extra folders (`addFolder`, `removeFolder`), a 200-file list with a name 
   join `folders` at load from `settings.extraFolders` and are watched like Downloads.
 - **History** is `[HistoryEntry]`, one line per file that ever arrived in a watched folder
   (path, size, kind, source, date), recorded in `fileArrived` and saved after each arrival. In
-  history mode the same panel shows `historyFiles` instead of `recentFiles` under a "History"
-  title with a Done button, the chips still apply, and the search field appears; the inbox
-  itself has no search (`setHistoryMode(false)` clears the query). History is reached from the
-  gear menu (Pro) or the "Show older files" row that ends the list when the folders hold more
-  than it shows (`hasOlderFiles`); without Pro that row and the gear's "Downtray Pro…" open the
-  Pro sheet drawn inside the panel (`paywallShown`, events `showOlderFiles` / `dismissPaywall`).
-  Rows for files no longer on disk show as missing.
+  history mode the same panel gets its own chrome per `specs/history-spec.md`: a back button,
+  a "History" title, Done, a search field and an All / Available / Gone segment
+  (`historyFilter`, event `setHistoryFilter`); no inbox chips, no footer, no gear. It lists
+  `historyFiles` (files only, never folders) newest first, grouped by local calendar day with
+  "Today" / "Yesterday" / weekday / date headers from Foundation. An Available row is an inbox
+  row without the unread dot; a Gone row (`missing`) is shorter and secondary, shows
+  "relative time · Moved or deleted", cannot be opened, and has one action, "Remove from
+  history" (`removeFromHistory`, also on click and ⌫). If Open or Reveal finds the file gone,
+  the row turns Gone in place (`onFileVanished` → `fileRemoved`). Empty states are
+  `historyEmpty` ("Nothing in history yet.") and `noMatches`. The inbox itself has no search
+  (`setHistoryMode(false)` clears the query), and leaving History marks nothing seen. History
+  is reached from the gear menu (Pro) or the "Show older files" row that ends the list when
+  the folders hold more than it shows (`hasOlderFiles`); without Pro that row and the gear's
+  "Downtray Pro…" open the Pro sheet drawn inside the panel (`paywallShown`, events
+  `showOlderFiles` / `dismissPaywall`). "Clear history" lives only in Settings.
 - **Rules** are `Rule { trigger, match, action }`. The trigger is arrival or "after opened";
   the match is any subset of kind, host, name substring and extension; the action is move to
   a folder, trash, mark seen, or `suggestTrash`, which puts a `Suggestion` on the model that
@@ -124,7 +132,7 @@ by full path. `arrive` and `vanish` simulate the watcher and exist for the headl
 the attached target sees real files.
 
 Pro events have their own lines: `pro on|off` (stands in for the store), `folder add`,
-`folder remove <name>`, `history on|off|clear`, `search <text>`,
+`folder remove <name>`, `history on|off|all|available|gone|clear`, `forget <file>`, `search <text>`,
 `rule add <name> [kind=pdf] [host=example.com] [name=invoice] [ext=pdf] [on=arrival|opened] then move <path>|trash|seen|suggest-trash`,
 `rule remove|enable|disable <name>`, `accept`, `dismiss-suggestion`, `unlock`, `restore`.
 

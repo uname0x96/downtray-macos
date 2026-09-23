@@ -13,13 +13,22 @@ struct PopoverView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            header
-            chips
-            if model.historyMode { searchField }
-            Divider()
-            content
-            Divider()
-            footer
+            if model.historyMode {
+                // History is another job (look up what arrived earlier), so it gets its own
+                // chrome: back + title + Done, search, its own segment, no chips, no footer.
+                historyHeader
+                searchField
+                historySegments
+                Divider()
+                content
+            } else {
+                header
+                chips
+                Divider()
+                content
+                Divider()
+                footer
+            }
         }
         .frame(width: 360, height: 520)
         .overlay(alignment: .bottom) { notices }
@@ -36,23 +45,12 @@ struct PopoverView: View {
 
     // MARK: Header
 
-    /// The inbox shows the brand and a gear menu; History (Pro, same panel) swaps the title
-    /// and adds a Done button, since the footer no longer links the two.
+    /// The inbox header: the brand and a gear menu.
     private var header: some View {
         HStack(spacing: 10) {
-            Text(model.historyMode
-                 ? String(localized: "inbox.history.title", defaultValue: "History", comment: "Panel title while the History list is shown (Pro).")
-                 : appName)
+            Text(appName)
                 .font(.headline)
             Spacer()
-            if model.historyMode {
-                Button(String(localized: "inbox.history.done", defaultValue: "Done", comment: "Button that leaves History and shows the inbox again.")) {
-                    presenter.dispatch(.setHistoryMode(false))
-                }
-                .buttonStyle(.link)
-                .font(.callout)
-                .accessibilityIdentifier("historyDone")
-            }
             Menu {
                 Button(String(localized: "menu.settings", defaultValue: "Settings…"), action: openSettings)
                     .accessibilityIdentifier("settings")
@@ -81,6 +79,48 @@ struct PopoverView: View {
         .padding(.bottom, 8)
     }
 
+    /// `‹ Inbox   History   Done`. Both ends return to the inbox; there is no gear here.
+    private var historyHeader: some View {
+        ZStack {
+            Text(String(localized: "history.title", defaultValue: "History", comment: "Title of the History panel (Pro)."))
+                .font(.headline)
+            HStack {
+                Button {
+                    presenter.dispatch(.setHistoryMode(false))
+                } label: {
+                    Label(String(localized: "history.back", defaultValue: "Inbox", comment: "Back button on the History panel; returns to the inbox."), systemImage: "chevron.left")
+                        .labelStyle(.titleAndIcon)
+                }
+                .buttonStyle(.link)
+                .font(.callout)
+                .accessibilityIdentifier("historyBack")
+                Spacer()
+                Button(String(localized: "history.done", defaultValue: "Done", comment: "Trailing button on the History panel; returns to the inbox.")) {
+                    presenter.dispatch(.setHistoryMode(false))
+                }
+                .buttonStyle(.link)
+                .font(.callout)
+                .accessibilityIdentifier("historyDone")
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.top, 12)
+        .padding(.bottom, 8)
+    }
+
+    /// All / Available / Gone: whether the file is still where it was. Not the inbox's chips.
+    private var historySegments: some View {
+        Picker("", selection: Binding(get: { presenter.model.historyFilter }, set: { presenter.dispatch(.setHistoryFilter($0)) })) {
+            ForEach(HistoryFilter.allCases, id: \.self) { Text($0.localizedTitle).tag($0) }
+        }
+        .pickerStyle(.segmented)
+        .labelsHidden()
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 14)
+        .padding(.bottom, 8)
+        .accessibilityIdentifier("historyFilter")
+    }
+
     /// Exactly five chips on one row at 360 pt in every language: a chip hugs its label and
     /// never wraps or truncates, so a label that does not fit is shortened in the catalog.
     private var chips: some View {
@@ -101,7 +141,7 @@ struct PopoverView: View {
         HStack(spacing: 6) {
             Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
             TextField(
-                String(localized: "inbox.search.history", defaultValue: "Search history", comment: "Placeholder of the search field on the History panel."),
+                String(localized: "history.search", defaultValue: "Search history", comment: "Placeholder of the search field on the History panel."),
                 text: Binding(get: { presenter.model.query }, set: { presenter.dispatch(.setQuery($0)) })
             )
             .textFieldStyle(.plain)
@@ -126,9 +166,11 @@ struct PopoverView: View {
     @ViewBuilder
     private var content: some View {
         if let empty = model.emptyState {
-            EmptyStateView(state: empty, searching: !model.query.isEmpty, history: model.historyMode) {
+            EmptyStateView(state: empty) {
                 presenter.dispatch(.grantAccess(.downloads))
             }
+        } else if model.historyMode {
+            historyList
         } else {
             ScrollViewReader { proxy in
                 ScrollView {
@@ -137,7 +179,6 @@ struct PopoverView: View {
                             FileRowView(
                                 file: file,
                                 showFolder: model.duplicateNames.contains(file.name),
-                                showUnread: !model.historyMode,
                                 selected: model.selection.contains(file.id),
                                 focused: model.focused == file.id,
                                 actions: RowActions(presenter: presenter, file: file, selection: model.selection)
@@ -171,6 +212,78 @@ struct PopoverView: View {
                 }
             }
         }
+    }
+
+    /// History rows grouped by the local calendar day they arrived, newest first. An Available
+    /// row is an inbox row without the dot; a Gone row is smaller and only removes itself.
+    private var historyList: some View {
+        ScrollViewReader { proxy in
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 1, pinnedViews: []) {
+                    ForEach(historySections, id: \.day) { section in
+                        Text(Self.sectionTitle(for: section.day, today: model.today))
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                            .padding(.horizontal, 8)
+                            .padding(.top, 10)
+                            .padding(.bottom, 4)
+                            .accessibilityAddTraits(.isHeader)
+                        ForEach(section.files) { file in
+                            if file.missing {
+                                GoneRowView(file: file, focused: model.focused == file.id) {
+                                    presenter.dispatch(.removeFromHistory(file.id))
+                                }
+                                .id(file.id)
+                            } else {
+                                FileRowView(
+                                    file: file,
+                                    showFolder: model.duplicateNames.contains(file.name),
+                                    showUnread: false,
+                                    selected: model.selection.contains(file.id),
+                                    focused: model.focused == file.id,
+                                    actions: RowActions(presenter: presenter, file: file, selection: model.selection)
+                                )
+                                .id(file.id)
+                            }
+                        }
+                    }
+                }
+                .padding(.horizontal, 8)
+                .padding(.bottom, 6)
+            }
+            .onChange(of: model.focused) { _, id in
+                if let id { withAnimation(.easeOut(duration: 0.15)) { proxy.scrollTo(id, anchor: .center) } }
+            }
+        }
+    }
+
+    private var historySections: [(day: Date, files: [InboxFile])] {
+        let calendar = Calendar.current
+        var sections: [(day: Date, files: [InboxFile])] = []
+        for file in model.visibleFiles {
+            let day = calendar.startOfDay(for: file.addedAt)
+            if sections.last?.day == day {
+                sections[sections.count - 1].files.append(file)
+            } else {
+                sections.append((day, [file]))
+            }
+        }
+        return sections
+    }
+
+    /// "Today", "Yesterday", the weekday within the last six days, else a medium date. All from
+    /// Foundation, so each language gets its own words and date order.
+    static func sectionTitle(for day: Date, today: Date) -> String {
+        let calendar = Calendar.current
+        let daysAgo = calendar.dateComponents([.day], from: day, to: calendar.startOfDay(for: today)).day ?? 0
+        if daysAgo >= 2 && daysAgo <= 6 {
+            return day.formatted(.dateTime.weekday(.wide))
+        }
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .none
+        formatter.doesRelativeDateFormatting = true
+        return formatter.string(from: day)
     }
 
     // MARK: Footer
@@ -230,7 +343,14 @@ struct PopoverView: View {
         case .space: presenter.dispatch(.quickLook(.selection)); return .handled
         case .upArrow: presenter.dispatch(.moveFocus(.up)); return .handled
         case .downArrow: presenter.dispatch(.moveFocus(.down)); return .handled
-        case .delete, .deleteForward: presenter.dispatch(.trash(.selection)); return .handled
+        case .delete, .deleteForward:
+            // On a Gone history row ⌫ is "Remove from history"; there is nothing to trash.
+            if model.historyMode, let focused = model.focused, model.file(focused)?.missing == true {
+                presenter.dispatch(.removeFromHistory(focused))
+            } else {
+                presenter.dispatch(.trash(.selection))
+            }
+            return .handled
         case .escape:
             if model.paywallShown {
                 presenter.dispatch(.dismissPaywall)
@@ -404,15 +524,11 @@ struct FileRowView: View {
         if file.kind != .folder { parts.append(file.size.formatted(.byteCount(style: .file))) }
         if let kind { parts.append(kind) }
         if showFolder { parts.append(file.folderName) }
-        if file.missing { parts.append(String(localized: "row.missing", defaultValue: "moved or deleted", comment: "Meta line fragment on a History row whose file is gone.")) }
         return parts.joined(separator: " · ")
     }
 
     private var tooltip: String {
-        if file.missing {
-            return String(localized: "row.missing.help", defaultValue: "This file was moved or deleted. History keeps it so you can see where it came from.", comment: "Tooltip on a greyed-out History row.")
-        }
-        return [file.source.localizedDescription, file.path].compactMap { $0 }.joined(separator: "\n")
+        [file.source.localizedDescription, file.path].compactMap { $0 }.joined(separator: "\n")
     }
 
     @ViewBuilder
@@ -465,28 +581,81 @@ struct FilterChip: View {
     }
 }
 
+/// A History row for a file that has moved or been deleted: smaller, secondary, a symbol
+/// instead of a blank document icon, and one action, which is to forget it.
+struct GoneRowView: View {
+    let file: InboxFile
+    let focused: Bool
+    let remove: () -> Void
+    @State private var hovering = false
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Color.clear.frame(width: 6, height: 6)
+            Image(systemName: "questionmark.folder")
+                .font(.system(size: 17))
+                .foregroundStyle(.tertiary)
+                .frame(width: 32)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(file.name)
+                    .font(.body)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                Text("\(file.addedAt.formatted(.relative(presentation: .named))) · \(String(localized: "history.gone", defaultValue: "Moved or deleted", comment: "Meta line of a History row whose file is gone."))")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+                    .lineLimit(1)
+            }
+            Spacer(minLength: 4)
+            Menu {
+                Button(removeTitle, action: remove)
+            } label: {
+                Image(systemName: "ellipsis.circle")
+            }
+            .menuStyle(.borderlessButton)
+            .menuIndicator(.hidden)
+            .fixedSize()
+            .opacity(hovering ? 1 : 0)
+            .accessibilityIdentifier("rowMenu")
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .frame(minHeight: 44)
+        .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(hovering ? Color.primary.opacity(0.06) : .clear))
+        .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(Color.accentColor.opacity(focused ? 0.9 : 0), lineWidth: 1.5))
+        .contentShape(Rectangle())
+        .onTapGesture(perform: remove)
+        .onHover { hovering = $0 }
+        .contextMenu { Button(removeTitle, action: remove) }
+        .help(file.path)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(file.name)
+        .accessibilityIdentifier("goneRow")
+    }
+
+    private var removeTitle: String {
+        String(localized: "history.remove", defaultValue: "Remove from history", comment: "The only action on a gone History row: click, ⌫ or the menu.")
+    }
+}
+
 struct EmptyStateView: View {
     let state: EmptyState
-    var searching = false
-    var history = false
     let grant: () -> Void
 
     var body: some View {
         VStack(spacing: 12) {
             Spacer()
-            Image(systemName: state == .needsAccess ? "lock.circle" : (searching ? "magnifyingglass" : "tray"))
+            Image(systemName: symbol)
                 .font(.system(size: 36))
                 .foregroundStyle(.secondary)
             switch state {
-            case .nothingNew where searching:
-                Text(String(localized: "inbox.empty.noMatches", defaultValue: "No matches.", comment: "Empty state while a search finds nothing."))
+            case .noMatches:
+                Text(String(localized: "history.empty.noMatches", defaultValue: "No matches.", comment: "History panel while the search or segment finds nothing."))
                     .font(.headline)
-            case .nothingNew where history:
-                Text(String(localized: "inbox.empty.history.title", defaultValue: "No history yet.", comment: "Empty state of the History list."))
+            case .historyEmpty:
+                Text(String(localized: "history.empty", defaultValue: "Nothing in history yet.", comment: "History panel before any file has been recorded."))
                     .font(.headline)
-                Text(String(localized: "inbox.empty.history.body", defaultValue: "Every file that lands in a watched folder is remembered here."))
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
             case .nothingNew:
                 Text(String(localized: "inbox.empty.title", defaultValue: "Nothing new.", comment: "Empty state of the inbox."))
                     .font(.headline)
@@ -503,6 +672,15 @@ struct EmptyStateView: View {
         .padding(24)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .accessibilityIdentifier("emptyState")
+    }
+
+    private var symbol: String {
+        switch state {
+        case .needsAccess: "lock.circle"
+        case .noMatches: "magnifyingglass"
+        case .historyEmpty: "clock"
+        case .nothingNew: "tray"
+        }
     }
 }
 

@@ -90,9 +90,11 @@ extension Event {
         ("pro on|off", "what the store reported (headless: sets Pro directly)"),
         ("folder add [path]", "Pro: watch another folder (no path: ask with the folder panel)"),
         ("folder remove <name|path>", "Pro: stop watching an extra folder"),
-        ("history on|off", "Pro: list every arrival instead of the current folder contents"),
+        ("history on|off", "Pro: the History panel instead of the inbox"),
+        ("history all|available|gone", "Pro: History's segment"),
         ("history clear", "Pro: forget the recorded arrivals"),
-        ("search [text]", "filter rows by name; no text clears the search"),
+        ("forget <file>", "Pro: remove one row from History"),
+        ("search [text]", "History: filter rows by name; no text clears the search"),
         ("rule add <name> [kind=pdf] [host=stripe.com] [name=invoice] [ext=dmg] [on=arrival|opened] then move <path>|trash|seen|suggest-trash", "Pro: add a rule"),
         ("rule remove|enable|disable <name>", "Pro: manage a rule"),
         ("accept", "do what the current suggestion offers"),
@@ -232,8 +234,11 @@ extension Event {
             case "on": return .setHistoryMode(true)
             case "off": return .setHistoryMode(false)
             case "clear": return .clearHistory
-            case let other: throw .invalidArgument(other)
+            case let segment:
+                guard let filter = HistoryFilter(rawValue: segment) else { throw .invalidArgument(segment) }
+                return .setHistoryFilter(filter)
             }
+        case "forget": return .removeFromHistory(try file(try required()))
         case "search": return .setQuery(argument ?? "")
         case "older": return .showOlderFiles
         case "paywall":
@@ -334,6 +339,8 @@ extension Event {
         case .removeFolder(let kind): return "folder remove \(kind.rawValue)"
         case .setHistoryMode(let on): return "history \(on ? "on" : "off")"
         case .clearHistory: return "history clear"
+        case .setHistoryFilter(let filter): return "history \(filter.rawValue)"
+        case .removeFromHistory(let id): return "forget \(name(id))"
         case .setQuery(let text): return text.isEmpty ? "search" : "search \(text)"
         case .addRule(let rule): return "rule add \(Self.ruleText(rule))"
         case .updateRule(let rule): return "rule \(rule.enabled ? "enable" : "disable") \(rule.name)"

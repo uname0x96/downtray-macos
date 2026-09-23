@@ -43,6 +43,16 @@ extension FolderKind {
     }
 }
 
+extension HistoryFilter {
+    var localizedTitle: String {
+        switch self {
+        case .all: String(localized: "history.filter.all", defaultValue: "All", comment: "History segment: every recorded file.")
+        case .available: String(localized: "history.filter.available", defaultValue: "Available", comment: "History segment: files still where they were. Keep short; three segments share one row.")
+        case .gone: String(localized: "history.filter.gone", defaultValue: "Gone", comment: "History segment: files moved or deleted since. Keep short.")
+        }
+    }
+}
+
 extension WatchedFolder {
     var localizedTitle: String { kind.isCustom ? title : kind.localizedTitle }
 }

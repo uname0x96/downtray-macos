@@ -14,7 +14,7 @@ import Testing
             "select b.zip range", "focus a.pdf", "up", "down", "deselect", "open", "open a.pdf b.zip", "ql a.pdf",
             "reveal", "copy a.pdf", "move", "unzip b.zip", "trash a.pdf", "undo", "dismiss a.pdf", "seen",
             "finder downloads", "desktop on", "login off", "notify on", "language ja", "language system", "hotkey-set ctrl+alt+d",
-            "filter other", "older", "paywall off",
+            "filter other", "older", "paywall off", "history gone", "forget a.pdf",
             "grant desktop", "unlock", "today 2026-09-23", "vanish b.zip",
         ]
         for line in lines {

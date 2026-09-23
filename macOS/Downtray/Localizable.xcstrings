@@ -60,7 +60,6 @@
       }
     },
     "action.copyPath": {
-      "comment": "Menu item and ⌘C: puts the file's path on the clipboard.",
       "localizations": {
         "de": {
           "stringUnit": {
@@ -89,7 +88,6 @@
       }
     },
     "action.move": {
-      "comment": "Menu item and ⌘M: opens a folder picker.",
       "localizations": {
         "de": {
           "stringUnit": {
@@ -176,7 +174,6 @@
       }
     },
     "action.reveal": {
-      "comment": "Menu item and ⌘R.",
       "localizations": {
         "de": {
           "stringUnit": {
@@ -263,7 +260,6 @@
       }
     },
     "action.unzip": {
-      "comment": "Menu item and ⌘U: extracts a zip next to itself.",
       "localizations": {
         "de": {
           "stringUnit": {
@@ -321,7 +317,6 @@
       }
     },
     "app.quit": {
-      "comment": "Menu item and ⌘Q. Keep the brand name as is.",
       "localizations": {
         "de": {
           "stringUnit": {
@@ -724,6 +719,325 @@
         }
       }
     },
+    "history.back": {
+      "comment": "Back button on the History panel; returns to the inbox.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eingang"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inbox"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Boîte"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "受信箱"
+          }
+        }
+      }
+    },
+    "history.done": {
+      "comment": "Trailing button on the History panel; returns to the inbox.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fertig"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "完了"
+          }
+        }
+      }
+    },
+    "history.empty": {
+      "comment": "History panel before any file has been recorded.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch nichts im Verlauf."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing in history yet."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rien dans l’historique pour l’instant."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "履歴はまだありません。"
+          }
+        }
+      }
+    },
+    "history.empty.noMatches": {
+      "comment": "History panel while the search or segment finds nothing.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Treffer."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No matches."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun résultat."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一致するものはありません。"
+          }
+        }
+      }
+    },
+    "history.filter.all": {
+      "comment": "History segment: every recorded file.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tout"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "すべて"
+          }
+        }
+      }
+    },
+    "history.filter.available": {
+      "comment": "History segment: files still where they were. Keep short; three segments share one row.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vorhanden"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Available"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Présents"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "あり"
+          }
+        }
+      }
+    },
+    "history.filter.gone": {
+      "comment": "History segment: files moved or deleted since. Keep short.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weg"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gone"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disparus"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "なし"
+          }
+        }
+      }
+    },
+    "history.gone": {
+      "comment": "Meta line of a History row whose file is gone.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bewegt oder gelöscht"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moved or deleted"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Déplacé ou supprimé"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移動または削除済み"
+          }
+        }
+      }
+    },
+    "history.remove": {
+      "comment": "The only action on a gone History row: click, ⌫ or the menu.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aus Verlauf entfernen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove from history"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retirer de l’historique"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "履歴から削除"
+          }
+        }
+      }
+    },
+    "history.search": {
+      "comment": "Placeholder of the search field on the History panel.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verlauf durchsuchen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search history"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rechercher dans l’historique"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "履歴を検索"
+          }
+        }
+      }
+    },
+    "history.title": {
+      "comment": "Title of the History panel (Pro).",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verlauf"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "History"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Historique"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "履歴"
+          }
+        }
+      }
+    },
     "hotkey.recording": {
       "comment": "Shortcut recorder while it waits for a key combination.",
       "localizations": {
@@ -777,92 +1091,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "新しいダウンロードはここに表示されます。"
-          }
-        }
-      }
-    },
-    "inbox.empty.history.body": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jede Datei, die in einem überwachten Ordner landet, wird hier gemerkt."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Every file that lands in a watched folder is remembered here."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Chaque fichier arrivé dans un dossier surveillé est mémorisé ici."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "監視中のフォルダに届いたファイルはすべてここに記録されます。"
-          }
-        }
-      }
-    },
-    "inbox.empty.history.title": {
-      "comment": "Empty state of the History list.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Noch kein Verlauf."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No history yet."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aucun historique pour l’instant."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "履歴はまだありません。"
-          }
-        }
-      }
-    },
-    "inbox.empty.noMatches": {
-      "comment": "Empty state while a search finds nothing.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Keine Treffer."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No matches."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aucun résultat."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "一致するものはありません。"
           }
         }
       }
@@ -954,64 +1182,6 @@
         }
       }
     },
-    "inbox.history.done": {
-      "comment": "Button that leaves History and shows the inbox again.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fertig"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Done"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "OK"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "完了"
-          }
-        }
-      }
-    },
-    "inbox.history.title": {
-      "comment": "Panel title while the History list is shown (Pro).",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Verlauf"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "History"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Historique"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "履歴"
-          }
-        }
-      }
-    },
     "inbox.olderFiles": {
       "comment": "Last row of the inbox when the folders hold more than the list shows. Opens History (Pro) or the Pro sheet.",
       "localizations": {
@@ -1095,35 +1265,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Downtray はダウンロードフォルダを読み取れません。"
-          }
-        }
-      }
-    },
-    "inbox.search.history": {
-      "comment": "Placeholder of the search field on the History panel.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Verlauf durchsuchen"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Search history"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rechercher dans l’historique"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "履歴を検索"
           }
         }
       }
@@ -1954,7 +2095,6 @@
       }
     },
     "pro.restore": {
-      "comment": "Standard App Store wording.",
       "localizations": {
         "de": {
           "stringUnit": {
@@ -2012,7 +2152,6 @@
       }
     },
     "pro.unlock.button": {
-      "comment": "Purchase button while the price is unknown.",
       "localizations": {
         "de": {
           "stringUnit": {
@@ -2041,7 +2180,6 @@
       }
     },
     "pro.unlock.buttonWithPrice": {
-      "comment": "Purchase button. Placeholder: localized price, e.g. $7.99.",
       "localizations": {
         "de": {
           "stringUnit": {
@@ -2065,64 +2203,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pro を購入 — %@"
-          }
-        }
-      }
-    },
-    "row.missing": {
-      "comment": "Meta line fragment on a History row whose file is gone.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "bewegt oder gelöscht"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "moved or deleted"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "déplacé ou supprimé"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "移動または削除済み"
-          }
-        }
-      }
-    },
-    "row.missing.help": {
-      "comment": "Tooltip on a greyed-out History row.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Diese Datei wurde bewegt oder gelöscht. Der Verlauf behält sie, damit du siehst, woher sie kam."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This file was moved or deleted. History keeps it so you can see where it came from."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ce fichier a été déplacé ou supprimé. L’historique le conserve pour que vous sachiez d’où il venait."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "このファイルは移動または削除されました。どこから来たかを確認できるように履歴に残しています。"
           }
         }
       }
@@ -3396,7 +3476,6 @@
       }
     },
     "settings.accessNeeded": {
-      "comment": "Row title when macOS denied a folder.",
       "localizations": {
         "de": {
           "stringUnit": {
@@ -3714,7 +3793,6 @@
       }
     },
     "settings.grantAccess": {
-      "comment": "Opens the folder picker that grants access.",
       "localizations": {
         "de": {
           "stringUnit": {
@@ -4073,7 +4151,6 @@
       }
     },
     "settings.language.system": {
-      "comment": "Picker option: follow the macOS language.",
       "localizations": {
         "de": {
           "stringUnit": {
@@ -4244,7 +4321,6 @@
       }
     },
     "settings.pro": {
-      "comment": "Section title and row label for the paid tier. Usually left as 'Pro'.",
       "localizations": {
         "de": {
           "stringUnit": {

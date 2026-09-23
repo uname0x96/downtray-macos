@@ -84,8 +84,11 @@ public enum Event: Equatable, Sendable {
     case addFolder
     case removeFolder(FolderKind)
     case setHistoryMode(Bool)
+    case setHistoryFilter(HistoryFilter)
     case setQuery(String)
     case clearHistory
+    /// The one action on a Gone history row: forget it.
+    case removeFromHistory(FileID)
     case addRule(Rule)
     case updateRule(Rule)
     case removeRule(String)

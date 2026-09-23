@@ -472,6 +472,17 @@ public enum InboxReducer {
             next.fixFocus()
             effects.append(.saveHistory([]))
 
+        case .setHistoryFilter(let filter):
+            next.historyFilter = filter
+            next.fixFocus()
+
+        case .removeFromHistory(let id):
+            guard next.history.contains(where: { $0.id == id }) else { throw .unknownFile(id) }
+            next.history.removeAll { $0.id == id }
+            next.selection.remove(id)
+            next.fixFocus()
+            effects.append(.saveHistory(next.history))
+
         case .addRule(let rule):
             guard next.isPro else { throw .proRequired(.rules) }
             if next.settings.rules.contains(where: { $0.id != rule.id && $0.name.caseInsensitiveCompare(rule.name) == .orderedSame }) {

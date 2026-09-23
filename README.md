@@ -103,7 +103,8 @@ specs/                   the product spec
 
 ## Status
 
-MVP per `specs/mvp-spec.md` with the popover per `specs/popover-spec.md`, plus the Pro tier:
+MVP per `specs/mvp-spec.md` with the popover per `specs/popover-spec.md` and the History
+panel per `specs/history-spec.md`, plus the Pro tier:
 extra folders, 200-file list, searchable history, rules, unlocked through StoreKit 2 (product
 `app.downtray.mac.pro`, to be created in App Store Connect, see `docs/app-store.md`).
 Icon, privacy manifest, usage strings, four languages and a signed App Store export are in place. Running the app from the

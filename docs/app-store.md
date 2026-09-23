@@ -67,8 +67,9 @@ Still worth doing before submitting:
 - [ ] Run the Release build on a second Mac or a fresh user account: first-launch Downloads
       prompt, Desktop grant, login item approval, notification permission, a purchase with a
       Sandbox tester.
-- [ ] Look at the Pro screens (Settings > Rules, the rule editor sheet, the History panel
-      with its search field, and the Pro sheet in the popover) and adjust spacing and copy.
+- [ ] Look at the Pro screens (Settings > Rules, the rule editor sheet, and the Pro sheet in
+      the popover) and adjust spacing and copy. The History panel was reworked per
+      `specs/history-spec.md` and checked in four languages.
 - [x] Localization: `Localizable.xcstrings` carries English, Japanese, German and French for
       every UI string; `scripts/check-strings.sh` keeps code and catalog in step. The Japanese
       and German texts were machine-drafted and need a native speaker's pass before the first

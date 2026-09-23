@@ -93,6 +93,38 @@ import MobiusTest
         #expect(cleared.model.history.isEmpty && cleared.effects == [.saveHistory([])])
     }
 
+    @Test func historyPanelHidesFoldersSegmentsRowsAndForgetsGoneOnes() throws {
+        let folder = InboxFile(path: downloads + "/shots", addedAt: today.addingTimeInterval(3600), kind: .folder)
+        let gone = file("gone.pdf", minutesAgo: 5)
+        let here = file("here.pdf")
+        var m = pro()
+        for arrival in [folder, gone, here] { m = try InboxReducer.reduce(m, .fileArrived(arrival)).model }
+        m = try InboxReducer.reduce(m, .fileRemoved(gone.id)).model
+        m = try InboxReducer.reduce(m, .setFilter(.images)).model
+        m = try InboxReducer.reduce(m, .setHistoryMode(true)).model
+        #expect(m.visibleFiles.map(\.name) == ["here.pdf", "gone.pdf"], "folders are left out and the inbox type chip does not apply")
+        #expect(m.visibleFiles.map(\.missing) == [false, true])
+
+        m = try InboxReducer.reduce(m, .setHistoryFilter(.gone)).model
+        #expect(m.visibleFiles.map(\.name) == ["gone.pdf"] && m.snapshot.historyFilter == "gone")
+        m = try InboxReducer.reduce(m, .setHistoryFilter(.available)).model
+        #expect(m.visibleFiles.map(\.name) == ["here.pdf"])
+        m = try InboxReducer.reduce(m, .setQuery("zzz")).model
+        #expect(m.emptyState == .noMatches)
+        m = try InboxReducer.reduce(m, .setQuery("")).model
+        m = try InboxReducer.reduce(m, .setHistoryFilter(.all)).model
+
+        let step = try InboxReducer.reduce(m, .removeFromHistory(gone.id))
+        #expect(step.model.visibleFiles.map(\.name) == ["here.pdf"])
+        #expect(step.effects == [.saveHistory(step.model.history)])
+        #expect(throws: EventError.unknownFile(gone.id)) { try InboxReducer.reduce(step.model, .removeFromHistory(gone.id)) }
+
+        var empty = try InboxReducer.reduce(pro(), .setHistoryMode(true)).model
+        #expect(empty.emptyState == .historyEmpty)
+        empty = try InboxReducer.reduce(empty, .fileArrived(folder)).model
+        #expect(empty.emptyState == .historyEmpty, "a folder alone is not history")
+    }
+
     @Test func historyIsCappedAndDeduplicated() throws {
         var m = pro()
         for index in 0..<(InboxModel.historyLimit + 5) {
@@ -210,6 +242,7 @@ import MobiusTest
         #expect(try Event.parse("folder add \(docs)", context: context) == .folderChosen(docs))
         #expect(try Event.parse("folder remove Documents", context: context) == .removeFolder(.custom(docs)))
         #expect(try Event.parse("history on", context: context) == .setHistoryMode(true))
+        #expect(try Event.parse("history gone", context: context) == .setHistoryFilter(.gone))
         #expect(try Event.parse("search inv oice", context: context) == .setQuery("inv oice"))
         #expect(try Event.parse("search", context: context) == .setQuery(""))
         #expect(try Event.parse("pro on", context: context) == .proStatusChanged(true))

@@ -81,6 +81,8 @@ public struct Snapshot: Codable, Equatable, Sendable {
     public let folders: [Folder]
     public let settings: SettingsView
     public let historyMode: Bool
+    /// "all", "available" or "gone".
+    public let historyFilter: String
     public let historyCount: Int
     public let query: String
     public let suggestion: SuggestionView?
@@ -133,6 +135,7 @@ public struct Snapshot: Codable, Equatable, Sendable {
             language: model.settings.language?.rawValue
         )
         historyMode = model.historyMode
+        historyFilter = model.historyFilter.rawValue
         historyCount = model.history.count
         query = model.query
         suggestion = model.suggestion.map { SuggestionView(file: ($0.fileID as NSString).lastPathComponent, message: $0.message) }
@@ -151,7 +154,12 @@ public struct Snapshot: Codable, Equatable, Sendable {
     public var summary: String {
         var text = "[\(panelOpen ? "open" : "closed")] \(historyMode ? "history " : "")\(filter): "
         if let emptyState {
-            text += emptyState == "needsAccess" ? "needs access to Downloads" : "nothing new"
+            switch emptyState {
+            case "needsAccess": text += "needs access to Downloads"
+            case "historyEmpty": text += "nothing in history"
+            case "noMatches": text += "no matches"
+            default: text += "nothing new"
+            }
         } else {
             text += "\(rows.count) rows"
             let unreadRows = rows.filter(\.unread).count

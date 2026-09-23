@@ -81,6 +81,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, Pan
         services.panelController = self
         services.onHotkey = { [weak self] in self?.presenter.dispatch(.hotkeyPressed) }
         services.onNotificationOpen = { [weak self] path in self?.presenter.dispatch(.open(.files([path]))) }
+        services.onFileVanished = { [weak self] id in self?.presenter.dispatch(.fileRemoved(id)) }
         setUpStatusItem()
         setUpPopover()
         presenter.start()

@@ -179,7 +179,13 @@ headless_scenario() {
     expect '.historyMode and (.rows | map(.name) | index("archive.zip")) != null' "history still lists the moved archive"
     send "search scan"
     expect '.query == "scan" and (.rows | length) == 1 and .rows[0].name == "scan.pdf"'
+    send "search zzz";  expect '.emptyState == "noMatches"' "a search with no hits is History's own empty state"
     send "search"
+    send "history gone"
+    expect '.historyFilter == "gone" and (.rows | length) > 0 and all(.rows[]; .missing)' "the Gone segment shows only files that left"
+    send "forget archive.zip"
+    expect '(.rows | map(.name) | index("archive.zip")) == null' "a Gone row can be removed from History"
+    send "history all"
     send "history off"
     expect '.historyMode == false and .query == ""'
 

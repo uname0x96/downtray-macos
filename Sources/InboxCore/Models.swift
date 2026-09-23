@@ -125,6 +125,27 @@ public enum FileFilter: String, CaseIterable, Codable, Sendable, Equatable {
     }
 }
 
+/// The History panel's segment: whether the file is still where it was.
+public enum HistoryFilter: String, CaseIterable, Codable, Sendable, Equatable {
+    case all, available, gone
+
+    public var title: String {
+        switch self {
+        case .all: return "All"
+        case .available: return "Available"
+        case .gone: return "Gone"
+        }
+    }
+
+    public func matches(_ file: InboxFile) -> Bool {
+        switch self {
+        case .all: return true
+        case .available: return !file.missing
+        case .gone: return file.missing
+        }
+    }
+}
+
 // MARK: - Watched folders
 
 /// Identifies a watched folder. `.downloads` and `.desktop` are the two built-in folders; a
@@ -542,6 +563,10 @@ public enum EmptyState: String, Sendable, Equatable {
     case needsAccess
     /// Nothing matches; show "Nothing new. New downloads will show up here."
     case nothingNew
+    /// History (Pro) has never recorded a file: "Nothing in history yet."
+    case historyEmpty
+    /// History has entries, but the search or the segment leaves none: "No matches."
+    case noMatches
 }
 
 // MARK: - Model
@@ -574,6 +599,8 @@ public struct InboxModel: Equatable, Sendable {
     public var history: [HistoryEntry]
     /// Pro: the list shows history instead of the current folder contents.
     public var historyMode: Bool
+    /// History's All / Available / Gone segment.
+    public var historyFilter: HistoryFilter
     /// Text typed into the search field; filters rows by name (and history by folder).
     public var query: String
     /// A rule waiting for the user's confirmation.
@@ -608,6 +635,7 @@ public struct InboxModel: Equatable, Sendable {
         self.nextToken = 1
         self.history = []
         self.historyMode = false
+        self.historyFilter = .all
         self.query = ""
         self.suggestion = nil
         self.paywallShown = false
@@ -641,17 +669,19 @@ public struct InboxModel: Equatable, Sendable {
             .sorted(by: Self.newestFirst)
     }
 
-    /// History rows: every recorded arrival, using the live file when it is still listed.
+    /// History rows: every recorded file (folders are left out), newest first, using the live
+    /// file when it is still listed and a `missing` row when it is gone.
     public var historyFiles: [InboxFile] {
-        history.map { $0.file(present: files[$0.id]) }
+        history.lazy.filter { $0.kind != .folder }.map { $0.file(present: files[$0.id]) }
     }
 
-    /// The rows on screen: recent files (or history) that match the filter and the search text.
+    /// The rows on screen. The inbox applies the type chip; History applies its
+    /// All / Available / Gone segment instead. Both apply the search text and the list limit.
     public var visibleFiles: [InboxFile] {
         let base = historyMode ? historyFiles : recentFiles
         let needle = query.trimmingCharacters(in: .whitespaces)
         return Array(
-            base.filter { filter.matches($0, today: today) }
+            base.filter { historyMode ? historyFilter.matches($0) : filter.matches($0, today: today) }
                 .filter { needle.isEmpty || $0.name.localizedCaseInsensitiveContains(needle) }
                 .prefix(effectiveListLimit)
         )
@@ -685,7 +715,11 @@ public struct InboxModel: Equatable, Sendable {
     }
 
     public var emptyState: EmptyState? {
-        if let downloads, downloads.access == .denied, !historyMode { return .needsAccess }
+        if historyMode {
+            guard visibleFiles.isEmpty else { return nil }
+            return historyFiles.isEmpty ? .historyEmpty : .noMatches
+        }
+        if let downloads, downloads.access == .denied { return .needsAccess }
         return visibleFiles.isEmpty ? .nothingNew : nil
     }
 
