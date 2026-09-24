@@ -53,8 +53,11 @@ Only possible in App Store Connect (account owner):
 - [ ] Add a Sandbox tester account (Users and Access > Sandbox) and buy Pro once on a
       TestFlight or development build signed for the store, to confirm the store path outside
       the local `.storekit` file.
-- [ ] Privacy policy URL (required because of the in-app purchase) and support URL. A draft
-      policy is below.
+- [x] Privacy policy URL (required because of the in-app purchase), support URL and
+      marketing URL. The site is live at https://uname0x96.github.io/downtray/ (GitHub Pages
+      from the `uname0x96/downtray` repository): use `/privacy.html`, `/support.html` and the
+      root. The pages still carry the `SUPPORT_EMAIL` and `APP_STORE_URL` placeholders; fill
+      them in before submitting.
 - [ ] App privacy questionnaire: "Data not collected".
 - [ ] Screenshots: at least one 1280×800 or 1440×900 (or the 2560×1600 / 2880×1800 Retina
       sizes) of the popover with a few files, one of Settings, one of the rule editor.
@@ -206,7 +209,7 @@ Privé par conception : pas de compte, pas de réseau, pas d’analyse. Tout res
 
 **What's New (1.0.0)**: Première version.
 
-## Privacy policy (draft, host at the privacy policy URL)
+## Privacy policy (draft; the live text is `privacy.html` on the website)
 
 > Downtray does not collect, store or transmit any personal data. The app runs entirely
 > on your Mac. It reads the folders you allow it to watch (Downloads by default, others only
