@@ -55,32 +55,16 @@ struct PopoverView: View {
 
     // MARK: Header
 
-    /// The inbox header: the brand and a gear menu.
+    /// The inbox header: the brand and a gear button that opens Settings.
     private var header: some View {
         HStack(spacing: 10) {
             Text(appName)
                 .font(.headline)
             Spacer()
-            Menu {
-                Button(String(localized: "menu.settings", defaultValue: "Settings…"), action: openSettings)
-                    .accessibilityIdentifier("settings")
-                if model.isPro {
-                    Button(String(localized: "menu.history", defaultValue: "History…", comment: "Gear menu item (Pro): opens the History list.")) {
-                        presenter.dispatch(.setHistoryMode(true))
-                    }
-                    .accessibilityIdentifier("historyToggle")
-                } else {
-                    Button(String(localized: "menu.pro", defaultValue: "Downtray Pro…", comment: "Gear menu item for free users: opens the Pro sheet. Keep the brand name.")) {
-                        presenter.dispatch(.showOlderFiles)
-                    }
-                    .accessibilityIdentifier("proMenuItem")
-                }
-            } label: {
+            Button(action: openSettings) {
                 Image(systemName: "gearshape")
             }
-            .menuStyle(.borderlessButton)
-            .menuIndicator(.hidden)
-            .fixedSize()
+            .buttonStyle(.borderless)
             .help(String(localized: "inbox.settings", defaultValue: "Settings", comment: "Tooltip on the gear button that opens Settings."))
             .accessibilityIdentifier("gear")
         }
@@ -404,11 +388,17 @@ struct PopoverView: View {
         model.downloads?.localizedTitle ?? FolderKind.downloads.localizedTitle
     }
 
-    /// Exactly two text buttons. History is not a footer link: it lives behind the gear (Pro)
-    /// and the "Show older files" row.
+    /// Exactly two text buttons: History (Pro; a lock in the free tier, where it opens the Pro
+    /// sheet) and Mark all seen.
     private var footer: some View {
         HStack {
-            Button(String(localized: "inbox.footer.openDownloads", defaultValue: "Open \(primaryFolderName) in Finder", comment: "Footer link button, leading. Placeholder: the primary folder's name, usually Downloads. Shares one line with 'Mark all seen'.")) { presenter.dispatch(.openWatchedFolder(.downloads)) }
+            Button {
+                presenter.dispatch(model.isPro ? .setHistoryMode(true) : .showOlderFiles)
+            } label: {
+                Label(String(localized: "inbox.footer.history", defaultValue: "History", comment: "Footer link button, leading: opens the History list (Pro). Shares one line with 'Mark all seen'."),
+                      systemImage: model.isPro ? "clock.arrow.circlepath" : "lock.fill")
+            }
+            .accessibilityIdentifier("historyToggle")
             Spacer()
             Button(String(localized: "inbox.footer.markAllSeen", defaultValue: "Mark all seen", comment: "Footer button: clears the unread dots and the badge.")) { presenter.dispatch(.markAllSeen) }
                 .disabled(model.unreadCount == 0)

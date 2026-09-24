@@ -141,10 +141,11 @@ error: extra folders (`addFolder`, `removeFolder`), a 200-file list with a name 
   field with Pro, whose list holds 200 files (the free inbox of 20 has none, per the popover
   spec); a query with no hits there is `noMatches` too. Entering or leaving History clears the
   query, so each panel starts its search empty, and leaving History marks nothing seen. History
-  is reached from the gear menu (Pro) or the "Show older files" row that ends the list when
-  the folders hold more than it shows (`hasOlderFiles`); without Pro that row and the gear's
-  "Downtray Pro…" open the Pro sheet drawn inside the panel (`paywallShown`, events
-  `showOlderFiles` / `dismissPaywall`). "Clear history" lives only in Settings.
+  is reached from the footer's History button (Pro) or the "Show older files" row that ends
+  the list when the folders hold more than it shows (`hasOlderFiles`); without Pro the footer
+  button carries a lock and, like that row, opens the Pro sheet drawn inside the panel
+  (`paywallShown`, events `showOlderFiles` / `dismissPaywall`). The gear opens Settings
+  directly. "Clear history" lives only in Settings.
 - **Rules** are `Rule { trigger, match, action }`. The trigger is arrival or "after opened";
   the match is any subset of kind, host, name substring and extension; the action is move to
   a folder, trash, mark seen, or `suggestTrash`, which puts a `Suggestion` on the model that

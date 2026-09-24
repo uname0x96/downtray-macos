@@ -1304,6 +1304,35 @@
         }
       }
     },
+    "inbox.footer.history": {
+      "comment": "Footer link button, leading: opens the History list (Pro). Shares one line with 'Mark all seen'.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verlauf"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "History"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Historique"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "履歴"
+          }
+        }
+      }
+    },
     "inbox.footer.markAllSeen": {
       "comment": "Footer button: clears the unread dots and the badge.",
       "localizations": {
@@ -1329,35 +1358,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "すべて既読にする"
-          }
-        }
-      }
-    },
-    "inbox.footer.openDownloads": {
-      "comment": "Footer link button, leading. Placeholder: the primary folder's name, usually Downloads. Shares one line with 'Mark all seen'.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "„%@“ im Finder öffnen"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open %@ in Finder"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ouvrir « %@ » dans le Finder"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "「%@」を Finder で開く"
           }
         }
       }
@@ -1677,64 +1677,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "PDF"
-          }
-        }
-      }
-    },
-    "menu.history": {
-      "comment": "Gear menu item (Pro): opens the History list.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Verlauf …"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "History…"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Historique…"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "履歴…"
-          }
-        }
-      }
-    },
-    "menu.pro": {
-      "comment": "Gear menu item for free users: opens the Pro sheet. Keep the brand name.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Downtray Pro …"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Downtray Pro…"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Downtray Pro…"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Downtray Pro…"
           }
         }
       }

@@ -87,7 +87,7 @@ Still worth doing before submitting:
 > macOS asks for access to the Downloads folder; please allow it, then drop any file into
 > ~/Downloads and it appears at the top of the list.
 >
-> The gear menu opens Settings. The Pro in-app purchase ("Downtray Pro",
+> The gear button opens Settings. The Pro in-app purchase ("Downtray Pro",
 > non-consumable) is on the Settings window and on a sheet inside the popover; it unlocks
 > extra watched folders, a longer list, a searchable history, and rules. Rules act only on files that land in folders the user
 > chose to watch, with actions the user configured (move to a folder the user picked, move to
