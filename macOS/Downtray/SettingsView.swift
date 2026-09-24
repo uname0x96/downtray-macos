@@ -10,6 +10,8 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
+            proSection
+
             Section {
                 primaryFolderRow
                 ForEach(model.customFolders, id: \.kind) { folder in
@@ -58,7 +60,6 @@ struct SettingsView: View {
                 languageRow
             }
 
-            proSection
             rulesSection
             typesSection
             quitSection
@@ -243,18 +244,13 @@ struct SettingsView: View {
     @State private var proPrice: String?
 
     @ViewBuilder
+    /// The first thing in the window: whether Pro is unlocked. Free users get the purchase
+    /// button, Restore Purchases and the store's last word.
     private var proSection: some View {
         Section {
             if model.isPro {
-                LabeledContent(String(localized: "settings.pro", defaultValue: "Pro", comment: "Section title and row label for the paid tier. Usually left as 'Pro'.")) {
+                LabeledContent(String(localized: "settings.pro", defaultValue: "Pro", comment: "Row label for the paid tier, and the tag next to Add Folder… in the free tier. Usually left as 'Pro'.")) {
                     Label(String(localized: "settings.pro.unlocked", defaultValue: "Unlocked", comment: "Status next to Pro after purchase."), systemImage: "checkmark.seal.fill").foregroundStyle(.green)
-                }
-                LabeledContent {
-                    Button(String(localized: "settings.history.clear", defaultValue: "Clear History")) { presenter.dispatch(.clearHistory) }
-                        .disabled(model.history.isEmpty)
-                } label: {
-                    Text(String(localized: "settings.history", defaultValue: "History", comment: "Row label."))
-                    Text(historySummary).foregroundStyle(.secondary)
                 }
             } else {
                 LabeledContent {
@@ -275,19 +271,10 @@ struct SettingsView: View {
                     .font(.caption)
                     .foregroundStyle(toast.isError ? Color.orange : Color.secondary)
             }
-        } header: {
-            Text(String(localized: "settings.pro", defaultValue: "Pro"))
         }
         .task {
             if !model.isPro { proPrice = await (presenter.services as? MacServices)?.proPrice() }
         }
-    }
-
-    private var historySummary: String {
-        let count = model.history.count
-        return count == 0
-            ? String(localized: "settings.history.empty", defaultValue: "No files remembered yet.")
-            : String(localized: "settings.history.count", defaultValue: "\(count) files remembered. The History button in the inbox lists them.", comment: "Placeholder: number of remembered files.")
     }
 
     @ViewBuilder

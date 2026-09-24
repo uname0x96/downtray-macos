@@ -96,7 +96,6 @@ extension Event {
         ("folder remove <name|path>", "Pro: stop watching an extra folder"),
         ("history on|off", "Pro: the History panel instead of the inbox"),
         ("history all|available|gone", "Pro: History's segment"),
-        ("history clear", "Pro: forget the recorded arrivals"),
         ("forget <file>", "Pro: remove one row from History"),
         ("search [text]", "filter rows by name, extension, type or source; no text clears the search"),
         ("rule add <name> [kind=pdf] [host=stripe.com] [name=invoice] [ext=dmg] [on=arrival|opened] then move <path>|trash|seen|suggest-trash", "Pro: add a rule"),
@@ -258,7 +257,6 @@ extension Event {
             switch try required().lowercased() {
             case "on": return .setHistoryMode(true)
             case "off": return .setHistoryMode(false)
-            case "clear": return .clearHistory
             case let segment:
                 guard let filter = HistoryFilter(rawValue: segment) else { throw .invalidArgument(segment) }
                 return .setHistoryFilter(filter)
@@ -362,7 +360,6 @@ extension Event {
         case .folderChosen(let path): return "folder add \(path)"
         case .removeFolder(let kind): return "folder remove \(kind.rawValue)"
         case .setHistoryMode(let on): return "history \(on ? "on" : "off")"
-        case .clearHistory: return "history clear"
         case .setHistoryFilter(let filter): return "history \(filter.rawValue)"
         case .removeFromHistory(let id): return "forget \(name(id))"
         case .setQuery(let text): return text.isEmpty ? "search" : "search \(text)"

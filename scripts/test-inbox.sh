@@ -236,8 +236,6 @@ headless_scenario() {
     expect '[.rows[] | select(.name == "scan.pdf")] | length == 2 and all(.showFolder)' "duplicate names show their folder"
     send "folder remove Scans"
     expect '.settings.extraFolders == [] and ([.rows[] | select(.name == "scan.pdf")] | length == 1 and .[0].folder == "Downloads")' "removing the folder drops its rows"
-    send "history clear"
-    expect '.historyCount == 0'
     send "pro off"
     expect '.settings.pro == false'
     echo "   $STEPS steps passed"

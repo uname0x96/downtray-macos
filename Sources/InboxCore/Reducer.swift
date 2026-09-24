@@ -495,11 +495,6 @@ public enum InboxReducer {
             next.query = text
             next.fixFocus()
 
-        case .clearHistory:
-            next.history = []
-            next.fixFocus()
-            effects.append(.saveHistory([]))
-
         case .setHistoryFilter(let filter):
             next.historyFilter = filter
             next.fixFocus()

@@ -145,7 +145,7 @@ error: extra folders (`addFolder`, `removeFolder`), a 200-file list with a name 
   the list when the folders hold more than it shows (`hasOlderFiles`); without Pro the footer
   button carries a lock and, like that row, opens the Pro sheet drawn inside the panel
   (`paywallShown`, events `showOlderFiles` / `dismissPaywall`). The gear opens Settings
-  directly. "Clear history" lives only in Settings.
+  directly. History cannot be cleared; single Gone rows can be forgotten.
 - **Rules** are `Rule { trigger, match, action }`. The trigger is arrival or "after opened";
   the match is any subset of kind, host, name substring and extension; the action is move to
   a folder, trash, mark seen, or `suggestTrash`, which puts a `Suggestion` on the model that
@@ -165,7 +165,7 @@ Filter lines: `filter all|1h|today|unread`, `type any|docs|images|media|archives
 (the primary folder; headless: the last `pick`), `badge on|off`, `seen` (mark all).
 
 Pro events have their own lines: `pro on|off` (stands in for the store), `folder add`,
-`folder remove <name>`, `history on|off|all|available|gone|clear`, `forget <file>`, `search <text>`,
+`folder remove <name>`, `history on|off|all|available|gone`, `forget <file>`, `search <text>`,
 `rule add <name> [kind=pdf] [host=example.com] [name=invoice] [ext=pdf] [on=arrival|opened] then move <path>|trash|seen|suggest-trash`,
 `rule remove|enable|disable <name>`, `accept`, `dismiss-suggestion`, `unlock`, `restore`.
 

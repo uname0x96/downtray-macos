@@ -88,9 +88,6 @@ import MobiusTest
         #expect(m.visibleFiles.map(\.name) == ["a.pdf"])
         #expect(m.visibleFiles[0].missing, "a history row for a gone file is greyed out")
         #expect(throws: EventError.fileMissing(a.id)) { try InboxReducer.reduce(m, .open(.files([a.id]))) }
-
-        let cleared = try InboxReducer.reduce(m, .clearHistory)
-        #expect(cleared.model.history.isEmpty && cleared.effects == [.saveHistory([])])
     }
 
     @Test func historyPanelHidesFoldersSegmentsRowsAndForgetsGoneOnes() throws {
