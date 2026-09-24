@@ -28,6 +28,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, Pan
     private var statusItem: NSStatusItem?
     private let popover = NSPopover()
     private var hosting: PopoverHostingController?
+    private var outsideClickMonitor: Any?
     #if DEBUG
     private var bridge: DebugBridge?
     #endif
@@ -79,6 +80,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, Pan
     /// does not deliver to a sandboxed app.
     private static let relaunchingKey = "relaunchingFromPID"
     private nonisolated static let log = Logger(subsystem: "app.downtray.mac", category: "launch")
+    private nonisolated static let popoverLog = Logger(subsystem: "app.downtray.mac", category: "popover")
 
     private func finishLaunching() {
         UserDefaults.standard.removeObject(forKey: Self.relaunchingKey)
@@ -213,11 +215,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, Pan
         // but AppKit leaves the popover on screen, so the deactivation closes it here. Quick
         // Look switches the behavior to `.applicationDefined` and is left alone.
         NotificationCenter.default.addObserver(forName: NSApplication.didResignActiveNotification, object: nil, queue: .main) { [weak self] _ in
-            MainActor.assumeIsolated {
-                guard let self, self.popover.behavior == .transient else { return }
-                self.closePopover()
-            }
+            MainActor.assumeIsolated { self?.closeIfTransient("app resigned active") }
         }
+        // Deactivation is not enough. The cooperative `activate()` in `showPopover` can be
+        // refused, and then there is nothing to resign: a click in another app, or on a system
+        // overlay that never activates anything (the screenshot thumbnail, a notification),
+        // leaves the popover hanging over whatever the user is now doing. A global monitor
+        // sees the mouse-down that went to the other app, and the workspace reports the app
+        // that took over, so either one closes the popover.
+        outsideClickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .otherMouseDown]) { [weak self] _ in
+            DispatchQueue.main.async { self?.closeIfTransient("click in another app") }
+        }
+        NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main) { [weak self] notification in
+            let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication
+            guard app?.processIdentifier != ProcessInfo.processInfo.processIdentifier else { return }
+            MainActor.assumeIsolated { self?.closeIfTransient("\(app?.bundleIdentifier ?? "?") activated") }
+        }
+    }
+
+    /// The user is doing something outside the popover; close it unless Quick Look has it.
+    private func closeIfTransient(_ reason: String) {
+        guard popover.isShown else { return }
+        Self.popoverLog.info("\(reason, privacy: .public): behavior=\(self.popover.behavior.rawValue, privacy: .public)")
+        guard popover.behavior == .transient else { return }
+        closePopover()
     }
 
     func showPopover() {
@@ -237,6 +258,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, Pan
     }
 
     func closePopover() {
+        // Quick Look belongs to the popover. A hotkey or a script hiding the panel while the
+        // preview is up would otherwise leave an empty preview panel on screen.
+        hosting?.endPreview()
         guard popover.isShown else { return }
         // `close()` rather than `performClose(nil)`: no close animation, so a hide followed at
         // once by a show (hotkey twice, a script) cannot interleave their delegate callbacks.
@@ -271,6 +295,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, Pan
     }
 
     func popoverDidClose(_ notification: Notification) {
+        Self.popoverLog.info("popover closed; model panelOpen=\(self.presenter.model.panelOpen, privacy: .public)")
         guard presenter.model.panelOpen else { return }
         if mouseIsOverStatusItem {
             closedByStatusItemClick = true

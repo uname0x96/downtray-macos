@@ -223,6 +223,14 @@ send the next line as soon as the panel is really there (rule 11). The debug ent
   bridge can answer as soon as the effect returns. The popover delegate only reports a close
   the user caused (click outside, Escape, another app activating) and re-closes a popover that
   finished showing after the model had already closed it.
+- **Anything outside the popover closes it.** AppKit's transient behavior only catches clicks
+  the app can see, and `didResignActive` only fires if the app was active, which the cooperative
+  `activate()` does not guarantee. So `AppDelegate` also closes the popover on a global
+  mouse-down (a click in another app or on a system overlay such as the screenshot thumbnail)
+  and when `NSWorkspace` reports another app becoming active. All three paths are skipped while
+  Quick Look has switched the popover to `.applicationDefined`. In the other direction,
+  `closePopover` first closes the preview panel, so a hotkey or a bridge `panel close` during
+  Quick Look does not leave an empty preview panel behind.
 - **The popover takes the first click.** `showPopover` activates the app with
   `ignoringOtherApps` (the cooperative `activate()` is refused while another app is frontmost)
   and the hosting view is a `FirstMouseHostingView` that accepts the first mouse, so a click

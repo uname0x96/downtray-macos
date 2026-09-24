@@ -43,6 +43,14 @@ final class PopoverHostingController: NSViewController, @preconcurrency QLPrevie
         }
     }
 
+    /// Closes the preview panel if this controller is showing it. Closing hands control back
+    /// through `endPreviewPanelControl`, so the popover becomes transient again.
+    func endPreview() {
+        guard QLPreviewPanel.sharedPreviewPanelExists(), let panel = QLPreviewPanel.shared(),
+              panel.isVisible, panel.dataSource === self else { return }
+        panel.orderOut(nil)
+    }
+
     override func acceptsPreviewPanelControl(_ panel: QLPreviewPanel!) -> Bool { true }
 
     override func beginPreviewPanelControl(_ panel: QLPreviewPanel!) {
