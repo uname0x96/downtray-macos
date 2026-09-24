@@ -429,19 +429,36 @@ struct PopoverView: View {
             } label: {
                 Label(String(localized: "inbox.footer.history", defaultValue: "History", comment: "Footer link button, leading: opens the History list (Pro). Shares one line with 'Mark all seen'."),
                       systemImage: model.isPro ? "clock.arrow.circlepath" : "lock.fill")
+                    .modifier(FooterHitArea())
             }
+            // Pro paid for this one, so it gets the full text color; the lock stays quiet.
+            .foregroundStyle(model.isPro ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
             .accessibilityIdentifier("historyToggle")
             Spacer()
             // Only while there is something to mark: a button that does nothing reads as broken.
             if model.unreadCount > 0 {
-                Button(String(localized: "inbox.footer.markAllSeen", defaultValue: "Mark all seen", comment: "Footer button: clears the unread dots and the badge. Shown only while something is unread.")) { presenter.dispatch(.markAllSeen) }
+                Button {
+                    presenter.dispatch(.markAllSeen)
+                } label: {
+                    Text(String(localized: "inbox.footer.markAllSeen", defaultValue: "Mark all seen", comment: "Footer button: clears the unread dots and the badge. Shown only while something is unread."))
+                        .modifier(FooterHitArea())
+                }
             }
         }
         .buttonStyle(.link)
         .foregroundStyle(.secondary)
         .font(.caption)
         .padding(.horizontal, 14)
-        .padding(.vertical, 10)
+    }
+
+    /// The footer's text is caption-sized, so the label alone is a thin target. The padding
+    /// is inside the button and the shape covers it, so the whole footer height takes the click.
+    private struct FooterHitArea: ViewModifier {
+        func body(content: Content) -> some View {
+            content
+                .padding(.vertical, 10)
+                .contentShape(Rectangle())
+        }
     }
 
     // MARK: Toast and undo
