@@ -64,7 +64,7 @@ Mobius.swift is used as the loop runtime, not as the design. The design is the r
 | Effect | `MacServices` |
 |---|---|
 | `loadSettings` / `saveSettings` | `UserDefaults` (JSON), login item state read from `SMAppService`. |
-| `startWatching` / `stopWatching` | `FolderWatcher`: `DispatchSource` on the directory, 150 ms debounce, rescan with `.addedToDirectoryDateKey`; partial downloads (`.download`, `.crdownload`, `.part`, `.tmp`) are skipped and new files are reported only after their size is stable for 3 polls at 400 ms. Source comes from the `kMDItemWhereFroms` xattr; AirDrop is inferred when a file lands in Downloads without it. |
+| `startWatching` / `stopWatching` | `FolderWatcher`: `DispatchSource` on the directory, 50 ms debounce, rescan with `.addedToDirectoryDateKey`; partial downloads (`.download`, `.crdownload`, `.part`, `.tmp`) are skipped and a new file is reported after one size check 150 ms later (a file still growing is polled until its size holds twice), so a finished download is in the list about 200 ms after it appears. Source comes from the `kMDItemWhereFroms` xattr; AirDrop is inferred when a file lands in Downloads without it. |
 | `requestAccess` | `NSOpenPanel` on the folder; the choice is kept as a security-scoped bookmark. |
 | `openFiles`, `reveal`, `openFolder` | `NSWorkspace`. Opening goes through Gatekeeper like Finder. |
 | `quickLook` | `QLPreviewPanel` hosted by the popover's `NSHostingController`; the popover stops being transient while the panel is up. |
@@ -76,7 +76,7 @@ Mobius.swift is used as the loop runtime, not as the design. The design is the r
 | `setLaunchAtLogin` | `SMAppService.mainApp`; opens System Settings when approval is required. |
 | `registerHotkey` | Carbon `RegisterEventHotKey`, default ⌃⌥D. |
 | `showPanel`, `hidePanel` | The status item's `NSPopover`. |
-| `notify`, `requestNotificationPermission` | `UNUserNotificationCenter`, bursts folded into one notification per 3 s. |
+| `notify`, `requestNotificationPermission` | `UNUserNotificationCenter`. The first new file is posted at once; files in the 2 s after it are folded into one "and N more" notification at the end of that window. |
 | `chooseFolder` | Pro. `NSOpenPanel` for a folder to watch; the choice is stored as a security-scoped bookmark keyed by path so it survives relaunches. |
 | `loadHistory`, `saveHistory` | Pro. `history.json` in the container's Application Support (newest first, capped at 1000). |
 | `checkProStatus`, `purchasePro`, `restorePurchases` | StoreKit 2: `Transaction.currentEntitlements` for the non-consumable `app.downtray.mac.pro`, `Product.purchase()`, `AppStore.sync()`. Without a store (no `.storekit` config, no App Store receipt) purchase fails with a toast and the app stays free. |

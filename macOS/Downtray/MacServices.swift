@@ -479,10 +479,18 @@ final class MacServices: InboxServices {
 /// One banner per burst: arrivals within 3 s collapse into a single notification whose title is
 /// the latest file name and whose "Open" action opens it.
 @MainActor
+/// Posts a notification for a new file right away. Files that follow within the next two
+/// seconds are folded into one "and N more" notification at the end of that window, so a batch
+/// download is one notification per window rather than one per file, and the first file is
+/// never held back.
 final class NotificationRelay: NSObject, UNUserNotificationCenterDelegate {
     var onOpen: ((FileID) -> Void)?
+    /// Files that arrived while a window was open, newest last.
     private var burst: [InboxFile] = []
+    /// Open for `window` after a notification; nil when the next arrival should post at once.
     private var timer: Task<Void, Never>?
+    static let window: Duration = .seconds(2)
+    private nonisolated static let log = Logger(subsystem: "app.downtray.mac", category: "notifications")
     private static let category = "newFile"
     private static let openAction = "open"
 
@@ -497,27 +505,41 @@ final class NotificationRelay: NSObject, UNUserNotificationCenterDelegate {
     }
 
     func enqueue(_ file: InboxFile) {
-        burst.append(file)
-        timer?.cancel()
-        timer = Task { @MainActor [weak self] in
-            try? await Task.sleep(for: .seconds(3))
-            guard !Task.isCancelled else { return }
-            self?.flush()
+        if timer == nil {
+            post(latest: file, others: 0)
+            openWindow()
+        } else {
+            burst.append(file)
         }
     }
 
-    private func flush() {
-        guard let latest = burst.last else { return }
+    /// After the window, whatever gathered goes out as one notification and, if there was
+    /// anything, a new window starts so a long stream stays at one notification per window.
+    private func openWindow() {
+        timer = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: Self.window)
+            guard let self, !Task.isCancelled else { return }
+            if let latest = burst.last {
+                post(latest: latest, others: burst.count - 1)
+                burst = []
+                openWindow()
+            } else {
+                timer = nil
+            }
+        }
+    }
+
+    private func post(latest: InboxFile, others: Int) {
         let content = UNMutableNotificationContent()
         content.title = latest.name
-        content.body = burst.count == 1
+        content.body = others == 0
             ? String(localized: "notification.newIn", defaultValue: "New in \(latest.folderName)", comment: "Notification body. Placeholder: folder name.")
-            : String(localized: "notification.more", defaultValue: "and \(burst.count - 1) more new files", comment: "Notification body under the newest file's name. Placeholder: how many others arrived. Plural: 1 → 'and 1 more new file'.")
+            : String(localized: "notification.more", defaultValue: "and \(others) more new files", comment: "Notification body under the newest file's name. Placeholder: how many others arrived. Plural: 1 → 'and 1 more new file'.")
         content.categoryIdentifier = Self.category
         content.userInfo = ["path": latest.path]
-        burst = []
         let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
         UNUserNotificationCenter.current().add(request) { _ in }
+        Self.log.info("notification posted: \(latest.name, privacy: .public) +\(others, privacy: .public)")
     }
 
     nonisolated func userNotificationCenter(
