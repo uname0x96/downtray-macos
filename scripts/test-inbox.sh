@@ -172,12 +172,8 @@ headless_scenario() {
     expect '.unread == 0 and .badge == 0'
     send "badge off";  expect '.settings.showBadge == false'
     send "badge on"
-    send "clear-list"; expect '.rows == [] and .emptyState == "nothingNew" and .settings.selectedChip == "all" and .settings.listCleared' "Clear list empties the inbox without touching the files"
     send "arrive after.txt 1k"
-    expect '(.rows | map(.name)) == ["after.txt"]' "what arrives after the clear shows"
-    send "restore-list"; expect '(.rows | length) > 1 and .rows[0].name == "after.txt" and (.settings.listCleared | not)' "Restore list brings the hidden rows back"
-    send "clear-list";  expect '(.rows | length) == 0'
-    send "arrive after.txt 1k"
+    expect '.rows[0].name == "after.txt"' "a new arrival goes to the top"
     send "panel close"
     expect '.panelOpen == false and .selection == [] and .focused == null'
 

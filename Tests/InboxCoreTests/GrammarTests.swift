@@ -15,7 +15,7 @@ import Testing
             "reveal", "copy a.pdf", "move", "unzip b.zip", "trash a.pdf", "undo", "dismiss a.pdf", "seen",
             "finder downloads", "folder change", "login off", "notify on", "language ja", "language system", "hotkey-set ctrl+alt+d",
             "filter 1h", "filter unread", "type docs", "type any", "type map foo docs", "type map foo none", "type reset",
-            "copy-name a.pdf", "read a.pdf", "unread", "clear-list", "restore-list", "badge off",
+            "copy-name a.pdf", "read a.pdf", "unread", "badge off",
             "older", "paywall off", "history gone", "forget a.pdf",
             "grant downloads", "unlock", "today 2026-09-23", "vanish b.zip",
         ]

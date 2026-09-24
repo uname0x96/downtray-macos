@@ -481,8 +481,6 @@ public struct Settings: Equatable, Codable, Sendable {
     /// The chip and the Type menu are remembered between launches. The search is not.
     public var selectedChip: FileFilter
     public var selectedType: TypeGroup?
-    /// "Clear list": files that arrived before this moment stay out of the inbox.
-    public var listClearedAt: Date?
 
     public init(
         launchAtLogin: Bool = false,
@@ -495,8 +493,7 @@ public struct Settings: Equatable, Codable, Sendable {
         showBadge: Bool = true,
         typeOverrides: [String: TypeGroup] = [:],
         selectedChip: FileFilter = .today,
-        selectedType: TypeGroup? = nil,
-        listClearedAt: Date? = nil
+        selectedType: TypeGroup? = nil
     ) {
         self.launchAtLogin = launchAtLogin
         self.hotkey = hotkey
@@ -509,7 +506,6 @@ public struct Settings: Equatable, Codable, Sendable {
         self.typeOverrides = typeOverrides
         self.selectedChip = selectedChip
         self.selectedType = selectedType
-        self.listClearedAt = listClearedAt
     }
 
     // Settings saved by older versions have no Pro fields.
@@ -526,7 +522,6 @@ public struct Settings: Equatable, Codable, Sendable {
         typeOverrides = try c.decodeIfPresent([String: TypeGroup].self, forKey: .typeOverrides) ?? [:]
         selectedChip = try c.decodeIfPresent(FileFilter.self, forKey: .selectedChip) ?? .today
         selectedType = try c.decodeIfPresent(TypeGroup.self, forKey: .selectedType)
-        listClearedAt = try c.decodeIfPresent(Date.self, forKey: .listClearedAt)
     }
 }
 
@@ -780,13 +775,9 @@ public struct InboxModel: Equatable, Sendable {
             .sorted(by: Self.newestFirst)
     }
 
-    /// The inbox's files: candidates that arrived after the last "Clear list", newest first,
-    /// before the chips and the limit. Nothing ages out on its own: a fresh install lists the
-    /// whole Downloads folder, and only Clear List empties the inbox.
-    public var recentFiles: [InboxFile] {
-        guard let cleared = settings.listClearedAt else { return inboxCandidates }
-        return inboxCandidates.filter { $0.addedAt > cleared }
-    }
+    /// The inbox's files, newest first, before the chips and the limit. Nothing ages out and
+    /// nothing is cleared: the inbox is the watched folders themselves.
+    public var recentFiles: [InboxFile] { inboxCandidates }
 
     /// The one place that decides whether an inbox row is on screen: chip, Type menu and
     /// search are AND-combined. History rows use `HistoryFilter` and the search only.

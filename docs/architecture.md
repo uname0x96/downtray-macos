@@ -84,9 +84,9 @@ Mobius.swift is used as the loop runtime, not as the design. The design is the r
 ## Reading the model
 
 `InboxModel` keeps `files` keyed by POSIX path. `recentFiles` are the candidates: enabled
-folders only, files and folders alike (an unzipped download is a row too), newer than
-`settings.listClearedAt` ("Clear List" in Settings; "Restore List" clears it again). Nothing
-ages out on its own, so a fresh install lists the Downloads folder instead of an empty inbox. The panel lists `visibleFiles`: `recentFiles` through the chip
+folders only, files and folders alike (an unzipped download is a row too). Nothing ages out
+and nothing is cleared, so the inbox is the watched folders themselves, newest first, and a
+fresh install lists the Downloads folder instead of an empty inbox. The panel lists `visibleFiles`: `recentFiles` through the chip
 (`filter`: All, 1h, Today, Unread), the Type menu (`typeFilter`: Docs, Images, Media, Archives,
 Apps, from `TypeGroup.forExtension` plus `settings.typeOverrides`) and the Pro `query`, all
 ANDed, newest first, capped at `listLimit` (20, Pro 200). The query matches the name, the
@@ -162,8 +162,7 @@ the attached target sees real files.
 Filter lines: `filter all|1h|today|unread`, `type any|docs|images|media|archives|apps`,
 `type map <ext> <group|none>`, `type reset`, `search <text>`. Row actions: `open`, `reveal`,
 `copy-path`, `copy-name`, `read`, `unread`, `trash`, `move`, `unzip`. Settings: `folder change`
-(the primary folder; headless: the last `pick`), `badge on|off`, `clear-list`, `restore-list`,
-`seen` (mark all).
+(the primary folder; headless: the last `pick`), `badge on|off`, `seen` (mark all).
 
 Pro events have their own lines: `pro on|off` (stands in for the store), `folder add`,
 `folder remove <name>`, `history on|off|all|available|gone|clear`, `forget <file>`, `search <text>`,

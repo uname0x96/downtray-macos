@@ -275,27 +275,11 @@ func model(_ files: [InboxFile] = [], open: Bool = false) -> InboxModel {
         #expect(m.inboxSections.isEmpty, "a search is a flat list")
     }
 
-    @Test func clearListKeepsOldArrivalsOutOfTheInbox() throws {
+    @Test func nothingAgesOutOfTheInbox() {
         let fresh = file("fresh.pdf")
-        let stale = InboxFile(path: downloads + "/stale.pdf", addedAt: now.addingTimeInterval(-40 * 24 * 3600))
-        var m = model([fresh, stale])
-        #expect(m.visibleFiles.map(\.name) == ["fresh.pdf", "stale.pdf"] && !m.hasOlderFiles, "nothing ages out: the inbox is the whole folder")
-
-        let step = try InboxReducer.reduce(m, .clearList(now))
-        #expect(step.model.visibleFiles.isEmpty && step.model.emptyState == .nothingNew)
-        #expect(step.model.hasOlderFiles, "the folder holds more than the inbox shows")
-        #expect(step.model.files.count == 2, "the files stay on disk and in the model")
-        #expect(step.effects == [.saveSettings(step.model.settings)])
-        let later = InboxFile(path: downloads + "/later.pdf", addedAt: now.addingTimeInterval(60))
-        m = try InboxReducer.reduce(step.model, .fileArrived(later)).model
-        #expect(m.visibleFiles.map(\.name) == ["later.pdf"], "what arrives after the clear shows")
-        #expect(m.snapshot.settings.listCleared)
-
-        let restored = try InboxReducer.reduce(m, .restoreList)
-        #expect(restored.model.visibleFiles.map(\.name) == ["later.pdf", "fresh.pdf", "stale.pdf"], "Restore List brings every hidden file back")
-        #expect(restored.model.settings.listClearedAt == nil && !restored.model.snapshot.settings.listCleared)
-        #expect(restored.effects == [.saveSettings(restored.model.settings)])
-        #expect(try InboxReducer.reduce(restored.model, .restoreList).effects.isEmpty, "nothing to restore is a no-op")
+        let stale = InboxFile(path: downloads + "/stale.pdf", addedAt: now.addingTimeInterval(-400 * 24 * 3600))
+        let m = model([fresh, stale])
+        #expect(m.visibleFiles.map(\.name) == ["fresh.pdf", "stale.pdf"] && !m.hasOlderFiles, "the inbox is the whole folder")
     }
 
     @Test func foldersAreRowsLikeFiles() {

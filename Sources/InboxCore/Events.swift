@@ -30,12 +30,6 @@ public enum Event: Equatable, Sendable {
     case moveFocus(FocusDirection)
     case clearSelection
     case markAllSeen
-    /// Settings > Danger: files that arrived up to this moment leave the inbox (they stay on
-    /// disk). Carries the clock because Settings is used while the panel, which refreshes
-    /// `now`, may have been closed for hours.
-    case clearList(Date)
-    /// Settings > Danger: undoes "Clear List"; the files it hid are listed again.
-    case restoreList
     case openWatchedFolder(FolderKind)
     case dismissToast
     /// The "Show older files" row: History with Pro, the Pro sheet without.

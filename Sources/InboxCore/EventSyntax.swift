@@ -80,8 +80,6 @@ extension Event {
         ("undo", "put the last trashed files back"),
         ("dismiss <file>", "remove a greyed-out row whose file vanished"),
         ("seen", "mark every file read; the badge follows"),
-        ("clear-list", "files that arrived until now leave the inbox (they stay on disk)"),
-        ("restore-list", "undo clear-list: the files it hid are listed again"),
         ("finder [downloads|<path>]", "open the watched folder in Finder"),
         ("login on|off", "launch at login"),
         ("notify on|off", "notification on new file"),
@@ -224,8 +222,6 @@ extension Event {
         case "undo": return .undoTrash
         case "dismiss": return .dismiss(try file(try required()))
         case "seen": return .markAllSeen
-        case "clear-list": return .clearList(context.now)
-        case "restore-list": return .restoreList
         case "finder": return .openWatchedFolder(try folder(argument))
         case "login": return .setLaunchAtLogin(try onOff())
         case "notify": return .setNotifications(try onOff())
@@ -332,8 +328,6 @@ extension Event {
         case .setTypeFilter(let type): return "type \(type?.rawValue ?? "any")"
         case .setTypeOverride(let ext, let group): return "type map \(ext) \(group?.rawValue ?? "none")"
         case .resetTypeOverrides: return "type reset"
-        case .clearList: return "clear-list"
-        case .restoreList: return "restore-list"
         case .copyName(let target): return "copy-name" + names(target)
         case .markRead(let target): return "read" + names(target)
         case .markUnread(let target): return "unread" + names(target)

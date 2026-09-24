@@ -56,19 +56,12 @@ struct SettingsView: View {
                 }
                 .accessibilityIdentifier("showBadge")
                 languageRow
-                LabeledContent {
-                    Button(String(localized: "app.quit", defaultValue: "Quit Downtray")) { NSApp.terminate(nil) }
-                } label: {
-                    Text(String(localized: "settings.quit", defaultValue: "Quit"))
-                    Text(String(localized: "settings.quit.body", defaultValue: "Also in the menu bar icon's right-click menu, or ⌘Q while the inbox is open.", comment: "Keep the ⌘Q glyph."))
-                        .foregroundStyle(.secondary)
-                }
             }
 
             proSection
             rulesSection
             typesSection
-            dangerSection
+            quitSection
         }
         .formStyle(.grouped)
         // A grouped form scrolls on its own. The window used to grow with its content, which
@@ -171,45 +164,19 @@ struct SettingsView: View {
         newExtension = ""
     }
 
-    // MARK: Danger
+    // MARK: Quit
 
-    @State private var confirmClear = false
-
-    @ViewBuilder
-    private var dangerSection: some View {
+    /// The last thing in the window: one red, full-width Quit button. Also ⌘Q while the inbox
+    /// is open, and the status item's right-click menu.
+    private var quitSection: some View {
         Section {
-            LabeledContent {
-                Button(String(localized: "settings.markAllRead", defaultValue: "Mark All as Read", comment: "Button in Settings › Danger.")) { presenter.dispatch(.markAllSeen) }
-                    .disabled(model.unreadCount == 0)
-                    .accessibilityIdentifier("markAllRead")
-            } label: {
-                Text(String(localized: "settings.markAllRead.body", defaultValue: "Clears every unread dot and the badge."))
+            Button(role: .destructive) { NSApp.terminate(nil) } label: {
+                Text(String(localized: "app.quit", defaultValue: "Quit Downtray", comment: "Menu item, ⌘Q and the red button at the end of Settings. Keep the brand name as is."))
+                    .frame(maxWidth: .infinity)
             }
-            LabeledContent {
-                Button(String(localized: "settings.clearList", defaultValue: "Clear List…", comment: "Button in Settings › Danger: empties the inbox.")) { confirmClear = true }
-                    .disabled(model.recentFiles.isEmpty)
-                    .accessibilityIdentifier("clearList")
-            } label: {
-                Text(String(localized: "settings.clearList.body", defaultValue: "Empties the inbox. Files stay in their folders; new arrivals show up again."))
-            }
-            if model.settings.listClearedAt != nil {
-                LabeledContent {
-                    Button(String(localized: "settings.restoreList", defaultValue: "Restore List", comment: "Button in Settings › Danger: undoes Clear List.")) { presenter.dispatch(.restoreList) }
-                        .accessibilityIdentifier("restoreList")
-                } label: {
-                    Text(String(localized: "settings.restoreList.body", defaultValue: "Lists the files that Clear List hid."))
-                }
-            }
-        } header: {
-            Text(String(localized: "settings.danger", defaultValue: "Danger", comment: "Section title: actions that cannot be undone."))
-        }
-        .confirmationDialog(
-            String(localized: "settings.clearList.confirm.title", defaultValue: "Clear the inbox list?", comment: "Confirmation before Clear List."),
-            isPresented: $confirmClear
-        ) {
-            Button(String(localized: "settings.clearList.confirm.button", defaultValue: "Clear List", comment: "Confirmation button."), role: .destructive) { presenter.dispatch(.clearList(Date())) }
-        } message: {
-            Text(String(localized: "settings.clearList.confirm.message", defaultValue: "No file is deleted. The inbox starts again from the next arrival.", comment: "Confirmation body."))
+            .buttonStyle(.borderedProminent)
+            .tint(.red)
+            .accessibilityIdentifier("quit")
         }
     }
 

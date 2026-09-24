@@ -48,8 +48,6 @@ public struct Snapshot: Codable, Equatable, Sendable {
         public let launchAtLogin: Bool
         public let hotkey: String
         public let notifications: Bool
-        /// True while "Clear List" hides files; `restore-list` brings them back.
-        public let listCleared: Bool
         public let showBadge: Bool
         public let typeOverrides: [String: String]
         /// The remembered chip and Type menu ("any" when none).
@@ -152,7 +150,6 @@ public struct Snapshot: Codable, Equatable, Sendable {
             launchAtLogin: model.settings.launchAtLogin,
             hotkey: model.settings.hotkey.display,
             notifications: model.settings.notificationsEnabled,
-            listCleared: model.settings.listClearedAt != nil,
             showBadge: model.settings.showBadge,
             typeOverrides: model.settings.typeOverrides.mapValues(\.rawValue),
             selectedChip: model.settings.selectedChip.rawValue,
