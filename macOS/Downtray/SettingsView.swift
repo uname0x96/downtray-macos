@@ -44,14 +44,17 @@ struct SettingsView: View {
                 Text(String(localized: "settings.folders.footer", defaultValue: "The inbox shows the \(model.effectiveListLimit) newest files from these folders.", comment: "Placeholder: 20 in the free tier, 200 with Pro."))
             }
 
-            listSection
-
             Section(String(localized: "settings.general", defaultValue: "General", comment: "Section title.")) {
                 Toggle(String(localized: "settings.launchAtLogin", defaultValue: "Launch at login"), isOn: binding(\.launchAtLogin) { .setLaunchAtLogin($0) })
                 LabeledContent(String(localized: "settings.hotkey", defaultValue: "Show inbox", comment: "Label of the keyboard shortcut recorder.")) {
                     HotkeyRecorder(hotkey: model.settings.hotkey) { presenter.dispatch(.setHotkey($0)) }
                 }
                 Toggle(String(localized: "settings.notifications", defaultValue: "Notify on new file", comment: "Toggle for system notifications."), isOn: binding(\.notificationsEnabled) { .setNotifications($0) })
+                Toggle(isOn: binding(\.showBadge) { .setShowBadge($0) }) {
+                    Text(String(localized: "settings.showBadge", defaultValue: "Show badge on the menu bar icon", comment: "Toggle in Settings › General."))
+                    Text(String(localized: "settings.showBadge.body", defaultValue: "The badge counts unread files.")).foregroundStyle(.secondary)
+                }
+                .accessibilityIdentifier("showBadge")
                 languageRow
                 LabeledContent {
                     Button(String(localized: "app.quit", defaultValue: "Quit Downtray")) { NSApp.terminate(nil) }
@@ -91,30 +94,6 @@ struct SettingsView: View {
                  ? String(localized: "settings.downloads.denied", defaultValue: "macOS has not allowed Downtray to read this folder.", comment: "Keep the brand name.")
                  : Self.displayPath(folder?.path))
                 .foregroundStyle(denied ? Color.orange : Color.secondary)
-        }
-    }
-
-    // MARK: List, appearance
-
-    /// How long an item stays, and the two behaviours around reading.
-    @ViewBuilder
-    private var listSection: some View {
-        Section {
-            Picker(selection: Binding(get: { presenter.model.settings.retention }, set: { presenter.dispatch(.setRetention($0)) })) {
-                ForEach(Retention.allCases, id: \.self) { Text($0.localizedTitle).tag($0) }
-            } label: {
-                Text(String(localized: "settings.keepItems", defaultValue: "Keep items", comment: "Picker label: how long a file stays in the inbox after it arrived."))
-                Text(String(localized: "settings.keepItems.body", defaultValue: "Files older than this leave the inbox. They stay in their folder.")).foregroundStyle(.secondary)
-            }
-            .accessibilityIdentifier("retention")
-            Toggle(isOn: binding(\.showBadge) { .setShowBadge($0) }) {
-                Text(String(localized: "settings.showBadge", defaultValue: "Show badge on the menu bar icon", comment: "Toggle in Settings › List."))
-                Text(String(localized: "settings.showBadge.body", defaultValue: "The badge counts unread files.")).foregroundStyle(.secondary)
-            }
-            .toggleStyle(.switch)
-            .accessibilityIdentifier("showBadge")
-        } header: {
-            Text(String(localized: "settings.list", defaultValue: "List", comment: "Section title: how the inbox list behaves."))
         }
     }
 

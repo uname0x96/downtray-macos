@@ -172,9 +172,6 @@ headless_scenario() {
     expect '.unread == 0 and .badge == 0'
     send "badge off";  expect '.settings.showBadge == false'
     send "badge on"
-    send "keep day";   expect '.settings.retention == "day"'
-    send "keep forever"; expect '.settings.retention == "forever"' "Forever is a retention choice"
-    send "keep week"
     send "clear-list"; expect '.rows == [] and .emptyState == "nothingNew" and .settings.selectedChip == "all" and .settings.listCleared' "Clear list empties the inbox without touching the files"
     send "arrive after.txt 1k"
     expect '(.rows | map(.name)) == ["after.txt"]' "what arrives after the clear shows"

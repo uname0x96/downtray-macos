@@ -260,7 +260,6 @@ func model(_ files: [InboxFile] = [], open: Bool = false) -> InboxModel {
         let thisWeek = InboxFile(path: downloads + "/d.pdf", addedAt: today.addingTimeInterval(-4 * 24 * 3600))
         let earlier = InboxFile(path: downloads + "/e.pdf", addedAt: today.addingTimeInterval(-6 * 24 * 3600 - 1), unread: false)
         var m = model([justNow, earlierToday, yesterday, thisWeek, earlier])
-        m.settings.retention = .month
         func sections() -> [(String, [String])] { m.inboxSections.map { ($0.section.rawValue, $0.files.map(\.name)) } }
         #expect(sections().map(\.0) == ["justNow", "earlierToday", "yesterday", "thisWeek", "earlier"])
         #expect(sections().map(\.1) == [["a.pdf"], ["b.pdf"], ["c.pdf"], ["d.pdf"], ["e.pdf"]])
@@ -276,22 +275,15 @@ func model(_ files: [InboxFile] = [], open: Bool = false) -> InboxModel {
         #expect(m.inboxSections.isEmpty, "a search is a flat list")
     }
 
-    @Test func retentionAndClearListKeepOldArrivalsOutOfTheInbox() throws {
+    @Test func clearListKeepsOldArrivalsOutOfTheInbox() throws {
         let fresh = file("fresh.pdf")
-        let stale = InboxFile(path: downloads + "/stale.pdf", addedAt: now.addingTimeInterval(-8 * 24 * 3600))
+        let stale = InboxFile(path: downloads + "/stale.pdf", addedAt: now.addingTimeInterval(-40 * 24 * 3600))
         var m = model([fresh, stale])
-        #expect(m.settings.retention == .forever, "a fresh install lists the whole folder")
-        #expect(m.visibleFiles.map(\.name) == ["fresh.pdf", "stale.pdf"] && !m.hasOlderFiles)
-        m = try InboxReducer.reduce(m, .setRetention(.week)).model
-        #expect(m.visibleFiles.map(\.name) == ["fresh.pdf"], "8 days old is outside a week")
-        #expect(m.hasOlderFiles, "the folder holds more than the inbox shows")
-        m = try InboxReducer.reduce(m, .setRetention(.month)).model
-        #expect(m.visibleFiles.map(\.name) == ["fresh.pdf", "stale.pdf"] && !m.hasOlderFiles)
-        m = try InboxReducer.reduce(m, .setRetention(.day)).model
-        #expect(m.visibleFiles.map(\.name) == ["fresh.pdf"])
+        #expect(m.visibleFiles.map(\.name) == ["fresh.pdf", "stale.pdf"] && !m.hasOlderFiles, "nothing ages out: the inbox is the whole folder")
 
         let step = try InboxReducer.reduce(m, .clearList(now))
         #expect(step.model.visibleFiles.isEmpty && step.model.emptyState == .nothingNew)
+        #expect(step.model.hasOlderFiles, "the folder holds more than the inbox shows")
         #expect(step.model.files.count == 2, "the files stay on disk and in the model")
         #expect(step.effects == [.saveSettings(step.model.settings)])
         let later = InboxFile(path: downloads + "/later.pdf", addedAt: now.addingTimeInterval(60))
@@ -300,7 +292,7 @@ func model(_ files: [InboxFile] = [], open: Bool = false) -> InboxModel {
         #expect(m.snapshot.settings.listCleared)
 
         let restored = try InboxReducer.reduce(m, .restoreList)
-        #expect(restored.model.visibleFiles.map(\.name) == ["later.pdf", "fresh.pdf"], "Restore List brings the hidden files back, within retention")
+        #expect(restored.model.visibleFiles.map(\.name) == ["later.pdf", "fresh.pdf", "stale.pdf"], "Restore List brings every hidden file back")
         #expect(restored.model.settings.listClearedAt == nil && !restored.model.snapshot.settings.listCleared)
         #expect(restored.effects == [.saveSettings(restored.model.settings)])
         #expect(try InboxReducer.reduce(restored.model, .restoreList).effects.isEmpty, "nothing to restore is a no-op")

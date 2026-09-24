@@ -2419,122 +2419,6 @@
         }
       }
     },
-    "retention.day": {
-      "comment": "Keep items picker option.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "24 Stunden"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "24 hours"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "24 heures"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "24 時間"
-          }
-        }
-      }
-    },
-    "retention.forever": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Unbegrenzt"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Forever"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Toujours"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ずっと"
-          }
-        }
-      },
-      "comment": "Keep items picker option: files never leave the inbox on their own."
-    },
-    "retention.month": {
-      "comment": "Keep items picker option.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "30 Tage"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "30 days"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "30 jours"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "30 日"
-          }
-        }
-      }
-    },
-    "retention.week": {
-      "comment": "Keep items picker option.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "7 Tage"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "7 days"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "7 jours"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "7 日"
-          }
-        }
-      }
-    },
     "row.source.airDrop": {
       "comment": "Row tooltip and menu caption. Keep 'AirDrop' as Apple spells it.",
       "localizations": {
@@ -4538,63 +4422,6 @@
         }
       }
     },
-    "settings.keepItems": {
-      "comment": "Picker label: how long a file stays in the inbox after it arrived.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Einträge behalten"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Keep items"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Conserver les éléments"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "項目を保持"
-          }
-        }
-      }
-    },
-    "settings.keepItems.body": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ältere Dateien verlassen den Posteingang. Sie bleiben in ihrem Ordner."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Files older than this leave the inbox. They stay in their folder."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Les fichiers plus anciens quittent la boîte de réception. Ils restent dans leur dossier."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "これより古いファイルは受信箱から消えます。ファイルはフォルダに残ります。"
-          }
-        }
-      }
-    },
     "settings.language": {
       "comment": "Picker label in General.",
       "localizations": {
@@ -4793,35 +4620,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "ログイン時に起動"
-          }
-        }
-      }
-    },
-    "settings.list": {
-      "comment": "Section title: how the inbox list behaves.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Liste"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "List"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Liste"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "リスト"
           }
         }
       }
@@ -5143,7 +4941,7 @@
       }
     },
     "settings.showBadge": {
-      "comment": "Toggle in Settings › List.",
+      "comment": "Toggle in Settings › General.",
       "localizations": {
         "de": {
           "stringUnit": {

@@ -448,11 +448,6 @@ public enum InboxReducer {
             next.settings.language = language
             effects.append(.saveSettings(next.settings))
 
-        case .setRetention(let retention):
-            next.settings.retention = retention
-            next.fixFocus()
-            effects.append(.saveSettings(next.settings))
-
         case .setShowBadge(let on):
             next.settings.showBadge = on
             effects.append(.saveSettings(next.settings))

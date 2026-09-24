@@ -85,7 +85,6 @@ public enum Event: Equatable, Sendable {
     case setNotifications(Bool)
     /// UI language; nil follows macOS. Takes effect at the next launch.
     case setLanguage(AppLanguage?)
-    case setRetention(Retention)
     case setShowBadge(Bool)
     /// Maps an extension to a Type group; nil removes the override.
     case setTypeOverride(String, TypeGroup?)

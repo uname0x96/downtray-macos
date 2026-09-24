@@ -180,32 +180,6 @@ public enum FileFilter: String, CaseIterable, Codable, Sendable, Equatable {
     }
 }
 
-/// How long the inbox keeps showing a file after it arrived. The default is forever: the
-/// popover is then the Downloads folder, newest first, and is never empty on a fresh install.
-/// History (Pro) keeps everything either way.
-public enum Retention: String, CaseIterable, Codable, Sendable, Equatable {
-    case day, week, month, forever
-
-    /// The window, or nil when files never age out.
-    public var seconds: TimeInterval? {
-        switch self {
-        case .day: return 24 * 3600
-        case .week: return 7 * 24 * 3600
-        case .month: return 30 * 24 * 3600
-        case .forever: return nil
-        }
-    }
-
-    public var title: String {
-        switch self {
-        case .day: return "24 hours"
-        case .week: return "7 days"
-        case .month: return "30 days"
-        case .forever: return "Forever"
-        }
-    }
-}
-
 /// The visual sections of the inbox list, for the All and Today chips. Not a filter.
 public enum InboxSection: String, CaseIterable, Sendable, Equatable {
     case justNow, earlierToday, yesterday, thisWeek, earlier
@@ -500,8 +474,6 @@ public struct Settings: Equatable, Codable, Sendable {
     public var rules: [Rule]
     /// UI language chosen in Settings; nil follows macOS. Applied at the next launch.
     public var language: AppLanguage?
-    /// How long a file stays in the inbox after it arrived.
-    public var retention: Retention
     /// The menu bar icon shows the unread count.
     public var showBadge: Bool
     /// User's extension → group mapping; wins over the built-in table.
@@ -520,7 +492,6 @@ public struct Settings: Equatable, Codable, Sendable {
         extraFolders: [String] = [],
         rules: [Rule] = [],
         language: AppLanguage? = nil,
-        retention: Retention = .forever,
         showBadge: Bool = true,
         typeOverrides: [String: TypeGroup] = [:],
         selectedChip: FileFilter = .today,
@@ -534,7 +505,6 @@ public struct Settings: Equatable, Codable, Sendable {
         self.extraFolders = extraFolders
         self.rules = rules
         self.language = language
-        self.retention = retention
         self.showBadge = showBadge
         self.typeOverrides = typeOverrides
         self.selectedChip = selectedChip
@@ -552,7 +522,6 @@ public struct Settings: Equatable, Codable, Sendable {
         extraFolders = try c.decodeIfPresent([String].self, forKey: .extraFolders) ?? []
         rules = try c.decodeIfPresent([Rule].self, forKey: .rules) ?? []
         language = try c.decodeIfPresent(AppLanguage.self, forKey: .language)
-        retention = try c.decodeIfPresent(Retention.self, forKey: .retention) ?? .week
         showBadge = try c.decodeIfPresent(Bool.self, forKey: .showBadge) ?? true
         typeOverrides = try c.decodeIfPresent([String: TypeGroup].self, forKey: .typeOverrides) ?? [:]
         selectedChip = try c.decodeIfPresent(FileFilter.self, forKey: .selectedChip) ?? .today
@@ -802,8 +771,8 @@ public struct InboxModel: Equatable, Sendable {
     /// Rows the list can show: 20 in the free tier, more with Pro.
     public var effectiveListLimit: Int { isPro ? max(listLimit, Self.proListLimit) : listLimit }
 
-    /// Everything the inbox could list: files in enabled folders (folders themselves only when
-    /// the setting says so), newest first, before retention, the chips and the limit.
+    /// Everything the inbox could list: files and folders in enabled folders, newest first,
+    /// before "Clear list", the chips and the limit.
     public var inboxCandidates: [InboxFile] {
         let enabled = enabledFolderPaths
         return files.values
@@ -811,14 +780,12 @@ public struct InboxModel: Equatable, Sendable {
             .sorted(by: Self.newestFirst)
     }
 
-    /// The inbox's files: candidates within the retention window (if any) and after the last
-    /// "Clear list", newest first, before the chips and the limit.
+    /// The inbox's files: candidates that arrived after the last "Clear list", newest first,
+    /// before the chips and the limit. Nothing ages out on its own: a fresh install lists the
+    /// whole Downloads folder, and only Clear List empties the inbox.
     public var recentFiles: [InboxFile] {
-        let oldest = settings.retention.seconds.map { now.addingTimeInterval(-$0) }
-        let cleared = settings.listClearedAt
-        return inboxCandidates.filter { file in
-            (oldest.map { file.addedAt >= $0 } ?? true) && (cleared.map { file.addedAt > $0 } ?? true)
-        }
+        guard let cleared = settings.listClearedAt else { return inboxCandidates }
+        return inboxCandidates.filter { $0.addedAt > cleared }
     }
 
     /// The one place that decides whether an inbox row is on screen: chip, Type menu and
