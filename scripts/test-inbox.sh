@@ -172,14 +172,18 @@ headless_scenario() {
     send "badge off";  expect '.settings.showBadge == false'
     send "badge on"
     send "keep day";   expect '.settings.retention == "day"'
+    send "keep forever"; expect '.settings.retention == "forever"' "Forever is a retention choice"
     send "keep week"
     send "read-on-close on"; expect '.settings.markReadOnClose == true'
     send "read-on-close off"
     send "folders on"; expect '.settings.includeFolders == true'
     send "folders off"
-    send "clear-list"; expect '.rows == [] and .emptyState == "nothingNew" and .settings.selectedChip == "all"' "Clear list empties the inbox without touching the files"
+    send "clear-list"; expect '.rows == [] and .emptyState == "nothingNew" and .settings.selectedChip == "all" and .settings.listCleared' "Clear list empties the inbox without touching the files"
     send "arrive after.txt 1k"
     expect '(.rows | map(.name)) == ["after.txt"]' "what arrives after the clear shows"
+    send "restore-list"; expect '(.rows | length) > 1 and .rows[0].name == "after.txt" and (.settings.listCleared | not)' "Restore list brings the hidden rows back"
+    send "clear-list";  expect '(.rows | length) == 0'
+    send "arrive after.txt 1k"
     send "panel close"
     expect '.panelOpen == false and .selection == [] and .focused == null'
 

@@ -85,12 +85,13 @@ extension Event {
         ("dismiss <file>", "remove a greyed-out row whose file vanished"),
         ("seen", "mark every file read; the badge follows"),
         ("clear-list", "files that arrived until now leave the inbox (they stay on disk)"),
+        ("restore-list", "undo clear-list: the files it hid are listed again"),
         ("finder [downloads|desktop]", "open the watched folder in Finder"),
         ("desktop on|off", "watch the Desktop folder too"),
         ("login on|off", "launch at login"),
         ("notify on|off", "notification on new file"),
         ("folders on|off", "list folders inside watched folders as rows"),
-        ("keep day|week|month", "how long a file stays in the inbox after it arrived"),
+        ("keep day|week|month|forever", "how long a file stays in the inbox after it arrived"),
         ("read-on-close on|off", "closing the panel marks the visible rows read"),
         ("badge on|off", "show the unread count on the menu bar icon"),
         ("language en|ja|de|fr|system", "UI language (system: follow macOS); applies at the next launch"),
@@ -230,6 +231,7 @@ extension Event {
         case "dismiss": return .dismiss(try file(try required()))
         case "seen": return .markAllSeen
         case "clear-list": return .clearList(context.now)
+        case "restore-list": return .restoreList
         case "finder": return .openWatchedFolder(try folder(argument))
         case "desktop": return .setWatchDesktop(try onOff())
         case "login": return .setLaunchAtLogin(try onOff())
@@ -349,6 +351,7 @@ extension Event {
         case .setTypeOverride(let ext, let group): return "type map \(ext) \(group?.rawValue ?? "none")"
         case .resetTypeOverrides: return "type reset"
         case .clearList: return "clear-list"
+        case .restoreList: return "restore-list"
         case .copyName(let target): return "copy-name" + names(target)
         case .markRead(let target): return "read" + names(target)
         case .markUnread(let target): return "unread" + names(target)

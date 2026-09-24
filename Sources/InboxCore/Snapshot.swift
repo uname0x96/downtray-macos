@@ -50,8 +50,10 @@ public struct Snapshot: Codable, Equatable, Sendable {
         public let notifications: Bool
         public let watchDesktop: Bool
         public let includeFolders: Bool
-        /// "day", "week" or "month".
+        /// "day", "week", "month" or "forever".
         public let retention: String
+        /// True while "Clear List" hides files; `restore-list` brings them back.
+        public let listCleared: Bool
         public let markReadOnClose: Bool
         public let showBadge: Bool
         public let typeOverrides: [String: String]
@@ -158,6 +160,7 @@ public struct Snapshot: Codable, Equatable, Sendable {
             watchDesktop: model.settings.watchDesktop,
             includeFolders: model.settings.includeFolders,
             retention: model.settings.retention.rawValue,
+            listCleared: model.settings.listClearedAt != nil,
             markReadOnClose: model.settings.markReadOnClose,
             showBadge: model.settings.showBadge,
             typeOverrides: model.settings.typeOverrides.mapValues(\.rawValue),

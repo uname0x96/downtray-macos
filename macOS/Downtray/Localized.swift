@@ -38,6 +38,7 @@ extension Retention {
         case .day: String(localized: "retention.day", defaultValue: "24 hours", comment: "Keep items picker option.")
         case .week: String(localized: "retention.week", defaultValue: "7 days", comment: "Keep items picker option.")
         case .month: String(localized: "retention.month", defaultValue: "30 days", comment: "Keep items picker option.")
+        case .forever: String(localized: "retention.forever", defaultValue: "Forever", comment: "Keep items picker option: files never leave the inbox on their own.")
         }
     }
 }

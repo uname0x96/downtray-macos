@@ -187,6 +187,12 @@ public enum InboxReducer {
             next.fixFocus()
             effects.append(.saveSettings(next.settings))
 
+        case .restoreList:
+            guard next.settings.listClearedAt != nil else { break }
+            next.settings.listClearedAt = nil
+            next.fixFocus()
+            effects.append(.saveSettings(next.settings))
+
         case .showOlderFiles:
             if next.isPro {
                 next.historyMode = true

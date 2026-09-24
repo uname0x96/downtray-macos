@@ -180,15 +180,19 @@ public enum FileFilter: String, CaseIterable, Codable, Sendable, Equatable {
     }
 }
 
-/// How long the inbox keeps showing a file after it arrived. History (Pro) keeps everything.
+/// How long the inbox keeps showing a file after it arrived. The default is forever: the
+/// popover is then the Downloads folder, newest first, and is never empty on a fresh install.
+/// History (Pro) keeps everything either way.
 public enum Retention: String, CaseIterable, Codable, Sendable, Equatable {
-    case day, week, month
+    case day, week, month, forever
 
-    public var seconds: TimeInterval {
+    /// The window, or nil when files never age out.
+    public var seconds: TimeInterval? {
         switch self {
         case .day: return 24 * 3600
         case .week: return 7 * 24 * 3600
         case .month: return 30 * 24 * 3600
+        case .forever: return nil
         }
     }
 
@@ -197,6 +201,7 @@ public enum Retention: String, CaseIterable, Codable, Sendable, Equatable {
         case .day: return "24 hours"
         case .week: return "7 days"
         case .month: return "30 days"
+        case .forever: return "Forever"
         }
     }
 }
@@ -525,7 +530,7 @@ public struct Settings: Equatable, Codable, Sendable {
         rules: [Rule] = [],
         language: AppLanguage? = nil,
         includeFolders: Bool = false,
-        retention: Retention = .week,
+        retention: Retention = .forever,
         markReadOnClose: Bool = false,
         showBadge: Bool = true,
         typeOverrides: [String: TypeGroup] = [:],
@@ -823,13 +828,13 @@ public struct InboxModel: Equatable, Sendable {
             .sorted(by: Self.newestFirst)
     }
 
-    /// The inbox's files: candidates within the retention window and after the last
+    /// The inbox's files: candidates within the retention window (if any) and after the last
     /// "Clear list", newest first, before the chips and the limit.
     public var recentFiles: [InboxFile] {
-        let oldest = now.addingTimeInterval(-settings.retention.seconds)
+        let oldest = settings.retention.seconds.map { now.addingTimeInterval(-$0) }
         let cleared = settings.listClearedAt
         return inboxCandidates.filter { file in
-            file.addedAt >= oldest && (cleared.map { file.addedAt > $0 } ?? true)
+            (oldest.map { file.addedAt >= $0 } ?? true) && (cleared.map { file.addedAt > $0 } ?? true)
         }
     }
 
