@@ -243,16 +243,13 @@ struct SettingsView: View {
     @State private var editingRule: Rule?
     @State private var proPrice: String?
 
+    /// The first thing in the window for free users: the purchase button, Restore Purchases
+    /// and the store's last word. Once Pro is unlocked the section is gone; the title bar
+    /// carries a small badge instead (`ProBadge`).
     @ViewBuilder
-    /// The first thing in the window: whether Pro is unlocked. Free users get the purchase
-    /// button, Restore Purchases and the store's last word.
     private var proSection: some View {
-        Section {
-            if model.isPro {
-                LabeledContent(String(localized: "settings.pro", defaultValue: "Pro", comment: "Row label for the paid tier, and the tag next to Add Folder… in the free tier. Usually left as 'Pro'.")) {
-                    Label(String(localized: "settings.pro.unlocked", defaultValue: "Unlocked", comment: "Status next to Pro after purchase."), systemImage: "checkmark.seal.fill").foregroundStyle(.green)
-                }
-            } else {
+        if !model.isPro {
+            Section {
                 LabeledContent {
                     Button(proPrice.map { String(localized: "pro.unlock.buttonWithPrice", defaultValue: "Unlock Pro — \($0)", comment: "Purchase button. Placeholder: localized price, e.g. $7.99.") }
                            ?? String(localized: "pro.unlock.button", defaultValue: "Unlock Pro…", comment: "Purchase button while the price is unknown.")) {
@@ -260,20 +257,18 @@ struct SettingsView: View {
                     }
                     .accessibilityIdentifier("unlockPro")
                 } label: {
-                    Text(String(localized: "settings.pro", defaultValue: "Pro"))
+                    Text(String(localized: "settings.pro", defaultValue: "Pro", comment: "Row label for the paid tier, the tag next to Add Folder… in the free tier, and the title bar badge once unlocked. Usually left as 'Pro'."))
                     Text(String(localized: "pro.unlock.body", defaultValue: "Extra folders, 200-file list with search, full history, and rules. One-time purchase.", comment: "What Pro adds."))
                         .foregroundStyle(.secondary)
                 }
                 Button(String(localized: "pro.restore", defaultValue: "Restore Purchases", comment: "Standard App Store wording.")) { presenter.dispatch(.restorePurchases) }
+                if let toast = model.toast {
+                    Text(toast.text.localized)
+                        .font(.caption)
+                        .foregroundStyle(toast.isError ? Color.orange : Color.secondary)
+                }
             }
-            if let toast = model.toast {
-                Text(toast.text.localized)
-                    .font(.caption)
-                    .foregroundStyle(toast.isError ? Color.orange : Color.secondary)
-            }
-        }
-        .task {
-            if !model.isPro { proPrice = await (presenter.services as? MacServices)?.proPrice() }
+            .task { proPrice = await (presenter.services as? MacServices)?.proPrice() }
         }
     }
 
@@ -517,5 +512,25 @@ struct HotkeyRecorder: View {
         if let monitor { NSEvent.removeMonitor(monitor) }
         monitor = nil
         recording = false
+    }
+}
+
+/// A small green "Pro" capsule for the trailing end of the Settings title bar. Renders nothing
+/// in the free tier, so it can stay installed and follow the purchase.
+struct ProBadge: View {
+    @Environment(InboxPresenter.self) private var presenter
+
+    var body: some View {
+        if presenter.model.isPro {
+            Label(String(localized: "settings.pro", defaultValue: "Pro"), systemImage: "checkmark.seal.fill")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.green)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 3)
+                .background(Capsule().fill(Color.green.opacity(0.15)))
+                .padding(.trailing, 10)
+                .help(String(localized: "settings.pro.badge.help", defaultValue: "Downtray Pro is unlocked.", comment: "Tooltip on the Pro badge in the Settings title bar. Keep the brand name."))
+                .accessibilityIdentifier("proBadge")
+        }
     }
 }

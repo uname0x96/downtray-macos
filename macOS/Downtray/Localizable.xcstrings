@@ -4296,7 +4296,7 @@
       }
     },
     "settings.pro": {
-      "comment": "Row label for the paid tier, and the tag next to Add Folder… in the free tier. Usually left as 'Pro'.",
+      "comment": "Row label for the paid tier, the tag next to Add Folder… in the free tier, and the title bar badge once unlocked. Usually left as 'Pro'.",
       "localizations": {
         "de": {
           "stringUnit": {
@@ -4324,31 +4324,31 @@
         }
       }
     },
-    "settings.pro.unlocked": {
-      "comment": "Status next to Pro after purchase.",
+    "settings.pro.badge.help": {
+      "comment": "Tooltip on the Pro badge in the Settings title bar. Keep the brand name.",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Freigeschaltet"
+            "value": "Downtray Pro ist freigeschaltet."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Unlocked"
+            "value": "Downtray Pro is unlocked."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Débloqué"
+            "value": "Downtray Pro est débloqué."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "購入済み"
+            "value": "Downtray Pro は有効です。"
           }
         }
       }

@@ -344,6 +344,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, Pan
             // The Settings scene comes with an empty unified toolbar, which pushes the title to
             // the left on macOS 26+. Without a toolbar the title is centered.
             window.toolbar = nil
+            // The Pro badge sits at the trailing end of the title bar, not in a row of the form.
+            // It is a title bar accessory rather than a toolbar item so the title stays centered.
+            if window.titlebarAccessoryViewControllers.isEmpty {
+                let badge = NSHostingView(rootView: ProBadge().environment(presenter))
+                let accessory = NSTitlebarAccessoryViewController()
+                accessory.layoutAttribute = .trailing
+                accessory.view = badge
+                window.addTitlebarAccessoryViewController(accessory)
+            }
+            // The accessory takes the size its view has when the window shows; the hosting
+            // view is measured here so a purchase since the last visit is reflected.
+            if let badge = window.titlebarAccessoryViewControllers.first?.view {
+                badge.frame.size = badge.fittingSize
+            }
             window.makeKeyAndOrderFront(nil)
         }
     }
