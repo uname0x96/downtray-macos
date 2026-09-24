@@ -1334,7 +1334,7 @@
       }
     },
     "inbox.footer.markAllSeen": {
-      "comment": "Footer button: clears the unread dots and the badge.",
+      "comment": "Footer button: clears the unread dots and the badge. Shown only while something is unread.",
       "localizations": {
         "de": {
           "stringUnit": {

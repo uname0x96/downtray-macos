@@ -420,8 +420,8 @@ struct PopoverView: View {
         model.downloads?.localizedTitle ?? FolderKind.downloads.localizedTitle
     }
 
-    /// Exactly two text buttons: History (Pro; a lock in the free tier, where it opens the Pro
-    /// sheet) and Mark all seen.
+    /// History (Pro; a lock in the free tier, where it opens the Pro sheet) and, while any row
+    /// is unread, Mark all seen.
     private var footer: some View {
         HStack {
             Button {
@@ -432,8 +432,10 @@ struct PopoverView: View {
             }
             .accessibilityIdentifier("historyToggle")
             Spacer()
-            Button(String(localized: "inbox.footer.markAllSeen", defaultValue: "Mark all seen", comment: "Footer button: clears the unread dots and the badge.")) { presenter.dispatch(.markAllSeen) }
-                .disabled(model.unreadCount == 0)
+            // Only while there is something to mark: a button that does nothing reads as broken.
+            if model.unreadCount > 0 {
+                Button(String(localized: "inbox.footer.markAllSeen", defaultValue: "Mark all seen", comment: "Footer button: clears the unread dots and the badge. Shown only while something is unread.")) { presenter.dispatch(.markAllSeen) }
+            }
         }
         .buttonStyle(.link)
         .foregroundStyle(.secondary)
