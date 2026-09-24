@@ -4526,6 +4526,35 @@
         }
       }
     },
+    "settings.types.addType": {
+      "comment": "Button that reveals the row for a new type override.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Typ hinzufügen …"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Type…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouter un type…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "種類を追加…"
+          }
+        }
+      }
+    },
     "settings.types.body": {
       "localizations": {
         "de": {
@@ -4583,77 +4612,6 @@
         }
       }
     },
-    "settings.types.count": {
-      "comment": "Status line. Plural: 1 → '1 override'.",
-      "localizations": {
-        "de": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "1 Regel"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld Regeln"
-                }
-              }
-            }
-          }
-        },
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "1 override"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld overrides"
-                }
-              }
-            }
-          }
-        },
-        "fr": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "1 règle"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld règles"
-                }
-              }
-            }
-          }
-        },
-        "ja": {
-          "variations": {
-            "plural": {
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld 件の上書き"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "settings.types.extension": {
       "comment": "Placeholder of the extension field, an example extension.",
       "localizations": {
@@ -4683,64 +4641,6 @@
         }
       }
     },
-    "settings.types.new": {
-      "comment": "Row label for adding a type override. Keep the arrow.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Endung → Gruppe"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Extension → group"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Extension → groupe"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "拡張子 → グループ"
-          }
-        }
-      }
-    },
-    "settings.types.none": {
-      "comment": "Status when no type override exists.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Standardtabelle"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Built-in table"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Table par défaut"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "標準の対応表"
-          }
-        }
-      }
-    },
     "settings.types.remove": {
       "comment": "Tooltip on the minus button next to a type override.",
       "localizations": {
@@ -4766,35 +4666,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "この上書きを削除"
-          }
-        }
-      }
-    },
-    "settings.types.reset": {
-      "comment": "Button: removes every type override.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Auf Standard zurücksetzen"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reset to Defaults"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rétablir les réglages par défaut"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "デフォルトに戻す"
           }
         }
       }

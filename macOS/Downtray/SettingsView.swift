@@ -95,9 +95,11 @@ struct SettingsView: View {
 
     @State private var newExtension = ""
     @State private var newGroup: TypeGroup = .docs
+    @State private var addingType = false
 
     /// Which group the Type menu files an extension under, when the built-in table is wrong
-    /// for this user (a `.key` that is a license, not a Keynote deck).
+    /// for this user (a `.key` that is a license, not a Keynote deck). Laid out like Folders:
+    /// one row per override, and an Add Type… button that turns into the entry row.
     @ViewBuilder
     private var typesSection: some View {
         Section {
@@ -120,7 +122,7 @@ struct SettingsView: View {
                 }
                 .accessibilityIdentifier("typeOverride-\(ext)")
             }
-            LabeledContent {
+            if addingType {
                 HStack(spacing: 8) {
                     // In a grouped form a text field's title becomes a label beside it; the
                     // example extension is wanted inside the field, so it is a prompt.
@@ -136,25 +138,21 @@ struct SettingsView: View {
                     }
                     .labelsHidden()
                     .fixedSize()
+                    Spacer()
+                    Button(String(localized: "common.cancel", defaultValue: "Cancel")) { cancelAddingType() }
+                        .keyboardShortcut(.cancelAction)
                     Button(String(localized: "settings.types.add", defaultValue: "Add", comment: "Button that saves a new type override."), action: addOverride)
                         .disabled(newExtension.trimmingCharacters(in: CharacterSet(charactersIn: ". ")).isEmpty)
                         .accessibilityIdentifier("addOverride")
                 }
-            } label: {
-                Text(String(localized: "settings.types.new", defaultValue: "Extension → group", comment: "Row label for adding a type override. Keep the arrow."))
-                Text(String(localized: "settings.types.body", defaultValue: "Decide which group the Type menu files an extension under.")).foregroundStyle(.secondary)
-            }
-            LabeledContent {
-                Button(String(localized: "settings.types.reset", defaultValue: "Reset to Defaults", comment: "Button: removes every type override.")) { presenter.dispatch(.resetTypeOverrides) }
-                    .disabled(model.settings.typeOverrides.isEmpty)
-                    .accessibilityIdentifier("resetOverrides")
-            } label: {
-                Text(model.settings.typeOverrides.isEmpty
-                     ? String(localized: "settings.types.none", defaultValue: "Built-in table", comment: "Status when no type override exists.")
-                     : String(localized: "settings.types.count", defaultValue: "\(model.settings.typeOverrides.count) overrides", comment: "Status line. Plural: 1 → '1 override'."))
+            } else {
+                Button(String(localized: "settings.types.addType", defaultValue: "Add Type…", comment: "Button that reveals the row for a new type override.")) { addingType = true }
+                    .accessibilityIdentifier("addType")
             }
         } header: {
             Text(String(localized: "settings.types", defaultValue: "Types", comment: "Section title: the extension-to-group table behind the Type menu."))
+        } footer: {
+            Text(String(localized: "settings.types.body", defaultValue: "Decide which group the Type menu files an extension under."))
         }
     }
 
@@ -162,7 +160,12 @@ struct SettingsView: View {
         let ext = newExtension.trimmingCharacters(in: CharacterSet(charactersIn: ". ")).lowercased()
         guard !ext.isEmpty else { return }
         presenter.dispatch(.setTypeOverride(ext, newGroup))
+        cancelAddingType()
+    }
+
+    private func cancelAddingType() {
         newExtension = ""
+        addingType = false
     }
 
     // MARK: Quit
