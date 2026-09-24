@@ -30,12 +30,6 @@ public enum Event: Equatable, Sendable {
     case moveFocus(FocusDirection)
     case clearSelection
     case markAllSeen
-    /// Settings > Danger: files that arrived up to this moment leave the inbox (they stay on
-    /// disk). Carries the clock because Settings is used while the panel, which refreshes
-    /// `now`, may have been closed for hours.
-    case clearList(Date)
-    /// Settings > Danger: undoes "Clear List"; the files it hid are listed again.
-    case restoreList
     case openWatchedFolder(FolderKind)
     case dismissToast
     /// The "Show older files" row: History with Pro, the Pro sheet without.
@@ -80,15 +74,11 @@ public enum Event: Equatable, Sendable {
 
     // MARK: Settings
 
-    case setWatchDesktop(Bool)
     case setLaunchAtLogin(Bool)
     case setHotkey(Hotkey)
     case setNotifications(Bool)
     /// UI language; nil follows macOS. Takes effect at the next launch.
     case setLanguage(AppLanguage?)
-    case setIncludeFolders(Bool)
-    case setRetention(Retention)
-    case setMarkReadOnClose(Bool)
     case setShowBadge(Bool)
     /// Maps an extension to a Type group; nil removes the override.
     case setTypeOverride(String, TypeGroup?)
@@ -105,7 +95,6 @@ public enum Event: Equatable, Sendable {
     case setHistoryMode(Bool)
     case setHistoryFilter(HistoryFilter)
     case setQuery(String)
-    case clearHistory
     /// The one action on a Gone history row: forget it.
     case removeFromHistory(FileID)
     case addRule(Rule)

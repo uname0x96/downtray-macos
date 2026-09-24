@@ -13,11 +13,11 @@ import Testing
             "panel open", "panel close", "hotkey", "filter today", "select a.pdf", "select a.pdf toggle",
             "select b.zip range", "focus a.pdf", "up", "down", "deselect", "open", "open a.pdf b.zip", "ql a.pdf",
             "reveal", "copy a.pdf", "move", "unzip b.zip", "trash a.pdf", "undo", "dismiss a.pdf", "seen",
-            "finder downloads", "desktop on", "login off", "notify on", "language ja", "language system", "hotkey-set ctrl+alt+d",
+            "finder downloads", "folder change", "login off", "notify on", "language ja", "language system", "hotkey-set ctrl+alt+d",
             "filter 1h", "filter unread", "type docs", "type any", "type map foo docs", "type map foo none", "type reset",
-            "copy-name a.pdf", "read a.pdf", "unread", "clear-list", "restore-list", "folders on", "keep month", "keep forever", "read-on-close on", "badge off",
+            "copy-name a.pdf", "read a.pdf", "unread", "badge off",
             "older", "paywall off", "history gone", "forget a.pdf",
-            "grant desktop", "unlock", "today 2026-09-23", "vanish b.zip",
+            "grant downloads", "unlock", "today 2026-09-23", "vanish b.zip",
         ]
         for line in lines {
             let event = try Event.parse(line, context: context)
@@ -34,9 +34,9 @@ import Testing
         #expect(f.source == .web(host: "stripe.com"))
         #expect(f.kind == .pdf)
 
-        let dropped = try Event.parse("arrive desktop/photo.heic 2m airdrop", context: context)
+        let dropped = try Event.parse("arrive \(scans)/photo.heic 2m airdrop", context: context)
         guard case .fileArrived(let d) = dropped else { Issue.record("not an arrival"); return }
-        #expect(d.path == desktop + "/photo.heic")
+        #expect(d.path == scans + "/photo.heic")
         #expect(d.source == .airDrop)
         #expect(d.kind == .image)
     }

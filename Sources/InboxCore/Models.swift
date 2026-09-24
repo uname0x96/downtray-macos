@@ -180,32 +180,6 @@ public enum FileFilter: String, CaseIterable, Codable, Sendable, Equatable {
     }
 }
 
-/// How long the inbox keeps showing a file after it arrived. The default is forever: the
-/// popover is then the Downloads folder, newest first, and is never empty on a fresh install.
-/// History (Pro) keeps everything either way.
-public enum Retention: String, CaseIterable, Codable, Sendable, Equatable {
-    case day, week, month, forever
-
-    /// The window, or nil when files never age out.
-    public var seconds: TimeInterval? {
-        switch self {
-        case .day: return 24 * 3600
-        case .week: return 7 * 24 * 3600
-        case .month: return 30 * 24 * 3600
-        case .forever: return nil
-        }
-    }
-
-    public var title: String {
-        switch self {
-        case .day: return "24 hours"
-        case .week: return "7 days"
-        case .month: return "30 days"
-        case .forever: return "Forever"
-        }
-    }
-}
-
 /// The visual sections of the inbox list, for the All and Today chips. Not a filter.
 public enum InboxSection: String, CaseIterable, Sendable, Equatable {
     case justNow, earlierToday, yesterday, thisWeek, earlier
@@ -246,17 +220,17 @@ public enum HistoryFilter: String, CaseIterable, Codable, Sendable, Equatable {
 
 // MARK: - Watched folders
 
-/// Identifies a watched folder. `.downloads` and `.desktop` are the two built-in folders; a
-/// custom folder (Pro) is identified by its absolute path, so the raw value round-trips through
-/// settings, bookmarks and the command line without a separate id.
+/// Identifies a watched folder. `.downloads` is the primary folder: it starts as `~/Downloads`
+/// and the user can point it anywhere (free tier). A custom folder (Pro) is identified by its
+/// absolute path, so the raw value round-trips through settings, bookmarks and the command line
+/// without a separate id.
 public struct FolderKind: RawRepresentable, Hashable, Codable, Sendable {
     public let rawValue: String
     public init(rawValue: String) { self.rawValue = rawValue }
     public init(_ rawValue: String) { self.rawValue = rawValue }
 
     public static let downloads = FolderKind("downloads")
-    public static let desktop = FolderKind("desktop")
-    public static let standardKinds: [FolderKind] = [.downloads, .desktop]
+    public static let standardKinds: [FolderKind] = [.downloads]
 
     /// A custom folder, identified by its path.
     public static func custom(_ path: String) -> FolderKind { FolderKind(path) }
@@ -266,7 +240,6 @@ public struct FolderKind: RawRepresentable, Hashable, Codable, Sendable {
     public var title: String {
         switch self {
         case .downloads: return "Downloads"
-        case .desktop: return "Desktop"
         default: return (rawValue as NSString).lastPathComponent
         }
     }
@@ -290,14 +263,18 @@ public struct WatchedFolder: Equatable, Codable, Sendable, Identifiable {
     }
 
     public var id: FolderKind { kind }
-    public var title: String { kind.isCustom ? (path as NSString).lastPathComponent : kind.title }
+    /// The folder's own name. The primary folder is "Downloads" until the user moves it.
+    public var title: String {
+        let name = (path as NSString).lastPathComponent
+        return name.isEmpty ? kind.title : name
+    }
 
     /// A Pro folder chosen by the user, watched from the moment it is added.
     public static func custom(_ path: String, access: AccessState = .granted) -> WatchedFolder {
         WatchedFolder(kind: .custom(path), path: path, enabled: true, access: access)
     }
 
-    /// The two folders the free tier can watch, at their real locations for the current user.
+    /// The primary folder at its default location, `~/Downloads`, for the current user.
     ///
     /// Inside the App Sandbox, `FileManager.urls(for:)` and `NSHomeDirectory()` point into the
     /// app's container (`~/Library/Containers/<id>/Data/Downloads`), which the folder watcher
@@ -305,10 +282,7 @@ public struct WatchedFolder: Equatable, Codable, Sendable, Identifiable {
     /// covers the real `~/Downloads`.
     public static var standard: [WatchedFolder] {
         let home = realHomeDirectory()
-        return [
-            WatchedFolder(kind: .downloads, path: home + "/Downloads", enabled: true),
-            WatchedFolder(kind: .desktop, path: home + "/Desktop", enabled: false),
-        ]
+        return [WatchedFolder(kind: .downloads, path: home + "/Downloads", enabled: true)]
     }
 
     public static func realHomeDirectory() -> String {
@@ -320,10 +294,7 @@ public struct WatchedFolder: Equatable, Codable, Sendable, Identifiable {
 
     /// Deterministic folders for tests and the headless CLI.
     public static func sample(home: String = "/Users/sample") -> [WatchedFolder] {
-        [
-            WatchedFolder(kind: .downloads, path: home + "/Downloads", enabled: true, access: .granted),
-            WatchedFolder(kind: .desktop, path: home + "/Desktop", enabled: false),
-        ]
+        [WatchedFolder(kind: .downloads, path: home + "/Downloads", enabled: true, access: .granted)]
     }
 }
 
@@ -496,7 +467,6 @@ public struct Settings: Equatable, Codable, Sendable {
     public var launchAtLogin: Bool
     public var hotkey: Hotkey
     public var notificationsEnabled: Bool
-    public var watchDesktop: Bool
     public var proUnlocked: Bool
     /// Pro: extra folders to watch, by absolute path.
     public var extraFolders: [String]
@@ -504,12 +474,6 @@ public struct Settings: Equatable, Codable, Sendable {
     public var rules: [Rule]
     /// UI language chosen in Settings; nil follows macOS. Applied at the next launch.
     public var language: AppLanguage?
-    /// Folders inside a watched folder are listed as rows. Off by default: the inbox is for files.
-    public var includeFolders: Bool
-    /// How long a file stays in the inbox after it arrived.
-    public var retention: Retention
-    /// Closing the panel marks the rows that were on screen as read.
-    public var markReadOnClose: Bool
     /// The menu bar icon shows the unread count.
     public var showBadge: Bool
     /// User's extension → group mapping; wins over the built-in table.
@@ -517,43 +481,31 @@ public struct Settings: Equatable, Codable, Sendable {
     /// The chip and the Type menu are remembered between launches. The search is not.
     public var selectedChip: FileFilter
     public var selectedType: TypeGroup?
-    /// "Clear list": files that arrived before this moment stay out of the inbox.
-    public var listClearedAt: Date?
 
     public init(
         launchAtLogin: Bool = false,
         hotkey: Hotkey = .default,
         notificationsEnabled: Bool = false,
-        watchDesktop: Bool = false,
         proUnlocked: Bool = false,
         extraFolders: [String] = [],
         rules: [Rule] = [],
         language: AppLanguage? = nil,
-        includeFolders: Bool = false,
-        retention: Retention = .forever,
-        markReadOnClose: Bool = false,
         showBadge: Bool = true,
         typeOverrides: [String: TypeGroup] = [:],
         selectedChip: FileFilter = .today,
-        selectedType: TypeGroup? = nil,
-        listClearedAt: Date? = nil
+        selectedType: TypeGroup? = nil
     ) {
         self.launchAtLogin = launchAtLogin
         self.hotkey = hotkey
         self.notificationsEnabled = notificationsEnabled
-        self.watchDesktop = watchDesktop
         self.proUnlocked = proUnlocked
         self.extraFolders = extraFolders
         self.rules = rules
         self.language = language
-        self.includeFolders = includeFolders
-        self.retention = retention
-        self.markReadOnClose = markReadOnClose
         self.showBadge = showBadge
         self.typeOverrides = typeOverrides
         self.selectedChip = selectedChip
         self.selectedType = selectedType
-        self.listClearedAt = listClearedAt
     }
 
     // Settings saved by older versions have no Pro fields.
@@ -562,19 +514,14 @@ public struct Settings: Equatable, Codable, Sendable {
         launchAtLogin = try c.decodeIfPresent(Bool.self, forKey: .launchAtLogin) ?? false
         hotkey = try c.decodeIfPresent(Hotkey.self, forKey: .hotkey) ?? .default
         notificationsEnabled = try c.decodeIfPresent(Bool.self, forKey: .notificationsEnabled) ?? false
-        watchDesktop = try c.decodeIfPresent(Bool.self, forKey: .watchDesktop) ?? false
         proUnlocked = try c.decodeIfPresent(Bool.self, forKey: .proUnlocked) ?? false
         extraFolders = try c.decodeIfPresent([String].self, forKey: .extraFolders) ?? []
         rules = try c.decodeIfPresent([Rule].self, forKey: .rules) ?? []
         language = try c.decodeIfPresent(AppLanguage.self, forKey: .language)
-        includeFolders = try c.decodeIfPresent(Bool.self, forKey: .includeFolders) ?? false
-        retention = try c.decodeIfPresent(Retention.self, forKey: .retention) ?? .week
-        markReadOnClose = try c.decodeIfPresent(Bool.self, forKey: .markReadOnClose) ?? false
         showBadge = try c.decodeIfPresent(Bool.self, forKey: .showBadge) ?? true
         typeOverrides = try c.decodeIfPresent([String: TypeGroup].self, forKey: .typeOverrides) ?? [:]
         selectedChip = try c.decodeIfPresent(FileFilter.self, forKey: .selectedChip) ?? .today
         selectedType = try c.decodeIfPresent(TypeGroup.self, forKey: .selectedType)
-        listClearedAt = try c.decodeIfPresent(Date.self, forKey: .listClearedAt)
     }
 }
 
@@ -819,24 +766,18 @@ public struct InboxModel: Equatable, Sendable {
     /// Rows the list can show: 20 in the free tier, more with Pro.
     public var effectiveListLimit: Int { isPro ? max(listLimit, Self.proListLimit) : listLimit }
 
-    /// Everything the inbox could list: files in enabled folders (folders themselves only when
-    /// the setting says so), newest first, before retention, the chips and the limit.
+    /// Everything the inbox could list: files and folders in enabled folders, newest first,
+    /// before "Clear list", the chips and the limit.
     public var inboxCandidates: [InboxFile] {
         let enabled = enabledFolderPaths
         return files.values
-            .filter { enabled.contains($0.folder) && (settings.includeFolders || $0.kind != .folder) }
+            .filter { enabled.contains($0.folder) }
             .sorted(by: Self.newestFirst)
     }
 
-    /// The inbox's files: candidates within the retention window (if any) and after the last
-    /// "Clear list", newest first, before the chips and the limit.
-    public var recentFiles: [InboxFile] {
-        let oldest = settings.retention.seconds.map { now.addingTimeInterval(-$0) }
-        let cleared = settings.listClearedAt
-        return inboxCandidates.filter { file in
-            (oldest.map { file.addedAt >= $0 } ?? true) && (cleared.map { file.addedAt > $0 } ?? true)
-        }
-    }
+    /// The inbox's files, newest first, before the chips and the limit. Nothing ages out and
+    /// nothing is cleared: the inbox is the watched folders themselves.
+    public var recentFiles: [InboxFile] { inboxCandidates }
 
     /// The one place that decides whether an inbox row is on screen: chip, Type menu and
     /// search are AND-combined. History rows use `HistoryFilter` and the search only.

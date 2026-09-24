@@ -65,7 +65,7 @@ Mobius.swift is used as the loop runtime, not as the design. The design is the r
 |---|---|
 | `loadSettings` / `saveSettings` | `UserDefaults` (JSON), login item state read from `SMAppService`. |
 | `startWatching` / `stopWatching` | `FolderWatcher`: `DispatchSource` on the directory, 50 ms debounce, rescan with `.addedToDirectoryDateKey`; partial downloads (`.download`, `.crdownload`, `.part`, `.tmp`) are skipped and a new file is reported after one size check 150 ms later (a file still growing is polled until its size holds twice), so a finished download is in the list about 200 ms after it appears. Source comes from the `kMDItemWhereFroms` xattr; AirDrop is inferred when a file lands in Downloads without it. |
-| `requestAccess` | `NSOpenPanel` on the folder; the choice is kept as a security-scoped bookmark. |
+| `requestAccess` | `NSOpenPanel` on the folder; the choice is kept as a security-scoped bookmark. For the primary folder this is also "Change…": the chosen folder replaces Downloads at the next `folderAccessChanged`, whose new path drops the old folder's rows and starts the watcher on the new one. |
 | `openFiles`, `reveal`, `openFolder` | `NSWorkspace`. Opening goes through Gatekeeper like Finder. |
 | `quickLook` | `QLPreviewPanel` hosted by the popover's `NSHostingController`; the popover stops being transient while the panel is up. |
 | `copyToPasteboard` | `NSPasteboard`. |
@@ -84,10 +84,9 @@ Mobius.swift is used as the loop runtime, not as the design. The design is the r
 ## Reading the model
 
 `InboxModel` keeps `files` keyed by POSIX path. `recentFiles` are the candidates: enabled
-folders only, files (folders too with `settings.includeFolders`), younger than
-`settings.retention` (24 h / 7 d / 30 d / forever, default forever, so a fresh install lists
-the Downloads folder instead of an empty inbox) and newer than `settings.listClearedAt` ("Clear
-List" in Settings; "Restore List" clears it again). The panel lists `visibleFiles`: `recentFiles` through the chip
+folders only, files and folders alike (an unzipped download is a row too). Nothing ages out
+and nothing is cleared, so the inbox is the watched folders themselves, newest first, and a
+fresh install lists the Downloads folder instead of an empty inbox. The panel lists `visibleFiles`: `recentFiles` through the chip
 (`filter`: All, 1h, Today, Unread), the Type menu (`typeFilter`: Docs, Images, Media, Archives,
 Apps, from `TypeGroup.forExtension` plus `settings.typeOverrides`) and the Pro `query`, all
 ANDed, newest first, capped at `listLimit` (20, Pro 200). The query matches the name, the
@@ -101,8 +100,8 @@ scan shows nothing from today (`chipResolved`). `now` is the moment the panel op
 
 The badge is the number of unread files in `recentFiles` (`badgeCount`, off with
 `settings.showBadge`). `unread` is per file and is cleared by Open, Show in Finder, Mark as
-Read, "Mark all seen", or, with `settings.markReadOnClose`, for the visible rows when the
-panel closes; opening the panel alone never clears it, and Mark as Unread puts it back. A
+Read or "Mark all seen"; opening or closing the panel never clears it, and Mark as Unread
+puts it back. A
 download that lands again at the same path (`fileArrived` with a newer `addedAt`) is a new
 arrival: unread again, back at the top. A file whose watcher reports it gone leaves the list at
 once (`fileRemoved`); the user moved or deleted it themselves, so there is nothing to
@@ -121,8 +120,12 @@ error: extra folders (`addFolder`, `removeFolder`), a 200-file list with a name 
 `checkProStatus`, and `proStatusChanged` overwrites the saved flag either way, so a stale
 "unlocked" flag cannot outlive a refund.
 
-- **Extra folders** are `FolderKind.custom(path)` (the raw value is the absolute path). They
-  join `folders` at load from `settings.extraFolders` and are watched like Downloads.
+- **The primary folder** is `FolderKind.downloads`. It starts as `~/Downloads` and the free
+  tier can move it anywhere (Settings › Folders › Change…); the bookmark stored under
+  "downloads" carries the choice across launches and the row takes the folder's name.
+- **Extra folders** (Pro) are `FolderKind.custom(path)` (the raw value is the absolute path).
+  They join `folders` at load from `settings.extraFolders` and are watched like the primary
+  folder. Moving the primary folder onto an extra folder folds the two rows into one.
 - **History** is `[HistoryEntry]`, one line per file that ever arrived in a watched folder
   (path, size, kind, source, date), recorded in `fileArrived` and saved after each arrival. In
   history mode the same panel gets its own chrome per `specs/history-spec.md`: a back button,
@@ -138,10 +141,11 @@ error: extra folders (`addFolder`, `removeFolder`), a 200-file list with a name 
   field with Pro, whose list holds 200 files (the free inbox of 20 has none, per the popover
   spec); a query with no hits there is `noMatches` too. Entering or leaving History clears the
   query, so each panel starts its search empty, and leaving History marks nothing seen. History
-  is reached from the gear menu (Pro) or the "Show older files" row that ends the list when
-  the folders hold more than it shows (`hasOlderFiles`); without Pro that row and the gear's
-  "Downtray Pro…" open the Pro sheet drawn inside the panel (`paywallShown`, events
-  `showOlderFiles` / `dismissPaywall`). "Clear history" lives only in Settings.
+  is reached from the footer's History button (Pro) or the "Show older files" row that ends
+  the list when the folders hold more than it shows (`hasOlderFiles`); without Pro the footer
+  button carries a lock and, like that row, opens the Pro sheet drawn inside the panel
+  (`paywallShown`, events `showOlderFiles` / `dismissPaywall`). The gear opens Settings
+  directly. History cannot be cleared; single Gone rows can be forgotten.
 - **Rules** are `Rule { trigger, match, action }`. The trigger is arrival or "after opened";
   the match is any subset of kind, host, name substring and extension; the action is move to
   a folder, trash, mark seen, or `suggestTrash`, which puts a `Suggestion` on the model that
@@ -157,11 +161,11 @@ the attached target sees real files.
 
 Filter lines: `filter all|1h|today|unread`, `type any|docs|images|media|archives|apps`,
 `type map <ext> <group|none>`, `type reset`, `search <text>`. Row actions: `open`, `reveal`,
-`copy-path`, `copy-name`, `read`, `unread`, `trash`, `move`, `unzip`. Settings: `folders on|off`,
-`keep day|week|month|forever`, `read-on-close on|off`, `badge on|off`, `clear-list`, `restore-list`, `seen` (mark all).
+`copy-path`, `copy-name`, `read`, `unread`, `trash`, `move`, `unzip`. Settings: `folder change`
+(the primary folder; headless: the last `pick`), `badge on|off`, `seen` (mark all).
 
 Pro events have their own lines: `pro on|off` (stands in for the store), `folder add`,
-`folder remove <name>`, `history on|off|all|available|gone|clear`, `forget <file>`, `search <text>`,
+`folder remove <name>`, `history on|off|all|available|gone`, `forget <file>`, `search <text>`,
 `rule add <name> [kind=pdf] [host=example.com] [name=invoice] [ext=pdf] [on=arrival|opened] then move <path>|trash|seen|suggest-trash`,
 `rule remove|enable|disable <name>`, `accept`, `dismiss-suggestion`, `unlock`, `restore`.
 

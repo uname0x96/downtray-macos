@@ -34,9 +34,6 @@ public enum InboxReducer {
             next.loaded = true
             next.filter = settings.selectedChip
             next.typeFilter = settings.selectedType
-            if let index = next.folders.firstIndex(where: { $0.kind == .desktop }) {
-                next.folders[index].enabled = settings.watchDesktop
-            }
             // Extra folders live in settings; the services may already have resolved their access.
             for path in settings.extraFolders where next.folder(.custom(path)) == nil {
                 next.folders.append(.custom(path, access: .granted))
@@ -47,17 +44,29 @@ public enum InboxReducer {
             effects.append(.checkProStatus)
 
         case .folderAccessChanged(let kind, let access, let path):
-            guard let index = next.folders.firstIndex(where: { $0.kind == kind }) else { break }
+            guard var index = next.folders.firstIndex(where: { $0.kind == kind }) else { break }
             next.folders[index].access = access
-            if let path { next.folders[index].path = path }
+            if let path, path != next.folders[index].path {
+                // The primary folder moved. Rows from the old folder leave; a Pro folder that
+                // already sat at the new path folds into the primary row.
+                let old = next.folders[index].path
+                next.folders[index].path = path
+                for id in next.files.keys where next.files[id]?.folder == old {
+                    next.files[id] = nil
+                    next.selection.remove(id)
+                }
+                if let twin = next.folders.firstIndex(where: { $0.kind != kind && $0.path == path }) {
+                    let twinKind = next.folders[twin].kind
+                    next.folders.remove(at: twin)
+                    next.settings.extraFolders.removeAll { $0 == path }
+                    effects.append(.stopWatching(twinKind))
+                    effects.append(.saveSettings(next.settings))
+                    index = next.folders.firstIndex(where: { $0.kind == kind })!
+                }
+                next.fixFocus()
+            }
             if access == .granted && next.folders[index].enabled {
                 effects.append(.startWatching([next.folders[index]]))
-            }
-            // The Desktop is opt-in; a refused grant turns the option back off.
-            if kind == .desktop && access == .denied && next.folders[index].enabled {
-                next.folders[index].enabled = false
-                next.settings.watchDesktop = false
-                effects.append(.saveSettings(next.settings))
             }
 
         case .scanCompleted(let kind, let listing):
@@ -180,18 +189,6 @@ public enum InboxReducer {
                 next.settings.selectedType = type
                 effects.append(.saveSettings(next.settings))
             }
-
-        case .clearList(let at):
-            next.settings.listClearedAt = at
-            next.selection = []
-            next.fixFocus()
-            effects.append(.saveSettings(next.settings))
-
-        case .restoreList:
-            guard next.settings.listClearedAt != nil else { break }
-            next.settings.listClearedAt = nil
-            next.fixFocus()
-            effects.append(.saveSettings(next.settings))
 
         case .showOlderFiles:
             if next.isPro {
@@ -422,21 +419,6 @@ public enum InboxReducer {
 
         // MARK: Settings
 
-        case .setWatchDesktop(let enabled):
-            guard let index = next.folders.firstIndex(where: { $0.kind == .desktop }) else { throw .unknownFolder(.desktop) }
-            next.settings.watchDesktop = enabled
-            next.folders[index].enabled = enabled
-            effects.append(.saveSettings(next.settings))
-            if enabled {
-                effects.append(next.folders[index].access == .granted
-                    ? .startWatching([next.folders[index]])
-                    : .requestAccess(.desktop))
-            } else {
-                effects.append(.stopWatching(.desktop))
-                next.selection = next.selection.filter { next.files[$0]?.folder != next.folders[index].path }
-                next.fixFocus()
-            }
-
         case .setLaunchAtLogin(let enabled):
             effects.append(.setLaunchAtLogin(enabled))
 
@@ -452,20 +434,6 @@ public enum InboxReducer {
 
         case .setLanguage(let language):
             next.settings.language = language
-            effects.append(.saveSettings(next.settings))
-
-        case .setIncludeFolders(let on):
-            next.settings.includeFolders = on
-            next.fixFocus()
-            effects.append(.saveSettings(next.settings))
-
-        case .setRetention(let retention):
-            next.settings.retention = retention
-            next.fixFocus()
-            effects.append(.saveSettings(next.settings))
-
-        case .setMarkReadOnClose(let on):
-            next.settings.markReadOnClose = on
             effects.append(.saveSettings(next.settings))
 
         case .setShowBadge(let on):
@@ -526,11 +494,6 @@ public enum InboxReducer {
         case .setQuery(let text):
             next.query = text
             next.fixFocus()
-
-        case .clearHistory:
-            next.history = []
-            next.fixFocus()
-            effects.append(.saveHistory([]))
 
         case .setHistoryFilter(let filter):
             next.historyFilter = filter
@@ -618,12 +581,9 @@ extension InboxModel {
         fixFocus()
     }
 
-    /// What every close does. With "Mark visible as read when popover closes" on, the rows
-    /// that were on screen are read now.
+    /// What every close does. Unread state is untouched: only opening, revealing or marking
+    /// a file clears its dot.
     fileprivate mutating func closePanel() {
-        if settings.markReadOnClose && !historyMode {
-            for file in visibleFiles { files[file.id]?.unread = false }
-        }
         panelOpen = false
         selection = []
         focused = nil

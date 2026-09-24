@@ -11,7 +11,7 @@ private func recordFailure(_ message: String, _ file: StaticString, _ line: UInt
 }
 
 let downloads = "/Users/sample/Downloads"
-let desktop = "/Users/sample/Desktop"
+let scans = "/Users/sample/Scans"
 let today = Calendar.current.date(from: DateComponents(year: 2026, month: 9, day: 23))!
 
 func file(_ name: String, minutesAgo: Double = 0, size: Int64 = 1024, folder: String = downloads,
@@ -41,9 +41,9 @@ func model(_ files: [InboxFile] = [], open: Bool = false) -> InboxModel {
         fresh.loaded = true
         spec.given(fresh).when(.launched).then(assertThatNext(hasNoEffects(), failFunction: recordFailure))
 
-        let settings = Settings(watchDesktop: true, proUnlocked: false)
+        let settings = Settings(proUnlocked: false)
         spec.given(model()).when(.settingsLoaded(settings, folders: WatchedFolder.sample())).then { result in
-            #expect(result.model.folder(.desktop)?.enabled == true)
+            #expect(result.model.folders.map(\.kind) == [.downloads])
             #expect(result.lastNext.effects == [
                 .startWatching(result.model.folders),
                 .registerHotkey(.default),
@@ -260,7 +260,6 @@ func model(_ files: [InboxFile] = [], open: Bool = false) -> InboxModel {
         let thisWeek = InboxFile(path: downloads + "/d.pdf", addedAt: today.addingTimeInterval(-4 * 24 * 3600))
         let earlier = InboxFile(path: downloads + "/e.pdf", addedAt: today.addingTimeInterval(-6 * 24 * 3600 - 1), unread: false)
         var m = model([justNow, earlierToday, yesterday, thisWeek, earlier])
-        m.settings.retention = .month
         func sections() -> [(String, [String])] { m.inboxSections.map { ($0.section.rawValue, $0.files.map(\.name)) } }
         #expect(sections().map(\.0) == ["justNow", "earlierToday", "yesterday", "thisWeek", "earlier"])
         #expect(sections().map(\.1) == [["a.pdf"], ["b.pdf"], ["c.pdf"], ["d.pdf"], ["e.pdf"]])
@@ -276,41 +275,16 @@ func model(_ files: [InboxFile] = [], open: Bool = false) -> InboxModel {
         #expect(m.inboxSections.isEmpty, "a search is a flat list")
     }
 
-    @Test func retentionAndClearListKeepOldArrivalsOutOfTheInbox() throws {
+    @Test func nothingAgesOutOfTheInbox() {
         let fresh = file("fresh.pdf")
-        let stale = InboxFile(path: downloads + "/stale.pdf", addedAt: now.addingTimeInterval(-8 * 24 * 3600))
-        var m = model([fresh, stale])
-        #expect(m.settings.retention == .forever, "a fresh install lists the whole folder")
-        #expect(m.visibleFiles.map(\.name) == ["fresh.pdf", "stale.pdf"] && !m.hasOlderFiles)
-        m = try InboxReducer.reduce(m, .setRetention(.week)).model
-        #expect(m.visibleFiles.map(\.name) == ["fresh.pdf"], "8 days old is outside a week")
-        #expect(m.hasOlderFiles, "the folder holds more than the inbox shows")
-        m = try InboxReducer.reduce(m, .setRetention(.month)).model
-        #expect(m.visibleFiles.map(\.name) == ["fresh.pdf", "stale.pdf"] && !m.hasOlderFiles)
-        m = try InboxReducer.reduce(m, .setRetention(.day)).model
-        #expect(m.visibleFiles.map(\.name) == ["fresh.pdf"])
-
-        let step = try InboxReducer.reduce(m, .clearList(now))
-        #expect(step.model.visibleFiles.isEmpty && step.model.emptyState == .nothingNew)
-        #expect(step.model.files.count == 2, "the files stay on disk and in the model")
-        #expect(step.effects == [.saveSettings(step.model.settings)])
-        let later = InboxFile(path: downloads + "/later.pdf", addedAt: now.addingTimeInterval(60))
-        m = try InboxReducer.reduce(step.model, .fileArrived(later)).model
-        #expect(m.visibleFiles.map(\.name) == ["later.pdf"], "what arrives after the clear shows")
-        #expect(m.snapshot.settings.listCleared)
-
-        let restored = try InboxReducer.reduce(m, .restoreList)
-        #expect(restored.model.visibleFiles.map(\.name) == ["later.pdf", "fresh.pdf"], "Restore List brings the hidden files back, within retention")
-        #expect(restored.model.settings.listClearedAt == nil && !restored.model.snapshot.settings.listCleared)
-        #expect(restored.effects == [.saveSettings(restored.model.settings)])
-        #expect(try InboxReducer.reduce(restored.model, .restoreList).effects.isEmpty, "nothing to restore is a no-op")
+        let stale = InboxFile(path: downloads + "/stale.pdf", addedAt: now.addingTimeInterval(-400 * 24 * 3600))
+        let m = model([fresh, stale])
+        #expect(m.visibleFiles.map(\.name) == ["fresh.pdf", "stale.pdf"] && !m.hasOlderFiles, "the inbox is the whole folder")
     }
 
-    @Test func foldersAreRowsOnlyWhenTheSettingSaysSo() throws {
+    @Test func foldersAreRowsLikeFiles() {
         let folder = InboxFile(path: downloads + "/shots", addedAt: now, kind: .folder)
-        var m = model([folder, file("a.pdf", minutesAgo: 1)])
-        #expect(m.visibleFiles.map(\.name) == ["a.pdf"])
-        m = try InboxReducer.reduce(m, .setIncludeFolders(true)).model
+        let m = model([folder, file("a.pdf", minutesAgo: 1)])
         #expect(m.visibleFiles.map(\.name) == ["shots", "a.pdf"])
     }
 
@@ -334,18 +308,15 @@ func model(_ files: [InboxFile] = [], open: Bool = false) -> InboxModel {
         #expect(same.model.files[first.id]?.size == 1000 && same.effects.isEmpty)
     }
 
-    @Test func markReadOnCloseAndTheBadgeSetting() throws {
+    @Test func closingThePanelKeepsUnreadAndTheBadgeSetting() throws {
         let a = file("a.pdf")
         let b = file("b.pdf", minutesAgo: 1)
         var m = model([a, b], open: true)
-        m = try InboxReducer.reduce(m, .setMarkReadOnClose(true)).model
-        m.query = "a."
-        #expect(m.visibleFiles.map(\.name) == ["a.pdf"])
         m = try InboxReducer.reduce(m, .panelClosed).model
-        #expect(m.files[a.id]?.unread == false && m.files[b.id]?.unread == true, "only the rows that were on screen")
-        #expect(m.badgeCount == 1)
+        #expect(m.files[a.id]?.unread == true && m.files[b.id]?.unread == true, "closing marks nothing read")
+        #expect(m.badgeCount == 2)
         m = try InboxReducer.reduce(m, .setShowBadge(false)).model
-        #expect(m.badgeCount == 0 && m.unreadCount == 1, "the badge is off, the dots stay")
+        #expect(m.badgeCount == 0 && m.unreadCount == 2, "the badge is off, the dots stay")
         #expect(m.snapshot.badge == 0 && m.snapshot.settings.showBadge == false)
     }
 
@@ -419,22 +390,50 @@ func model(_ files: [InboxFile] = [], open: Bool = false) -> InboxModel {
         }
     }
 
-    @Test func desktopFilesOnlyShowWhenDesktopIsWatched() {
-        let m = model([file("a.pdf"), file("note.txt", folder: desktop)])
-        #expect(m.visibleFiles.map(\.name) == ["a.pdf"])
-        spec.given(m).when(.setWatchDesktop(true)).then { result in
-            #expect(result.model.visibleFiles.map(\.name) == ["a.pdf", "note.txt"])
-            #expect(result.lastNext.effects == [.saveSettings(result.model.settings), .requestAccess(.desktop)])
+    @Test func changingThePrimaryFolderSwapsItsRows() {
+        var m = model([file("a.pdf"), file("b.zip")])
+        m.panelOpen = true
+        m.focused = m.files.keys.sorted().first
+        let inbox = "/Users/sample/Inbox"
+        spec.given(m).when(.folderAccessChanged(.downloads, .granted, path: inbox)).then { result in
+            #expect(result.model.downloads?.path == inbox)
+            #expect(result.model.downloads?.title == "Inbox")
+            #expect(result.model.visibleFiles.isEmpty)
+            #expect(result.model.focused == nil)
+            #expect(result.lastNext.effects == [.startWatching([result.model.downloads!])])
+        }
+        // Cancelling the picker changes nothing.
+        spec.given(m).when(.folderAccessChanged(.downloads, .denied, path: nil)).then { result in
+            #expect(result.model.downloads?.path == downloads)
+            #expect(result.model.visibleFiles.map(\.name) == ["a.pdf", "b.zip"])
+            #expect(result.lastNext.effects.isEmpty)
+        }
+    }
+
+    @Test func movingThePrimaryFolderOntoAnExtraFolderFoldsThemTogether() {
+        var m = model([file("a.pdf"), file("scan.pdf", folder: scans)])
+        m.settings.proUnlocked = true
+        m.settings.extraFolders = [scans]
+        m.folders.append(.custom(scans))
+        spec.given(m).when(.folderAccessChanged(.downloads, .granted, path: scans)).then { result in
+            #expect(result.model.folders.map(\.kind) == [.downloads])
+            #expect(result.model.settings.extraFolders.isEmpty)
+            #expect(result.model.visibleFiles.map(\.name) == ["scan.pdf"])
+            #expect(result.lastNext.effects == [
+                .stopWatching(.custom(scans)),
+                .saveSettings(result.model.settings),
+                .startWatching([result.model.downloads!]),
+            ])
         }
     }
 
     @Test func duplicateNamesAreFlagged() {
-        let m = model([file("a.pdf"), file("a.pdf", folder: desktop)])
-        var withDesktop = m
-        withDesktop.folders[1].enabled = true
+        let m = model([file("a.pdf"), file("a.pdf", folder: scans)])
+        var withScans = m
+        withScans.folders.append(.custom(scans))
         #expect(m.duplicateNames.isEmpty)
-        #expect(withDesktop.duplicateNames == ["a.pdf"])
-        #expect(withDesktop.snapshot.rows.map(\.showFolder) == [true, true])
+        #expect(withScans.duplicateNames == ["a.pdf"])
+        #expect(withScans.snapshot.rows.map(\.showFolder) == [true, true])
     }
 
     // MARK: Selection and focus

@@ -31,18 +31,6 @@ extension TypeGroup {
     }
 }
 
-extension Retention {
-    /// Settings › List › Keep items.
-    var localizedTitle: String {
-        switch self {
-        case .day: String(localized: "retention.day", defaultValue: "24 hours", comment: "Keep items picker option.")
-        case .week: String(localized: "retention.week", defaultValue: "7 days", comment: "Keep items picker option.")
-        case .month: String(localized: "retention.month", defaultValue: "30 days", comment: "Keep items picker option.")
-        case .forever: String(localized: "retention.forever", defaultValue: "Forever", comment: "Keep items picker option: files never leave the inbox on their own.")
-        }
-    }
-}
-
 extension InboxSection {
     /// Section header in the inbox list (All and Today chips only).
     var localizedTitle: String {
@@ -71,11 +59,10 @@ extension FileKind {
 }
 
 extension FolderKind {
-    /// The two built-in folders get the name Finder shows for them; a custom folder keeps its own.
+    /// The Downloads folder gets the name Finder shows for it; a custom folder keeps its own.
     var localizedTitle: String {
         switch self {
         case .downloads: String(localized: "folder.downloads", defaultValue: "Downloads", comment: "The user's Downloads folder, as Finder names it.")
-        case .desktop: String(localized: "folder.desktop", defaultValue: "Desktop", comment: "The user's Desktop folder, as Finder names it.")
         default: title
         }
     }
@@ -92,7 +79,9 @@ extension HistoryFilter {
 }
 
 extension WatchedFolder {
-    var localizedTitle: String { kind.isCustom ? title : kind.localizedTitle }
+    /// The primary folder is "Downloads" in the UI language while it still is `~/Downloads`;
+    /// once moved it carries the chosen folder's name, like a Pro folder.
+    var localizedTitle: String { kind == .downloads && title == "Downloads" ? kind.localizedTitle : title }
 }
 
 extension InboxFile {

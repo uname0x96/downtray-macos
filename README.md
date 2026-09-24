@@ -1,6 +1,6 @@
 # Downtray
 
-A menu bar inbox for the files that land in `~/Downloads` (and, optionally, the Desktop).
+A menu bar inbox for the files that land in `~/Downloads` (or any one folder you point it at).
 Press ⌃⌥D, see the latest twenty, act on them with one key: open, Quick Look, reveal, copy
 path, move, unzip, trash with undo. Pro (one-time purchase) adds any extra folders, a 200-file
 list, a searchable history, and rules that sort arrivals automatically. macOS 14+,

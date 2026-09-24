@@ -9,10 +9,11 @@ public final class FakeServices: InboxServices {
     public var world: [FileID: InboxFile] = [:]
     public var settings = Settings()
     public var folders: [WatchedFolder]
-    public var accessGrants: [FolderKind: AccessState] = [.downloads: .granted, .desktop: .granted]
+    public var accessGrants: [FolderKind: AccessState] = [.downloads: .granted]
     /// What the next "Move to…" panel answers. nil cancels.
     public var nextDestination: String?
-    /// What the next "Add Folder…" panel answers. nil cancels.
+    /// What the next folder panel ("Add Folder…", or "Change…" on the primary folder) answers.
+    /// nil cancels the former and keeps the primary folder where it is.
     public var nextFolder: String?
     /// Whether the fake store owns Pro; `purchasePro` sets it unless `purchaseShouldFail`.
     public var proOwned = false
@@ -68,7 +69,7 @@ public final class FakeServices: InboxServices {
 
     public func requestAccess(_ kind: FolderKind) async -> (AccessState, path: String?) {
         record("requestAccess \(kind.rawValue)")
-        return (accessGrants[kind] ?? .denied, nil)
+        return (accessGrants[kind] ?? .denied, nextFolder)
     }
 
     /// Simulates a file landing in a watched folder.

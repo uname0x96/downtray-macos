@@ -55,32 +55,16 @@ struct PopoverView: View {
 
     // MARK: Header
 
-    /// The inbox header: the brand and a gear menu.
+    /// The inbox header: the brand and a gear button that opens Settings.
     private var header: some View {
         HStack(spacing: 10) {
             Text(appName)
                 .font(.headline)
             Spacer()
-            Menu {
-                Button(String(localized: "menu.settings", defaultValue: "Settings…"), action: openSettings)
-                    .accessibilityIdentifier("settings")
-                if model.isPro {
-                    Button(String(localized: "menu.history", defaultValue: "History…", comment: "Gear menu item (Pro): opens the History list.")) {
-                        presenter.dispatch(.setHistoryMode(true))
-                    }
-                    .accessibilityIdentifier("historyToggle")
-                } else {
-                    Button(String(localized: "menu.pro", defaultValue: "Downtray Pro…", comment: "Gear menu item for free users: opens the Pro sheet. Keep the brand name.")) {
-                        presenter.dispatch(.showOlderFiles)
-                    }
-                    .accessibilityIdentifier("proMenuItem")
-                }
-            } label: {
+            Button(action: openSettings) {
                 Image(systemName: "gearshape")
             }
-            .menuStyle(.borderlessButton)
-            .menuIndicator(.hidden)
-            .fixedSize()
+            .buttonStyle(.borderless)
             .help(String(localized: "inbox.settings", defaultValue: "Settings", comment: "Tooltip on the gear button that opens Settings."))
             .accessibilityIdentifier("gear")
         }
@@ -256,6 +240,7 @@ struct PopoverView: View {
             EmptyStateView(
                 state: empty,
                 inHistory: model.historyMode,
+                folderName: primaryFolderName,
                 grant: { presenter.dispatch(.grantAccess(.downloads)) },
                 openDownloads: { presenter.dispatch(.openWatchedFolder(.downloads)) }
             )
@@ -266,15 +251,12 @@ struct PopoverView: View {
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 1) {
                         Color.clear.frame(height: 0).id(Self.topAnchor)
-                        let sections = model.inboxSections
-                        if sections.isEmpty {
-                            // 1h, Unread and a search show a flat list: one bucket, no headers.
-                            ForEach(model.visibleFiles) { file in inboxRow(file) }
-                        } else {
-                            ForEach(sections, id: \.section) { section in
-                                sectionHeader(section.section.localizedTitle)
-                                    .accessibilityIdentifier("section-\(section.section.rawValue)")
-                                ForEach(section.files) { file in inboxRow(file) }
+                        ForEach(inboxItems) { item in
+                            switch item {
+                            case .header(let title, let id):
+                                sectionHeader(title).accessibilityIdentifier(id)
+                            case .file(let file):
+                                inboxRow(file)
                             }
                         }
                         if model.hasOlderFiles {
@@ -310,15 +292,51 @@ struct PopoverView: View {
 
     private static let topAnchor = "top"
 
+    /// Headers and rows as one flat list for one `ForEach`. Nested `ForEach`es (one per
+    /// section) gave a file that moved to another section, say from Just now to Yesterday on
+    /// reopening after midnight, a second row with the same id in a new container, and the
+    /// `LazyVStack` kept drawing the old one: its unread dot survived Mark all seen. With one
+    /// container the row keeps one identity and just moves. 1h, Unread and a search show a
+    /// flat list: no headers.
+    private var inboxItems: [ListItem] {
+        let sections = model.inboxSections
+        if sections.isEmpty { return model.visibleFiles.map(ListItem.file) }
+        return sections.flatMap { section in
+            [.header(section.section.localizedTitle, id: "section-\(section.section.rawValue)")]
+                + section.files.map(ListItem.file)
+        }
+    }
+
+    private var historyItems: [ListItem] {
+        historySections.flatMap { section in
+            [.header(Self.sectionTitle(for: section.day, today: model.today), id: "day-\(section.day.timeIntervalSince1970)")]
+                + section.files.map(ListItem.file)
+        }
+    }
+
+    enum ListItem: Identifiable {
+        case header(String, id: String)
+        case file(InboxFile)
+
+        var id: String {
+            switch self {
+            case .header(_, let id): return id
+            case .file(let file): return file.id
+            }
+        }
+    }
+
+    /// No explicit `.id()`: the `ForEach` identifies the row by the file's path, which is what
+    /// `scrollTo` uses.
     private func inboxRow(_ file: InboxFile) -> some View {
         FileRowView(
             file: file,
+            now: model.now,
             showFolder: model.duplicateNames.contains(file.name),
             selected: model.selection.contains(file.id),
             focused: model.focused == file.id,
             actions: RowActions(presenter: presenter, file: file, selection: model.selection)
         )
-        .id(file.id)
     }
 
     private func sectionHeader(_ title: String) -> some View {
@@ -337,25 +355,24 @@ struct PopoverView: View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 1, pinnedViews: []) {
-                    ForEach(historySections, id: \.day) { section in
-                        sectionHeader(Self.sectionTitle(for: section.day, today: model.today))
-                        ForEach(section.files) { file in
-                            if file.missing {
-                                GoneRowView(file: file, focused: model.focused == file.id) {
-                                    presenter.dispatch(.removeFromHistory(file.id))
-                                }
-                                .id(file.id)
-                            } else {
-                                FileRowView(
-                                    file: file,
-                                    showFolder: model.duplicateNames.contains(file.name),
-                                    showUnread: false,
-                                    selected: model.selection.contains(file.id),
-                                    focused: model.focused == file.id,
-                                    actions: RowActions(presenter: presenter, file: file, selection: model.selection)
-                                )
-                                .id(file.id)
+                    ForEach(historyItems) { item in
+                        switch item {
+                        case .header(let title, _):
+                            sectionHeader(title)
+                        case .file(let file) where file.missing:
+                            GoneRowView(file: file, focused: model.focused == file.id) {
+                                presenter.dispatch(.removeFromHistory(file.id))
                             }
+                        case .file(let file):
+                            FileRowView(
+                                file: file,
+                                now: model.now,
+                                showFolder: model.duplicateNames.contains(file.name),
+                                showUnread: false,
+                                selected: model.selection.contains(file.id),
+                                focused: model.focused == file.id,
+                                actions: RowActions(presenter: presenter, file: file, selection: model.selection)
+                            )
                         }
                     }
                 }
@@ -399,20 +416,49 @@ struct PopoverView: View {
 
     // MARK: Footer
 
-    /// Exactly two text buttons. History is not a footer link: it lives behind the gear (Pro)
-    /// and the "Show older files" row.
+    private var primaryFolderName: String {
+        model.downloads?.localizedTitle ?? FolderKind.downloads.localizedTitle
+    }
+
+    /// History (Pro; a lock in the free tier, where it opens the Pro sheet) and, while any row
+    /// is unread, Mark all seen.
     private var footer: some View {
         HStack {
-            Button(String(localized: "inbox.footer.openDownloads", defaultValue: "Open Downloads in Finder", comment: "Footer link button, leading. Shares one line with 'Mark all seen'.")) { presenter.dispatch(.openWatchedFolder(.downloads)) }
+            Button {
+                presenter.dispatch(model.isPro ? .setHistoryMode(true) : .showOlderFiles)
+            } label: {
+                Label(String(localized: "inbox.footer.history", defaultValue: "History", comment: "Footer link button, leading: opens the History list (Pro). Shares one line with 'Mark all seen'."),
+                      systemImage: model.isPro ? "clock.arrow.circlepath" : "lock.fill")
+                    .modifier(FooterHitArea())
+            }
+            // Pro paid for this one, so it gets the full text color; the lock stays quiet.
+            .foregroundStyle(model.isPro ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
+            .accessibilityIdentifier("historyToggle")
             Spacer()
-            Button(String(localized: "inbox.footer.markAllSeen", defaultValue: "Mark all seen", comment: "Footer button: clears the unread dots and the badge.")) { presenter.dispatch(.markAllSeen) }
-                .disabled(model.unreadCount == 0)
+            // Only while there is something to mark: a button that does nothing reads as broken.
+            if model.unreadCount > 0 {
+                Button {
+                    presenter.dispatch(.markAllSeen)
+                } label: {
+                    Text(String(localized: "inbox.footer.markAllSeen", defaultValue: "Mark all seen", comment: "Footer button: clears the unread dots and the badge. Shown only while something is unread."))
+                        .modifier(FooterHitArea())
+                }
+            }
         }
         .buttonStyle(.link)
         .foregroundStyle(.secondary)
         .font(.caption)
         .padding(.horizontal, 14)
-        .padding(.vertical, 10)
+    }
+
+    /// The footer's text is caption-sized, so the label alone is a thin target. The padding
+    /// is inside the button and the shape covers it, so the whole footer height takes the click.
+    private struct FooterHitArea: ViewModifier {
+        func body(content: Content) -> some View {
+            content
+                .padding(.vertical, 10)
+                .contentShape(Rectangle())
+        }
     }
 
     // MARK: Toast and undo
@@ -571,6 +617,9 @@ struct RowActions {
 
 struct FileRowView: View {
     let file: InboxFile
+    /// The moment the panel opened. The meta line's relative time is formatted from the clock,
+    /// so this is here only to make the row render again on reopen instead of keeping "now".
+    let now: Date
     let showFolder: Bool
     /// History shows no dots; the column stays so both lists share one row shape.
     var showUnread = true
@@ -791,6 +840,8 @@ struct EmptyStateView: View {
     let state: EmptyState
     /// History keeps its own wording for "No matches"; the inbox adds a hint.
     var inHistory = false
+    /// The primary folder's name, for the wording of "nothing new" and "open folder".
+    var folderName = "Downloads"
     let grant: () -> Void
     var openDownloads: (() -> Void)? = nil
 
@@ -814,10 +865,10 @@ struct EmptyStateView: View {
             case .nothingNew:
                 Text(String(localized: "empty.noRecent.title", defaultValue: "No recent downloads", comment: "Empty state of the inbox when the watched folders hold nothing recent."))
                     .font(.headline)
-                Text(String(localized: "empty.noRecent.body", defaultValue: "New files in Downloads will show up here."))
+                Text(String(localized: "empty.noRecent.body", defaultValue: "New files in \(folderName) will show up here.", comment: "Placeholder: the primary folder's name, usually Downloads."))
                     .foregroundStyle(.secondary)
                 if let openDownloads {
-                    Button(String(localized: "empty.openDownloads", defaultValue: "Open Downloads Folder", comment: "Button under the empty inbox: opens the folder in Finder."), action: openDownloads)
+                    Button(String(localized: "empty.openDownloads", defaultValue: "Open \(folderName) Folder", comment: "Button under the empty inbox: opens the folder in Finder. Placeholder: the primary folder's name, usually Downloads."), action: openDownloads)
                         .accessibilityIdentifier("openDownloads")
                 }
             case .nothingLastHour:

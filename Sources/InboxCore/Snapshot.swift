@@ -48,13 +48,6 @@ public struct Snapshot: Codable, Equatable, Sendable {
         public let launchAtLogin: Bool
         public let hotkey: String
         public let notifications: Bool
-        public let watchDesktop: Bool
-        public let includeFolders: Bool
-        /// "day", "week", "month" or "forever".
-        public let retention: String
-        /// True while "Clear List" hides files; `restore-list` brings them back.
-        public let listCleared: Bool
-        public let markReadOnClose: Bool
         public let showBadge: Bool
         public let typeOverrides: [String: String]
         /// The remembered chip and Type menu ("any" when none).
@@ -157,11 +150,6 @@ public struct Snapshot: Codable, Equatable, Sendable {
             launchAtLogin: model.settings.launchAtLogin,
             hotkey: model.settings.hotkey.display,
             notifications: model.settings.notificationsEnabled,
-            watchDesktop: model.settings.watchDesktop,
-            includeFolders: model.settings.includeFolders,
-            retention: model.settings.retention.rawValue,
-            listCleared: model.settings.listClearedAt != nil,
-            markReadOnClose: model.settings.markReadOnClose,
             showBadge: model.settings.showBadge,
             typeOverrides: model.settings.typeOverrides.mapValues(\.rawValue),
             selectedChip: model.settings.selectedChip.rawValue,

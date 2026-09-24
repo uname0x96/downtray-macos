@@ -1,10 +1,9 @@
 import Foundation
 
-/// What the parser needs from its caller: where the watched folders are (to build paths for
+/// What the parser needs from its caller: where the primary folder is (to build paths for
 /// `arrive`), how to turn a file name into an id, and the clock for arrival times.
 public struct ParseContext: Sendable {
     public var downloadsPath: String
-    public var desktopPath: String
     public var now: Date
     /// Resolves a bare name (or a path) to a known file id. Returns nil when unknown.
     public var resolveFile: @Sendable (String) -> FileID?
@@ -17,12 +16,10 @@ public struct ParseContext: Sendable {
 
     public init(
         downloadsPath: String,
-        desktopPath: String,
         now: Date = Date(),
         resolveFile: @escaping @Sendable (String) -> FileID?
     ) {
         self.downloadsPath = downloadsPath
-        self.desktopPath = desktopPath
         self.now = now
         self.resolveFile = resolveFile
     }
@@ -31,9 +28,8 @@ public struct ParseContext: Sendable {
     public init(model: InboxModel, now: Date = Date()) {
         let files = model.files
         let downloads = model.folder(.downloads)?.path ?? "/Downloads"
-        let desktop = model.folder(.desktop)?.path ?? "/Desktop"
         let history = model.history
-        self.init(downloadsPath: downloads, desktopPath: desktop, now: now) { name in
+        self.init(downloadsPath: downloads, now: now) { name in
             if files[name] != nil { return name }
             let matches = files.values.filter { $0.name == name }
             if matches.count == 1 { return matches[0].id }
@@ -84,27 +80,22 @@ extension Event {
         ("undo", "put the last trashed files back"),
         ("dismiss <file>", "remove a greyed-out row whose file vanished"),
         ("seen", "mark every file read; the badge follows"),
-        ("clear-list", "files that arrived until now leave the inbox (they stay on disk)"),
-        ("restore-list", "undo clear-list: the files it hid are listed again"),
-        ("finder [downloads|desktop]", "open the watched folder in Finder"),
-        ("desktop on|off", "watch the Desktop folder too"),
+        ("finder [downloads|<path>]", "open the watched folder in Finder"),
         ("login on|off", "launch at login"),
         ("notify on|off", "notification on new file"),
         ("folders on|off", "list folders inside watched folders as rows"),
-        ("keep day|week|month|forever", "how long a file stays in the inbox after it arrived"),
-        ("read-on-close on|off", "closing the panel marks the visible rows read"),
         ("badge on|off", "show the unread count on the menu bar icon"),
         ("language en|ja|de|fr|system", "UI language (system: follow macOS); applies at the next launch"),
         ("hotkey-set <combo>", "e.g. ctrl+alt+d, cmd+shift+space"),
-        ("grant downloads|desktop", "ask for folder access"),
+        ("grant [downloads]", "ask for access to the primary folder"),
         ("unlock", "buy Pro through the store"),
         ("restore", "restore a Pro purchase"),
         ("pro on|off", "what the store reported (headless: sets Pro directly)"),
+        ("folder change", "choose the primary folder with the folder panel (headless: the last `pick`)"),
         ("folder add [path]", "Pro: watch another folder (no path: ask with the folder panel)"),
         ("folder remove <name|path>", "Pro: stop watching an extra folder"),
         ("history on|off", "Pro: the History panel instead of the inbox"),
         ("history all|available|gone", "Pro: History's segment"),
-        ("history clear", "Pro: forget the recorded arrivals"),
         ("forget <file>", "Pro: remove one row from History"),
         ("search [text]", "filter rows by name, extension, type or source; no text clears the search"),
         ("rule add <name> [kind=pdf] [host=stripe.com] [name=invoice] [ext=dmg] [on=arrival|opened] then move <path>|trash|seen|suggest-trash", "Pro: add a rule"),
@@ -112,7 +103,7 @@ extension Event {
         ("accept", "do what the current suggestion offers"),
         ("dismiss-suggestion", "drop the current suggestion"),
         ("today <yyyy-mm-dd>", "set the clock: the day for Today, midnight of it for 1h"),
-        ("arrive <file> [size] [host|airdrop]", "a file lands in Downloads (prefix desktop/ for the Desktop); size like 120k, 2m"),
+        ("arrive <file|path> [size] [host|airdrop]", "a file lands in the primary folder (or at an absolute path); size like 120k, 2m"),
         ("vanish <file>", "a listed file disappears from its folder"),
     ]
 
@@ -230,18 +221,9 @@ extension Event {
         case "undo": return .undoTrash
         case "dismiss": return .dismiss(try file(try required()))
         case "seen": return .markAllSeen
-        case "clear-list": return .clearList(context.now)
-        case "restore-list": return .restoreList
         case "finder": return .openWatchedFolder(try folder(argument))
-        case "desktop": return .setWatchDesktop(try onOff())
         case "login": return .setLaunchAtLogin(try onOff())
         case "notify": return .setNotifications(try onOff())
-        case "folders": return .setIncludeFolders(try onOff())
-        case "keep":
-            let value = try required().lowercased()
-            guard let retention = Retention(rawValue: value) else { throw .invalidArgument(value) }
-            return .setRetention(retention)
-        case "read-on-close": return .setMarkReadOnClose(try onOff())
         case "badge": return .setShowBadge(try onOff())
         case "language":
             let code = try required().lowercased()
@@ -260,6 +242,8 @@ extension Event {
             guard let verb = words.first?.lowercased() else { throw .missingArgument(command) }
             let rest = words.dropFirst().joined(separator: " ")
             switch verb {
+            case "change":
+                return .grantAccess(.downloads)
             case "add":
                 return rest.isEmpty ? .addFolder : .folderChosen(rest)
             case "remove":
@@ -273,7 +257,6 @@ extension Event {
             switch try required().lowercased() {
             case "on": return .setHistoryMode(true)
             case "off": return .setHistoryMode(false)
-            case "clear": return .clearHistory
             case let segment:
                 guard let filter = HistoryFilter(rawValue: segment) else { throw .invalidArgument(segment) }
                 return .setHistoryFilter(filter)
@@ -306,14 +289,7 @@ extension Event {
             return .setToday(date)
         case "arrive":
             guard let name = words.first else { throw .missingArgument(command) }
-            var path: String
-            if name.lowercased().hasPrefix("desktop/") {
-                path = context.desktopPath + "/" + String(name.dropFirst("desktop/".count))
-            } else if name.hasPrefix("/") {
-                path = name
-            } else {
-                path = context.downloadsPath + "/" + name
-            }
+            let path = name.hasPrefix("/") ? name : context.downloadsPath + "/" + name
             var size: Int64 = 0
             var source = FileSource.unknown
             for extra in words.dropFirst() {
@@ -350,14 +326,9 @@ extension Event {
         case .setTypeFilter(let type): return "type \(type?.rawValue ?? "any")"
         case .setTypeOverride(let ext, let group): return "type map \(ext) \(group?.rawValue ?? "none")"
         case .resetTypeOverrides: return "type reset"
-        case .clearList: return "clear-list"
-        case .restoreList: return "restore-list"
         case .copyName(let target): return "copy-name" + names(target)
         case .markRead(let target): return "read" + names(target)
         case .markUnread(let target): return "unread" + names(target)
-        case .setIncludeFolders(let on): return "folders \(on ? "on" : "off")"
-        case .setRetention(let retention): return "keep \(retention.rawValue)"
-        case .setMarkReadOnClose(let on): return "read-on-close \(on ? "on" : "off")"
         case .setShowBadge(let on): return "badge \(on ? "on" : "off")"
         case .showOlderFiles: return "older"
         case .dismissPaywall: return "paywall off"
@@ -377,7 +348,6 @@ extension Event {
         case .markAllSeen: return "seen"
         case .openWatchedFolder(let kind): return "finder \(kind.rawValue)"
         case .dismissToast: return "dismiss-toast"
-        case .setWatchDesktop(let on): return "desktop \(on ? "on" : "off")"
         case .setLaunchAtLogin(let on): return "login \(on ? "on" : "off")"
         case .setNotifications(let on): return "notify \(on ? "on" : "off")"
         case .setLanguage(let language): return "language \(language?.rawValue ?? "system")"
@@ -390,7 +360,6 @@ extension Event {
         case .folderChosen(let path): return "folder add \(path)"
         case .removeFolder(let kind): return "folder remove \(kind.rawValue)"
         case .setHistoryMode(let on): return "history \(on ? "on" : "off")"
-        case .clearHistory: return "history clear"
         case .setHistoryFilter(let filter): return "history \(filter.rawValue)"
         case .removeFromHistory(let id): return "forget \(name(id))"
         case .setQuery(let text): return text.isEmpty ? "search" : "search \(text)"

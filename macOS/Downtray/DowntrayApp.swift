@@ -26,6 +26,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, Pan
     let presenter: InboxPresenter
 
     private var statusItem: NSStatusItem?
+    private var badgeView: StatusBadgeView?
     private let popover = NSPopover()
     private var hosting: PopoverHostingController?
     private var outsideClickMonitor: Any?
@@ -112,8 +113,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, Pan
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = item.button {
             button.image = Self.menuBarIcon
-            button.imagePosition = .imageLeading
-            button.font = NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .semibold)
+            button.imagePosition = .imageOnly
             button.target = self
             button.action = #selector(statusItemClicked)
             // Right click too: a small menu, the only place an accessory app can offer Quit.
@@ -184,9 +184,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, Pan
         }
     }
 
+    /// The unread count is a small red disc on the glyph's lower right corner, like an app
+    /// icon badge, so the item stays one compact glyph. It is an overlay view rather than part
+    /// of the image so the glyph keeps its template tint.
     private func renderBadge(_ count: Int) {
         guard let button = statusItem?.button else { return }
-        button.title = count == 0 ? "" : (count > 9 ? "9+" : "\(count)")
+        if badgeView == nil {
+            let badge = StatusBadgeView()
+            button.addSubview(badge)
+            badgeView = badge
+        }
+        badgeView?.count = count
+        if let badge = badgeView {
+            let size = badge.intrinsicContentSize
+            // Bottom-right of the glyph; the button is a little wider than the 18 pt image.
+            badge.frame = CGRect(x: button.bounds.maxX - size.width - 2, y: 1, width: size.width, height: size.height)
+            badge.autoresizingMask = [.minXMargin, .maxYMargin]
+        }
         button.toolTip = count == 0
             ? appName
             : String(localized: "statusItem.unreadFiles", defaultValue: "\(count) unread files", comment: "Tooltip on the menu bar icon while the badge shows. Plural: 1 → '1 unread file'.")
@@ -344,6 +358,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, Pan
             // The Settings scene comes with an empty unified toolbar, which pushes the title to
             // the left on macOS 26+. Without a toolbar the title is centered.
             window.toolbar = nil
+            // The Pro badge sits at the trailing end of the title bar, not in a row of the form.
+            // It is a title bar accessory rather than a toolbar item so the title stays centered.
+            if window.titlebarAccessoryViewControllers.isEmpty {
+                let badge = NSHostingView(rootView: ProBadge().environment(presenter))
+                let accessory = NSTitlebarAccessoryViewController()
+                accessory.layoutAttribute = .trailing
+                accessory.view = badge
+                window.addTitlebarAccessoryViewController(accessory)
+            }
+            // The accessory takes the size its view has when the window shows; the hosting
+            // view is measured here so a purchase since the last visit is reflected.
+            if let badge = window.titlebarAccessoryViewControllers.first?.view {
+                // As tall as the title bar, so the capsule centers on the title instead of
+                // sitting on the bar's bottom edge.
+                let titleBarHeight = window.frame.height - window.contentLayoutRect.height
+                badge.frame.size = CGSize(width: badge.fittingSize.width, height: max(titleBarHeight, badge.fittingSize.height))
+            }
             window.makeKeyAndOrderFront(nil)
         }
     }
@@ -362,4 +393,39 @@ protocol PanelController: AnyObject {
     var panelFrame: CGRect? { get }
     /// The popover's content view while it is on screen (its window is not in `NSApp.windows`).
     var panelContentView: NSView? { get }
+}
+
+/// The red unread badge over the status item's glyph. Draws nothing at zero and never takes
+/// the click: mouse events fall through to the button.
+final class StatusBadgeView: NSView {
+    var count = 0 {
+        didSet {
+            isHidden = count == 0
+            needsDisplay = true
+            invalidateIntrinsicContentSize()
+        }
+    }
+
+    private var text: String { count > 99 ? "99+" : "\(count)" }
+    private let font = NSFont.systemFont(ofSize: 8, weight: .bold)
+    private let height: CGFloat = 12
+
+    override var isFlipped: Bool { true }
+    override func hitTest(_ point: NSPoint) -> NSView? { nil }
+
+    override var intrinsicContentSize: NSSize {
+        let width = (text as NSString).size(withAttributes: [.font: font]).width
+        return NSSize(width: max(height, ceil(width) + 6), height: height)
+    }
+
+    override func draw(_ dirtyRect: NSRect) {
+        guard count > 0 else { return }
+        let pill = NSBezierPath(roundedRect: bounds, xRadius: height / 2, yRadius: height / 2)
+        NSColor.systemRed.setFill()
+        pill.fill()
+        let attributes: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: NSColor.white]
+        let size = (text as NSString).size(withAttributes: attributes)
+        let origin = NSPoint(x: (bounds.width - size.width) / 2, y: (bounds.height - size.height) / 2)
+        (text as NSString).draw(at: origin, withAttributes: attributes)
+    }
 }

@@ -2,30 +2,30 @@
   "sourceLanguage": "en",
   "strings": {
     "access.message": {
-      "comment": "Folder picker heading. Placeholder: Downloads or Desktop. Keep the brand name.",
+      "comment": "Folder picker heading, both for the first grant and for moving the inbox to another folder. Keep the brand name.",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Downtray braucht Zugriff auf deinen Ordner „%@“, um neue Dateien anzuzeigen."
+            "value": "Wähle den Ordner, dessen neue Dateien Downtray anzeigt. Meist ist das „Downloads“."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Downtray needs access to your %@ folder to list new files."
+            "value": "Choose the folder Downtray lists new files from. Downloads is the usual choice."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Downtray a besoin d’accéder à votre dossier « %@ » pour afficher les nouveaux fichiers."
+            "value": "Choisissez le dossier dont Downtray affiche les nouveaux fichiers. En général, c’est « Téléchargements »."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "新しいファイルを表示するには、Downtray に「%@」フォルダへのアクセスが必要です。"
+            "value": "Downtray が新しいファイルを表示するフォルダを選択してください。通常は「ダウンロード」です。"
           }
         }
       }
@@ -36,25 +36,25 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zugriff erlauben"
+            "value": "Auswählen"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Grant Access"
+            "value": "Choose"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Autoriser l’accès"
+            "value": "Choisir"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "アクセスを許可"
+            "value": "選択"
           }
         }
       }
@@ -408,7 +408,7 @@
       }
     },
     "app.quit": {
-      "comment": "Menu item and ⌘Q. Keep the brand name as is.",
+      "comment": "Menu item, ⌘Q and the red button at the end of Settings. Keep the brand name as is.",
       "localizations": {
         "de": {
           "stringUnit": {
@@ -642,28 +642,29 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Neue Dateien in Downloads erscheinen hier."
+            "value": "Neue Dateien in „%@“ erscheinen hier."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "New files in Downloads will show up here."
+            "value": "New files in %@ will show up here."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Les nouveaux fichiers de Téléchargements apparaîtront ici."
+            "value": "Les nouveaux fichiers de « %@ » apparaîtront ici."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "ダウンロードに届いた新しいファイルがここに表示されます。"
+            "value": "「%@」に届いた新しいファイルがここに表示されます。"
           }
         }
-      }
+      },
+      "comment": "Placeholder: the primary folder's name, usually Downloads."
     },
     "empty.noRecent.title": {
       "comment": "Empty state of the inbox when the watched folders hold nothing recent.",
@@ -695,30 +696,30 @@
       }
     },
     "empty.openDownloads": {
-      "comment": "Button under the empty inbox: opens the folder in Finder.",
+      "comment": "Button under the empty inbox: opens the folder in Finder. Placeholder: the primary folder's name, usually Downloads.",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ordner „Downloads“ öffnen"
+            "value": "Ordner „%@“ öffnen"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open Downloads Folder"
+            "value": "Open %@ Folder"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ouvrir le dossier Téléchargements"
+            "value": "Ouvrir le dossier « %@ »"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "ダウンロードフォルダを開く"
+            "value": "「%@」フォルダを開く"
           }
         }
       }
@@ -951,35 +952,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "未読"
-          }
-        }
-      }
-    },
-    "folder.desktop": {
-      "comment": "The user's Desktop folder, as Finder names it.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Schreibtisch"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Desktop"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bureau"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "デスクトップ"
           }
         }
       }
@@ -1332,8 +1304,37 @@
         }
       }
     },
+    "inbox.footer.history": {
+      "comment": "Footer link button, leading: opens the History list (Pro). Shares one line with 'Mark all seen'.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verlauf"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "History"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Historique"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "履歴"
+          }
+        }
+      }
+    },
     "inbox.footer.markAllSeen": {
-      "comment": "Footer button: clears the unread dots and the badge.",
+      "comment": "Footer button: clears the unread dots and the badge. Shown only while something is unread.",
       "localizations": {
         "de": {
           "stringUnit": {
@@ -1357,35 +1358,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "すべて既読にする"
-          }
-        }
-      }
-    },
-    "inbox.footer.openDownloads": {
-      "comment": "Footer link button, leading. Shares one line with 'Mark all seen'.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Downloads im Finder öffnen"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open Downloads in Finder"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ouvrir Téléchargements"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Finder でダウンロードを開く"
           }
         }
       }
@@ -1705,64 +1677,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "PDF"
-          }
-        }
-      }
-    },
-    "menu.history": {
-      "comment": "Gear menu item (Pro): opens the History list.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Verlauf …"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "History…"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Historique…"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "履歴…"
-          }
-        }
-      }
-    },
-    "menu.pro": {
-      "comment": "Gear menu item for free users: opens the Pro sheet. Keep the brand name.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Downtray Pro …"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Downtray Pro…"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Downtray Pro…"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Downtray Pro…"
           }
         }
       }
@@ -2443,122 +2357,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pro を購入 — %@"
-          }
-        }
-      }
-    },
-    "retention.day": {
-      "comment": "Keep items picker option.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "24 Stunden"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "24 hours"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "24 heures"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "24 時間"
-          }
-        }
-      }
-    },
-    "retention.forever": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Unbegrenzt"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Forever"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Toujours"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ずっと"
-          }
-        }
-      },
-      "comment": "Keep items picker option: files never leave the inbox on their own."
-    },
-    "retention.month": {
-      "comment": "Keep items picker option.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "30 Tage"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "30 days"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "30 jours"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "30 日"
-          }
-        }
-      }
-    },
-    "retention.week": {
-      "comment": "Keep items picker option.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "7 Tage"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "7 days"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "7 jours"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "7 日"
           }
         }
       }
@@ -4005,35 +3803,6 @@
         }
       }
     },
-    "settings.accessNeeded": {
-      "comment": "Row title when macOS denied a folder.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zugriff nötig"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Access needed"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Accès requis"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "アクセスが必要です"
-          }
-        }
-      }
-    },
     "settings.addFolder": {
       "comment": "Opens the folder picker (Pro).",
       "localizations": {
@@ -4059,265 +3828,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "フォルダを追加…"
-          }
-        }
-      }
-    },
-    "settings.alwaysOn": {
-      "comment": "Value next to the Downloads folder: it cannot be turned off.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Immer an"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Always on"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Toujours actif"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "常にオン"
-          }
-        }
-      }
-    },
-    "settings.clearList": {
-      "comment": "Button in Settings › Danger: empties the inbox.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Liste leeren …"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Clear List…"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vider la liste…"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "リストを消去…"
-          }
-        }
-      }
-    },
-    "settings.clearList.body": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Leert den Posteingang. Die Dateien bleiben in ihren Ordnern; neue Dateien erscheinen wieder."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Empties the inbox. Files stay in their folders; new arrivals show up again."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vide la boîte de réception. Les fichiers restent dans leurs dossiers ; les nouvelles arrivées réapparaissent."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "受信箱を空にします。ファイルはフォルダに残り、新しく届いたものは再び表示されます。"
-          }
-        }
-      }
-    },
-    "settings.clearList.confirm.button": {
-      "comment": "Confirmation button.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Liste leeren"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Clear List"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vider la liste"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "リストを消去"
-          }
-        }
-      }
-    },
-    "settings.clearList.confirm.message": {
-      "comment": "Confirmation body.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Es wird keine Datei gelöscht. Der Posteingang beginnt mit der nächsten neuen Datei von vorn."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No file is deleted. The inbox starts again from the next arrival."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aucun fichier n’est supprimé. La boîte de réception repart de la prochaine arrivée."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ファイルは削除されません。次に届いたファイルから受信箱をやり直します。"
-          }
-        }
-      }
-    },
-    "settings.clearList.confirm.title": {
-      "comment": "Confirmation before Clear List.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Liste im Posteingang leeren?"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Clear the inbox list?"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vider la liste de la boîte de réception ?"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "受信箱のリストを消去しますか?"
-          }
-        }
-      }
-    },
-    "settings.danger": {
-      "comment": "Section title: actions that cannot be undone.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Gefahrenzone"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Danger"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zone sensible"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "危険な操作"
-          }
-        }
-      }
-    },
-    "settings.desktop.body": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Auch Dateien anzeigen, die auf dem Schreibtisch landen."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Also list files that land on the Desktop."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Afficher aussi les fichiers qui arrivent sur le Bureau."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "デスクトップに届いたファイルも表示します。"
-          }
-        }
-      }
-    },
-    "settings.desktop.denied": {
-      "comment": "Keep the brand name.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wähle den Schreibtisch-Ordner, damit Downtray ihn überwachen kann."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choose the Desktop folder to let Downtray watch it."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choisissez le dossier Bureau pour que Downtray puisse le surveiller."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Downtray が監視できるように、デスクトップフォルダを選択してください。"
           }
         }
       }
@@ -4444,25 +3954,25 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Der Eingang zeigt die %lld neuesten Dateien aus den überwachten Ordnern."
+            "value": "Der Posteingang zeigt die %lld neuesten Dateien aus diesen Ordnern."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The inbox shows the %lld newest files from the folders it watches."
+            "value": "The inbox shows the %lld newest files from these folders."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "La boîte de réception affiche les %lld fichiers les plus récents des dossiers surveillés."
+            "value": "La boîte de réception affiche les %lld fichiers les plus récents de ces dossiers."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "受信箱には、監視中のフォルダの新しいファイルが %lld 件まで表示されます。"
+            "value": "受信箱にはこれらのフォルダの最新 %lld 件のファイルが表示されます。"
           }
         }
       }
@@ -4496,191 +4006,6 @@
         }
       }
     },
-    "settings.grantAccess": {
-      "comment": "Opens the folder picker that grants access.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zugriff erlauben …"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Grant Access…"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Autoriser l’accès…"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "アクセスを許可…"
-          }
-        }
-      }
-    },
-    "settings.history": {
-      "comment": "Row label.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Verlauf"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "History"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Historique"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "履歴"
-          }
-        }
-      }
-    },
-    "settings.history.clear": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Verlauf löschen"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Clear History"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Effacer l’historique"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "履歴を消去"
-          }
-        }
-      }
-    },
-    "settings.history.count": {
-      "comment": "Placeholder: number of remembered files.",
-      "localizations": {
-        "de": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "1 Datei gemerkt. Die Taste „Verlauf“ im Eingang zeigt sie."
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld Dateien gemerkt. Die Taste „Verlauf“ im Eingang zeigt sie."
-                }
-              }
-            }
-          }
-        },
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "1 file remembered. The History button in the inbox lists them."
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld files remembered. The History button in the inbox lists them."
-                }
-              }
-            }
-          }
-        },
-        "fr": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "1 fichier mémorisé. Le bouton Historique de la boîte de réception l’affiche."
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld fichiers mémorisés. Le bouton Historique de la boîte de réception les affiche."
-                }
-              }
-            }
-          }
-        },
-        "ja": {
-          "variations": {
-            "plural": {
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld 件のファイルを記録しています。受信箱の「履歴」ボタンで一覧できます。"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "settings.history.empty": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Noch keine Dateien gemerkt."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No files remembered yet."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aucun fichier mémorisé pour l’instant."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "記録されたファイルはまだありません。"
-          }
-        }
-      }
-    },
     "settings.hotkey": {
       "comment": "Label of the keyboard shortcut recorder.",
       "localizations": {
@@ -4706,120 +4031,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "受信箱を表示"
-          }
-        }
-      }
-    },
-    "settings.includeFolders": {
-      "comment": "Toggle: list folders that land in a watched folder, not only files.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ordner einbeziehen"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Include folders"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Inclure les dossiers"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "フォルダも含める"
-          }
-        }
-      }
-    },
-    "settings.includeFolders.body": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Auch Ordner auflisten, die in einem überwachten Ordner landen, etwa ein entpackter Download."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Also list folders that land in a watched folder, such as an unzipped download."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Liste aussi les dossiers qui arrivent dans un dossier surveillé, comme un téléchargement décompressé."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "解凍したダウンロードなど、監視中のフォルダに届いたフォルダも一覧に載せます。"
-          }
-        }
-      }
-    },
-    "settings.keepItems": {
-      "comment": "Picker label: how long a file stays in the inbox after it arrived.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Einträge behalten"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Keep items"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Conserver les éléments"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "項目を保持"
-          }
-        }
-      }
-    },
-    "settings.keepItems.body": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ältere Dateien verlassen den Posteingang. Sie bleiben in ihrem Ordner."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Files older than this leave the inbox. They stay in their folder."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Les fichiers plus anciens quittent la boîte de réception. Ils restent dans leur dossier."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "これより古いファイルは受信箱から消えます。ファイルはフォルダに残ります。"
           }
         }
       }
@@ -5026,206 +4237,6 @@
         }
       }
     },
-    "settings.list": {
-      "comment": "Section title: how the inbox list behaves.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Liste"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "List"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Liste"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "リスト"
-          }
-        }
-      }
-    },
-    "settings.markAllRead": {
-      "comment": "Button in Settings › Danger.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Alle als gelesen markieren"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mark All as Read"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tout marquer comme lu"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "すべて既読にする"
-          }
-        }
-      }
-    },
-    "settings.markAllRead.body": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Entfernt alle Ungelesen-Punkte und die Kennzeichnung."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Clears every unread dot and the badge."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Efface tous les points « non lu » et le badge."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "未読の印とバッジをすべて消します。"
-          }
-        }
-      }
-    },
-    "settings.markReadOnClose": {
-      "comment": "Toggle in Settings › List.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sichtbare Dateien beim Schließen als gelesen markieren"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mark visible files as read when the inbox closes"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Marquer les fichiers visibles comme lus à la fermeture"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "受信箱を閉じたとき、表示中のファイルを既読にする"
-          }
-        }
-      }
-    },
-    "settings.moreFolders": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Weitere Ordner"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "More folders"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Autres dossiers"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "その他のフォルダ"
-          }
-        }
-      }
-    },
-    "settings.moreFolders.free": {
-      "comment": "Shown in the free tier; 'Pro:' marks a paid feature.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pro: Beliebige weitere Ordner überwachen."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pro: watch any other folder."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pro : surveiller n’importe quel autre dossier."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pro: 他のフォルダも監視できます。"
-          }
-        }
-      }
-    },
-    "settings.moreFolders.pro": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Beliebige weitere Ordner überwachen, etwa einen Scanner- oder AirDrop-Ordner."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Watch any other folder, such as a scanner or AirDrop target."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Surveillez n’importe quel autre dossier, par exemple celui d’un scanner ou d’AirDrop."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "スキャナや AirDrop の保存先など、他のフォルダも監視できます。"
-          }
-        }
-      }
-    },
     "settings.notifications": {
       "comment": "Toggle for system notifications.",
       "localizations": {
@@ -5255,8 +4266,37 @@
         }
       }
     },
+    "settings.primary.change": {
+      "comment": "Opens the folder picker to move the inbox to another folder.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ändern …"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modifier…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "変更…"
+          }
+        }
+      }
+    },
     "settings.pro": {
-      "comment": "Section title and row label for the paid tier. Usually left as 'Pro'.",
+      "comment": "Row label for the paid tier, the tag next to Add Folder… in the free tier, and the title bar badge once unlocked. Usually left as 'Pro'.",
       "localizations": {
         "de": {
           "stringUnit": {
@@ -5284,145 +4324,31 @@
         }
       }
     },
-    "settings.pro.unlocked": {
-      "comment": "Status next to Pro after purchase.",
+    "settings.pro.badge.help": {
+      "comment": "Tooltip on the Pro badge in the Settings title bar. Keep the brand name.",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Freigeschaltet"
+            "value": "Downtray Pro ist freigeschaltet."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Unlocked"
+            "value": "Downtray Pro is unlocked."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Débloqué"
+            "value": "Downtray Pro est débloqué."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "購入済み"
-          }
-        }
-      }
-    },
-    "settings.quit": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Beenden"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Quit"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Quitter"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "終了"
-          }
-        }
-      }
-    },
-    "settings.quit.body": {
-      "comment": "Keep the ⌘Q glyph.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Auch im Kontextmenü des Menüleistensymbols oder mit ⌘Q, während der Eingang offen ist."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Also in the menu bar icon's right-click menu, or ⌘Q while the inbox is open."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aussi dans le menu contextuel de l’icône de la barre des menus, ou avec ⌘Q quand la boîte de réception est ouverte."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "メニューバーアイコンの右クリックメニュー、または受信箱を開いた状態で ⌘Q でも終了できます。"
-          }
-        }
-      }
-    },
-    "settings.restoreList": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Liste wiederherstellen"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Restore List"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Restaurer la liste"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "リストを復元"
-          }
-        }
-      },
-      "comment": "Button in Settings › Danger: undoes Clear List."
-    },
-    "settings.restoreList.body": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zeigt die Dateien wieder an, die „Liste leeren“ ausgeblendet hat."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lists the files that Clear List hid."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Réaffiche les fichiers masqués par « Vider la liste »."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "「リストを消去」で隠したファイルを再び表示します。"
+            "value": "Downtray Pro は有効です。"
           }
         }
       }
@@ -5457,7 +4383,7 @@
       }
     },
     "settings.showBadge": {
-      "comment": "Toggle in Settings › List.",
+      "comment": "Toggle in Settings › General.",
       "localizations": {
         "de": {
           "stringUnit": {
@@ -5571,31 +4497,31 @@
         }
       }
     },
-    "settings.types.add": {
-      "comment": "Button that saves a new type override.",
+    "settings.types.addType": {
+      "comment": "Opens the sheet for a new type override.",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hinzufügen"
+            "value": "Typ hinzufügen …"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Add"
+            "value": "Add Type…"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ajouter"
+            "value": "Ajouter un type…"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "追加"
+            "value": "種類を追加…"
           }
         }
       }
@@ -5657,160 +4583,118 @@
         }
       }
     },
-    "settings.types.count": {
-      "comment": "Status line. Plural: 1 → '1 override'.",
+    "settings.types.extension": {
+      "comment": "Type override sheet: the file extension field.",
       "localizations": {
         "de": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "1 Regel"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld Regeln"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "Endung"
           }
         },
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "1 override"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld overrides"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extension"
           }
         },
         "fr": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "1 règle"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld règles"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extension"
           }
         },
         "ja": {
-          "variations": {
-            "plural": {
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld 件の上書き"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "拡張子"
           }
         }
       }
     },
-    "settings.types.extension": {
-      "comment": "Placeholder of the extension field, an example extension.",
+    "settings.types.group": {
+      "comment": "Type override sheet: the Type menu group to file the extension under.",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "pdf"
+            "value": "Gruppe"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "pdf"
+            "value": "Group"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "pdf"
+            "value": "Groupe"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "pdf"
+            "value": "グループ"
           }
         }
       }
     },
     "settings.types.new": {
-      "comment": "Row label for adding a type override. Keep the arrow.",
+      "comment": "Row title once at least one override exists.",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Endung → Gruppe"
+            "value": "Neue Regel"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Extension → group"
+            "value": "New override"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Extension → groupe"
+            "value": "Nouvelle règle"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "拡張子 → グループ"
+            "value": "新しいルール"
           }
         }
       }
     },
     "settings.types.none": {
-      "comment": "Status when no type override exists.",
+      "comment": "Row title while the built-in table is untouched.",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Standardtabelle"
+            "value": "Noch keine Regeln"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Built-in table"
+            "value": "No overrides yet"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Table par défaut"
+            "value": "Aucune règle pour l’instant"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "標準の対応表"
+            "value": "ルールはまだありません"
           }
         }
       }
@@ -5844,31 +4728,31 @@
         }
       }
     },
-    "settings.types.reset": {
-      "comment": "Button: removes every type override.",
+    "settings.types.sheetTitle": {
+      "comment": "Title of the sheet that adds a type override.",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Auf Standard zurücksetzen"
+            "value": "Neuer Typ"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reset to Defaults"
+            "value": "New Type"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Rétablir les réglages par défaut"
+            "value": "Nouveau type"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "デフォルトに戻す"
+            "value": "新しい種類"
           }
         }
       }
