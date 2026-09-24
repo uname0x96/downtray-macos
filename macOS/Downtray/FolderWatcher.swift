@@ -5,8 +5,10 @@ import InboxCore
 ///
 /// A `DispatchSource` on the directory wakes a debounced rescan; the rescan diffs the listing
 /// against the last one. New files are held back while they are still being written: partial
-/// download extensions are ignored outright, and any other new file must keep the same size
-/// for three polls 400 ms apart before it is reported as arrived.
+/// download extensions are ignored outright, and any other new file is checked once, 150 ms
+/// later, before it is reported as arrived. Browsers download into a partial file and rename
+/// it when done, so the finished file is what appears and that one check passes. A file still
+/// being copied in (its size moved) is polled until it has held the same size twice.
 ///
 /// Date added comes from `.addedToDirectoryDateKey` (the same value Spotlight exposes as
 /// `kMDItemDateAdded`) and the source host from the `kMDItemWhereFroms` extended attribute, so
@@ -28,9 +30,10 @@ final class FolderWatcher {
     static func isIgnoredName(_ name: String) -> Bool {
         name.hasPrefix("~$") || name.lowercased() == "desktop.ini"
     }
-    static let settlePolls = 3
-    static let settleInterval: Duration = .milliseconds(400)
-    static let debounce: Duration = .milliseconds(150)
+    /// One stable poll reports a finished file; a file whose size moved needs this many.
+    static let settlePollsWhileGrowing = 2
+    static let settleInterval: Duration = .milliseconds(150)
+    static let debounce: Duration = .milliseconds(50)
     /// Only this many newest files are reported on the first scan; the model lists 20 anyway.
     static let initialLimit = 200
 
@@ -105,12 +108,14 @@ final class FolderWatcher {
         }
     }
 
-    /// Waits until the file's size has been stable for three polls, then reports the arrival.
+    /// Reports the arrival once the file's size has stopped moving: one poll for a file that
+    /// was complete when it appeared, more while it is still growing.
     private func settle(_ file: InboxFile) {
         settling[file.id] = Task { @MainActor [weak self] in
             var lastSize = file.size
             var stable = 0
-            while stable < Self.settlePolls {
+            var required = 1
+            while stable < required {
                 try? await Task.sleep(for: Self.settleInterval)
                 guard !Task.isCancelled else { return }
                 guard let attributes = try? FileManager.default.attributesOfItem(atPath: file.path) else {
@@ -118,7 +123,13 @@ final class FolderWatcher {
                     return
                 }
                 let size = (attributes[.size] as? Int64) ?? lastSize
-                if size == lastSize { stable += 1 } else { stable = 0; lastSize = size }
+                if size == lastSize {
+                    stable += 1
+                } else {
+                    stable = 0
+                    lastSize = size
+                    required = Self.settlePollsWhileGrowing
+                }
             }
             guard let self else { return }
             settling[file.id] = nil
