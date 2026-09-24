@@ -356,7 +356,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, Pan
             // The accessory takes the size its view has when the window shows; the hosting
             // view is measured here so a purchase since the last visit is reflected.
             if let badge = window.titlebarAccessoryViewControllers.first?.view {
-                badge.frame.size = badge.fittingSize
+                // As tall as the title bar, so the capsule centers on the title instead of
+                // sitting on the bar's bottom edge.
+                let titleBarHeight = window.frame.height - window.contentLayoutRect.height
+                badge.frame.size = CGSize(width: badge.fittingSize.width, height: max(titleBarHeight, badge.fittingSize.height))
             }
             window.makeKeyAndOrderFront(nil)
         }

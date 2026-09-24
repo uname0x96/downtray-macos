@@ -504,6 +504,7 @@ struct ProBadge: View {
                 .padding(.vertical, 3)
                 .background(Capsule().fill(Color.green.opacity(0.15)))
                 .padding(.trailing, 10)
+                .frame(maxHeight: .infinity, alignment: .center)
                 .help(String(localized: "settings.pro.badge.help", defaultValue: "Downtray Pro is unlocked.", comment: "Tooltip on the Pro badge in the Settings title bar. Keep the brand name."))
                 .accessibilityIdentifier("proBadge")
         }
