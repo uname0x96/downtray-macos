@@ -251,15 +251,12 @@ struct PopoverView: View {
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 1) {
                         Color.clear.frame(height: 0).id(Self.topAnchor)
-                        let sections = model.inboxSections
-                        if sections.isEmpty {
-                            // 1h, Unread and a search show a flat list: one bucket, no headers.
-                            ForEach(model.visibleFiles) { file in inboxRow(file) }
-                        } else {
-                            ForEach(sections, id: \.section) { section in
-                                sectionHeader(section.section.localizedTitle)
-                                    .accessibilityIdentifier("section-\(section.section.rawValue)")
-                                ForEach(section.files) { file in inboxRow(file) }
+                        ForEach(inboxItems) { item in
+                            switch item {
+                            case .header(let title, let id):
+                                sectionHeader(title).accessibilityIdentifier(id)
+                            case .file(let file):
+                                inboxRow(file)
                             }
                         }
                         if model.hasOlderFiles {
@@ -295,15 +292,51 @@ struct PopoverView: View {
 
     private static let topAnchor = "top"
 
+    /// Headers and rows as one flat list for one `ForEach`. Nested `ForEach`es (one per
+    /// section) gave a file that moved to another section, say from Just now to Yesterday on
+    /// reopening after midnight, a second row with the same id in a new container, and the
+    /// `LazyVStack` kept drawing the old one: its unread dot survived Mark all seen. With one
+    /// container the row keeps one identity and just moves. 1h, Unread and a search show a
+    /// flat list: no headers.
+    private var inboxItems: [ListItem] {
+        let sections = model.inboxSections
+        if sections.isEmpty { return model.visibleFiles.map(ListItem.file) }
+        return sections.flatMap { section in
+            [.header(section.section.localizedTitle, id: "section-\(section.section.rawValue)")]
+                + section.files.map(ListItem.file)
+        }
+    }
+
+    private var historyItems: [ListItem] {
+        historySections.flatMap { section in
+            [.header(Self.sectionTitle(for: section.day, today: model.today), id: "day-\(section.day.timeIntervalSince1970)")]
+                + section.files.map(ListItem.file)
+        }
+    }
+
+    enum ListItem: Identifiable {
+        case header(String, id: String)
+        case file(InboxFile)
+
+        var id: String {
+            switch self {
+            case .header(_, let id): return id
+            case .file(let file): return file.id
+            }
+        }
+    }
+
+    /// No explicit `.id()`: the `ForEach` identifies the row by the file's path, which is what
+    /// `scrollTo` uses.
     private func inboxRow(_ file: InboxFile) -> some View {
         FileRowView(
             file: file,
+            now: model.now,
             showFolder: model.duplicateNames.contains(file.name),
             selected: model.selection.contains(file.id),
             focused: model.focused == file.id,
             actions: RowActions(presenter: presenter, file: file, selection: model.selection)
         )
-        .id(file.id)
     }
 
     private func sectionHeader(_ title: String) -> some View {
@@ -322,25 +355,24 @@ struct PopoverView: View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 1, pinnedViews: []) {
-                    ForEach(historySections, id: \.day) { section in
-                        sectionHeader(Self.sectionTitle(for: section.day, today: model.today))
-                        ForEach(section.files) { file in
-                            if file.missing {
-                                GoneRowView(file: file, focused: model.focused == file.id) {
-                                    presenter.dispatch(.removeFromHistory(file.id))
-                                }
-                                .id(file.id)
-                            } else {
-                                FileRowView(
-                                    file: file,
-                                    showFolder: model.duplicateNames.contains(file.name),
-                                    showUnread: false,
-                                    selected: model.selection.contains(file.id),
-                                    focused: model.focused == file.id,
-                                    actions: RowActions(presenter: presenter, file: file, selection: model.selection)
-                                )
-                                .id(file.id)
+                    ForEach(historyItems) { item in
+                        switch item {
+                        case .header(let title, _):
+                            sectionHeader(title)
+                        case .file(let file) where file.missing:
+                            GoneRowView(file: file, focused: model.focused == file.id) {
+                                presenter.dispatch(.removeFromHistory(file.id))
                             }
+                        case .file(let file):
+                            FileRowView(
+                                file: file,
+                                now: model.now,
+                                showFolder: model.duplicateNames.contains(file.name),
+                                showUnread: false,
+                                selected: model.selection.contains(file.id),
+                                focused: model.focused == file.id,
+                                actions: RowActions(presenter: presenter, file: file, selection: model.selection)
+                            )
                         }
                     }
                 }
@@ -566,6 +598,9 @@ struct RowActions {
 
 struct FileRowView: View {
     let file: InboxFile
+    /// The moment the panel opened. The meta line's relative time is formatted from the clock,
+    /// so this is here only to make the row render again on reopen instead of keeping "now".
+    let now: Date
     let showFolder: Bool
     /// History shows no dots; the column stays so both lists share one row shape.
     var showUnread = true
