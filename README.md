@@ -110,3 +110,7 @@ extra folders, 200-file list, searchable history, rules, unlocked through StoreK
 Icon, privacy manifest, usage strings, four languages and a signed App Store export are in place. Running the app from the
 Xcode scheme uses `macOS/Downtray/Pro.storekit` for a local sandbox purchase; a build
 launched any other way reports "Pro is not available in this build" and stays free.
+
+## License
+
+MIT. See `LICENSE`.
