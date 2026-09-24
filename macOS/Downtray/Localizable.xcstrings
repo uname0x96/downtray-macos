@@ -4497,37 +4497,8 @@
         }
       }
     },
-    "settings.types.add": {
-      "comment": "Button that saves a new type override.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hinzufügen"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ajouter"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "追加"
-          }
-        }
-      }
-    },
     "settings.types.addType": {
-      "comment": "Button that reveals the row for a new type override.",
+      "comment": "Opens the sheet for a new type override.",
       "localizations": {
         "de": {
           "stringUnit": {
@@ -4613,30 +4584,117 @@
       }
     },
     "settings.types.extension": {
-      "comment": "Placeholder of the extension field, an example extension.",
+      "comment": "Type override sheet: the file extension field.",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "pdf"
+            "value": "Endung"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "pdf"
+            "value": "Extension"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "pdf"
+            "value": "Extension"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "pdf"
+            "value": "拡張子"
+          }
+        }
+      }
+    },
+    "settings.types.group": {
+      "comment": "Type override sheet: the Type menu group to file the extension under.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gruppe"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Group"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Groupe"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "グループ"
+          }
+        }
+      }
+    },
+    "settings.types.new": {
+      "comment": "Row title once at least one override exists.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neue Regel"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New override"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nouvelle règle"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新しいルール"
+          }
+        }
+      }
+    },
+    "settings.types.none": {
+      "comment": "Row title while the built-in table is untouched.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch keine Regeln"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No overrides yet"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucune règle pour l’instant"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ルールはまだありません"
           }
         }
       }
@@ -4666,6 +4724,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "この上書きを削除"
+          }
+        }
+      }
+    },
+    "settings.types.sheetTitle": {
+      "comment": "Title of the sheet that adds a type override.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neuer Typ"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Type"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nouveau type"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新しい種類"
           }
         }
       }

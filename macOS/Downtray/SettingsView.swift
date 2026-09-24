@@ -93,13 +93,11 @@ struct SettingsView: View {
 
     // MARK: Types
 
-    @State private var newExtension = ""
-    @State private var newGroup: TypeGroup = .docs
     @State private var addingType = false
 
     /// Which group the Type menu files an extension under, when the built-in table is wrong
-    /// for this user (a `.key` that is a license, not a Keynote deck). Laid out like Folders:
-    /// one row per override, and an Add Type… button that turns into the entry row.
+    /// for this user (a `.key` that is a license, not a Keynote deck). Laid out like Rules:
+    /// one row per override, then a row whose Add Type… button opens a small sheet.
     @ViewBuilder
     private var typesSection: some View {
         Section {
@@ -122,50 +120,24 @@ struct SettingsView: View {
                 }
                 .accessibilityIdentifier("typeOverride-\(ext)")
             }
-            if addingType {
-                HStack(spacing: 8) {
-                    // In a grouped form a text field's title becomes a label beside it; the
-                    // example extension is wanted inside the field, so it is a prompt.
-                    TextField("", text: $newExtension, prompt: Text(String(localized: "settings.types.extension", defaultValue: "pdf", comment: "Placeholder of the extension field, an example extension.")))
-                        .labelsHidden()
-                        .multilineTextAlignment(.leading)
-                        .textFieldStyle(.roundedBorder)
-                        .frame(width: 80)
-                        .onSubmit(addOverride)
-                        .accessibilityIdentifier("newExtension")
-                    Picker("", selection: $newGroup) {
-                        ForEach(TypeGroup.allCases, id: \.self) { Text($0.localizedTitle).tag($0) }
-                    }
-                    .labelsHidden()
-                    .fixedSize()
-                    Spacer()
-                    Button(String(localized: "common.cancel", defaultValue: "Cancel")) { cancelAddingType() }
-                        .keyboardShortcut(.cancelAction)
-                    Button(String(localized: "settings.types.add", defaultValue: "Add", comment: "Button that saves a new type override."), action: addOverride)
-                        .disabled(newExtension.trimmingCharacters(in: CharacterSet(charactersIn: ". ")).isEmpty)
-                        .accessibilityIdentifier("addOverride")
-                }
-            } else {
-                Button(String(localized: "settings.types.addType", defaultValue: "Add Type…", comment: "Button that reveals the row for a new type override.")) { addingType = true }
+            LabeledContent {
+                Button(String(localized: "settings.types.addType", defaultValue: "Add Type…", comment: "Opens the sheet for a new type override.")) { addingType = true }
                     .accessibilityIdentifier("addType")
+            } label: {
+                Text(model.settings.typeOverrides.isEmpty
+                     ? String(localized: "settings.types.none", defaultValue: "No overrides yet", comment: "Row title while the built-in table is untouched.")
+                     : String(localized: "settings.types.new", defaultValue: "New override", comment: "Row title once at least one override exists."))
+                Text(String(localized: "settings.types.body", defaultValue: "Decide which group the Type menu files an extension under.")).foregroundStyle(.secondary)
             }
         } header: {
             Text(String(localized: "settings.types", defaultValue: "Types", comment: "Section title: the extension-to-group table behind the Type menu."))
-        } footer: {
-            Text(String(localized: "settings.types.body", defaultValue: "Decide which group the Type menu files an extension under."))
         }
-    }
-
-    private func addOverride() {
-        let ext = newExtension.trimmingCharacters(in: CharacterSet(charactersIn: ". ")).lowercased()
-        guard !ext.isEmpty else { return }
-        presenter.dispatch(.setTypeOverride(ext, newGroup))
-        cancelAddingType()
-    }
-
-    private func cancelAddingType() {
-        newExtension = ""
-        addingType = false
+        .sheet(isPresented: $addingType) {
+            TypeOverrideEditor { ext, group in
+                if let ext { presenter.dispatch(.setTypeOverride(ext, group)) }
+                addingType = false
+            }
+        }
     }
 
     // MARK: Quit
@@ -535,5 +507,49 @@ struct ProBadge: View {
                 .help(String(localized: "settings.pro.badge.help", defaultValue: "Downtray Pro is unlocked.", comment: "Tooltip on the Pro badge in the Settings title bar. Keep the brand name."))
                 .accessibilityIdentifier("proBadge")
         }
+    }
+}
+
+/// The sheet behind Add Type…: an extension and the group it belongs to.
+struct TypeOverrideEditor: View {
+    @State private var extensionText = ""
+    @State private var group: TypeGroup = .docs
+    let finish: (String?, TypeGroup) -> Void
+
+    private var cleaned: String {
+        extensionText.trimmingCharacters(in: CharacterSet(charactersIn: ". ")).lowercased()
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Form {
+                Section {
+                    TextField(String(localized: "settings.types.extension", defaultValue: "Extension", comment: "Type override sheet: the file extension field."), text: $extensionText, prompt: Text(verbatim: "pdf"))
+                        .accessibilityIdentifier("newExtension")
+                        .onSubmit { if !cleaned.isEmpty { finish(cleaned, group) } }
+                    Picker(String(localized: "settings.types.group", defaultValue: "Group", comment: "Type override sheet: the Type menu group to file the extension under."), selection: $group) {
+                        ForEach(TypeGroup.allCases, id: \.self) { Text($0.localizedTitle).tag($0) }
+                    }
+                } header: {
+                    Text(String(localized: "settings.types.sheetTitle", defaultValue: "New Type", comment: "Title of the sheet that adds a type override."))
+                } footer: {
+                    if !cleaned.isEmpty {
+                        Text(String(localized: "settings.types.builtIn", defaultValue: "Built in: \(TypeGroup.forExtension(cleaned).localizedTitle)"))
+                    }
+                }
+            }
+            .formStyle(.grouped)
+            HStack {
+                Button(String(localized: "common.cancel", defaultValue: "Cancel"), role: .cancel) { finish(nil, group) }
+                    .keyboardShortcut(.cancelAction)
+                Spacer()
+                Button(String(localized: "common.add", defaultValue: "Add")) { finish(cleaned, group) }
+                    .keyboardShortcut(.defaultAction)
+                    .disabled(cleaned.isEmpty)
+                    .accessibilityIdentifier("addOverride")
+            }
+            .padding()
+        }
+        .frame(width: 440, height: 200)
     }
 }
