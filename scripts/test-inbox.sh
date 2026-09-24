@@ -152,14 +152,15 @@ headless_scenario() {
     send "move archive.zip"
     expect '(.rows | map(.name) | index("archive.zip")) == null and (.toast.message | startswith("Moved archive.zip to Documents"))'
 
-    send "arrive desktop/notes.pdf 3k"
-    expect '(.rows | map(.name) | index("notes.pdf")) == null' "desktop is not watched by default"
-    send "desktop on"
-    expect '.settings.watchDesktop and (.folders[] | select(.kind == "desktop") | .enabled)'
-    send "arrive desktop/notes.pdf 3k"
-    expect "$(row notes.pdf) | .folder == \"Desktop\""
-    send "arrive notes.pdf 4k"
-    expect '[.rows[] | select(.name == "notes.pdf")] | length == 2 and all(.showFolder)' "duplicate names show their folder"
+    # The primary folder can move (free tier). The picker is scripted with `pick`.
+    send "pick /Users/sample/Inbox"
+    send "folder change"
+    expect '(.folders | length) == 1 and .folders[0].path == "/Users/sample/Inbox" and .folders[0].title == "Inbox" and .rows == []' "moving the primary folder drops the old folder's rows"
+    send "arrive notes.pdf 3k"
+    expect "$(row notes.pdf) | .folder == \"Inbox\"" "arrivals now come from the new folder"
+    send "pick /Users/sample/Downloads"
+    send "folder change"
+    expect '.folders[0].path == "/Users/sample/Downloads" and (.rows | map(.name) | index("notes.pdf")) == null and (.rows | length) > 0' "moving back rescans Downloads"
 
     send "hotkey-set cmd+shift+space"
     expect '.settings.hotkey == "⇧⌘Space"'
@@ -242,8 +243,10 @@ headless_scenario() {
     send "rule remove Receipts"
     expect '.settings.rules == []'
 
+    send "arrive scan.pdf 4k"
+    expect '[.rows[] | select(.name == "scan.pdf")] | length == 2 and all(.showFolder)' "duplicate names show their folder"
     send "folder remove Scans"
-    expect '.settings.extraFolders == [] and (.rows | map(.name) | index("scan.pdf")) == null' "removing the folder drops its rows"
+    expect '.settings.extraFolders == [] and ([.rows[] | select(.name == "scan.pdf")] | length == 1 and .[0].folder == "Downloads")' "removing the folder drops its rows"
     send "history clear"
     expect '.historyCount == 0'
     send "pro off"

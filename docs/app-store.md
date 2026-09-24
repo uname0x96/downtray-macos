@@ -65,7 +65,8 @@ Only possible in App Store Connect (account owner):
 Still worth doing before submitting:
 
 - [ ] Run the Release build on a second Mac or a fresh user account: first-launch Downloads
-      prompt, Desktop grant, login item approval, notification permission, a purchase with a
+      prompt, moving the primary folder with Change…, login item approval, notification
+      permission, a purchase with a
       Sandbox tester.
 - [ ] Look at the Pro screens (Settings > Rules, the rule editor sheet, and the Pro sheet in
       the popover) and adjust spacing and copy. The History panel was reworked per

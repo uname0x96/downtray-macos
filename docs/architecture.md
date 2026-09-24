@@ -65,7 +65,7 @@ Mobius.swift is used as the loop runtime, not as the design. The design is the r
 |---|---|
 | `loadSettings` / `saveSettings` | `UserDefaults` (JSON), login item state read from `SMAppService`. |
 | `startWatching` / `stopWatching` | `FolderWatcher`: `DispatchSource` on the directory, 50 ms debounce, rescan with `.addedToDirectoryDateKey`; partial downloads (`.download`, `.crdownload`, `.part`, `.tmp`) are skipped and a new file is reported after one size check 150 ms later (a file still growing is polled until its size holds twice), so a finished download is in the list about 200 ms after it appears. Source comes from the `kMDItemWhereFroms` xattr; AirDrop is inferred when a file lands in Downloads without it. |
-| `requestAccess` | `NSOpenPanel` on the folder; the choice is kept as a security-scoped bookmark. |
+| `requestAccess` | `NSOpenPanel` on the folder; the choice is kept as a security-scoped bookmark. For the primary folder this is also "Change…": the chosen folder replaces Downloads at the next `folderAccessChanged`, whose new path drops the old folder's rows and starts the watcher on the new one. |
 | `openFiles`, `reveal`, `openFolder` | `NSWorkspace`. Opening goes through Gatekeeper like Finder. |
 | `quickLook` | `QLPreviewPanel` hosted by the popover's `NSHostingController`; the popover stops being transient while the panel is up. |
 | `copyToPasteboard` | `NSPasteboard`. |
@@ -121,8 +121,12 @@ error: extra folders (`addFolder`, `removeFolder`), a 200-file list with a name 
 `checkProStatus`, and `proStatusChanged` overwrites the saved flag either way, so a stale
 "unlocked" flag cannot outlive a refund.
 
-- **Extra folders** are `FolderKind.custom(path)` (the raw value is the absolute path). They
-  join `folders` at load from `settings.extraFolders` and are watched like Downloads.
+- **The primary folder** is `FolderKind.downloads`. It starts as `~/Downloads` and the free
+  tier can move it anywhere (Settings › Folders › Change…); the bookmark stored under
+  "downloads" carries the choice across launches and the row takes the folder's name.
+- **Extra folders** (Pro) are `FolderKind.custom(path)` (the raw value is the absolute path).
+  They join `folders` at load from `settings.extraFolders` and are watched like the primary
+  folder. Moving the primary folder onto an extra folder folds the two rows into one.
 - **History** is `[HistoryEntry]`, one line per file that ever arrived in a watched folder
   (path, size, kind, source, date), recorded in `fileArrived` and saved after each arrival. In
   history mode the same panel gets its own chrome per `specs/history-spec.md`: a back button,
@@ -157,8 +161,9 @@ the attached target sees real files.
 
 Filter lines: `filter all|1h|today|unread`, `type any|docs|images|media|archives|apps`,
 `type map <ext> <group|none>`, `type reset`, `search <text>`. Row actions: `open`, `reveal`,
-`copy-path`, `copy-name`, `read`, `unread`, `trash`, `move`, `unzip`. Settings: `folders on|off`,
-`keep day|week|month|forever`, `read-on-close on|off`, `badge on|off`, `clear-list`, `restore-list`, `seen` (mark all).
+`copy-path`, `copy-name`, `read`, `unread`, `trash`, `move`, `unzip`. Settings: `folder change`
+(the primary folder; headless: the last `pick`), `folders on|off`, `keep day|week|month|forever`,
+`read-on-close on|off`, `badge on|off`, `clear-list`, `restore-list`, `seen` (mark all).
 
 Pro events have their own lines: `pro on|off` (stands in for the store), `folder add`,
 `folder remove <name>`, `history on|off|all|available|gone|clear`, `forget <file>`, `search <text>`,

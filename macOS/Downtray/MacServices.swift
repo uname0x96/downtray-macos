@@ -27,7 +27,8 @@ final class MacServices: InboxServices {
     private var watchers: [FolderKind: FolderWatcher] = [:]
     private let hotkeys = HotkeyCenter()
     private let notifications = NotificationRelay()
-    /// Security-scoped URLs currently being accessed, per folder (Desktop; Downloads if re-granted).
+    /// Security-scoped URLs currently being accessed, per folder (the primary folder once it was
+    /// chosen through the panel, and every Pro folder).
     private var scopedURLs: [FolderKind: URL] = [:]
 
     private enum Keys {
@@ -174,8 +175,8 @@ final class MacServices: InboxServices {
         panel.canChooseFiles = false
         panel.allowsMultipleSelection = false
         panel.canCreateDirectories = false
-        panel.prompt = String(localized: "access.prompt", defaultValue: "Grant Access", comment: "Folder picker button. Keep short.")
-        panel.message = String(localized: "access.message", defaultValue: "Downtray needs access to your \(kind.localizedTitle) folder to list new files.", comment: "Folder picker heading. Placeholder: Downloads or Desktop. Keep the brand name.")
+        panel.prompt = String(localized: "access.prompt", defaultValue: "Choose", comment: "Folder picker button. Keep short.")
+        panel.message = String(localized: "access.message", defaultValue: "Choose the folder Downtray lists new files from. Downloads is the usual choice.", comment: "Folder picker heading, both for the first grant and for moving the inbox to another folder. Keep the brand name.")
         if let standard { panel.directoryURL = URL(fileURLWithPath: standard) }
         NSApp.activate()
         let response = await panel.begin()

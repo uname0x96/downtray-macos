@@ -11,33 +11,7 @@ struct SettingsView: View {
     var body: some View {
         Form {
             Section {
-                LabeledContent {
-                    Text(String(localized: "settings.alwaysOn", defaultValue: "Always on", comment: "Value next to the Downloads folder: it cannot be turned off.")).foregroundStyle(.secondary)
-                } label: {
-                    Text(FolderKind.downloads.localizedTitle)
-                    Text(Self.displayPath(model.downloads?.path)).foregroundStyle(.secondary)
-                }
-                if model.downloads?.access == .denied {
-                    LabeledContent {
-                        Button(String(localized: "settings.grantAccess", defaultValue: "Grant Access…", comment: "Opens the folder picker that grants access.")) { presenter.dispatch(.grantAccess(.downloads)) }
-                    } label: {
-                        Text(String(localized: "settings.accessNeeded", defaultValue: "Access needed", comment: "Row title when macOS denied a folder."))
-                        Text(String(localized: "settings.downloads.denied", defaultValue: "macOS has not allowed Downtray to read this folder.", comment: "Keep the brand name.")).foregroundStyle(.secondary)
-                    }
-                }
-                Toggle(isOn: binding(\.watchDesktop) { .setWatchDesktop($0) }) {
-                    Text(FolderKind.desktop.localizedTitle)
-                    Text(String(localized: "settings.desktop.body", defaultValue: "Also list files that land on the Desktop.")).foregroundStyle(.secondary)
-                }
-                .toggleStyle(.switch)
-                if model.folder(.desktop)?.access == .denied {
-                    LabeledContent {
-                        Button(String(localized: "settings.grantAccess", defaultValue: "Grant Access…")) { presenter.dispatch(.grantAccess(.desktop)) }
-                    } label: {
-                        Text(String(localized: "settings.accessNeeded", defaultValue: "Access needed"))
-                        Text(String(localized: "settings.desktop.denied", defaultValue: "Choose the Desktop folder to let Downtray watch it.", comment: "Keep the brand name.")).foregroundStyle(.secondary)
-                    }
-                }
+                primaryFolderRow
                 ForEach(model.customFolders, id: \.kind) { folder in
                     LabeledContent {
                         Button {
@@ -57,25 +31,17 @@ struct SettingsView: View {
                     }
                 }
                 LabeledContent {
+                    if !model.isPro {
+                        Text(String(localized: "settings.pro", defaultValue: "Pro")).foregroundStyle(.secondary)
+                    }
+                } label: {
                     Button(String(localized: "settings.addFolder", defaultValue: "Add Folder…", comment: "Opens the folder picker (Pro).")) { presenter.dispatch(.addFolder) }
                         .accessibilityIdentifier("addFolder")
-                } label: {
-                    Text(String(localized: "settings.moreFolders", defaultValue: "More folders"))
-                    Text(model.isPro
-                         ? String(localized: "settings.moreFolders.pro", defaultValue: "Watch any other folder, such as a scanner or AirDrop target.")
-                         : String(localized: "settings.moreFolders.free", defaultValue: "Pro: watch any other folder.", comment: "Shown in the free tier; 'Pro:' marks a paid feature."))
-                        .foregroundStyle(.secondary)
                 }
-                Toggle(isOn: binding(\.includeFolders) { .setIncludeFolders($0) }) {
-                    Text(String(localized: "settings.includeFolders", defaultValue: "Include folders", comment: "Toggle: list folders that land in a watched folder, not only files."))
-                    Text(String(localized: "settings.includeFolders.body", defaultValue: "Also list folders that land in a watched folder, such as an unzipped download.")).foregroundStyle(.secondary)
-                }
-                .toggleStyle(.switch)
-                .accessibilityIdentifier("includeFolders")
             } header: {
                 Text(String(localized: "settings.folders", defaultValue: "Folders", comment: "Section title."))
             } footer: {
-                Text(String(localized: "settings.folders.footer", defaultValue: "The inbox shows the \(model.effectiveListLimit) newest files from the folders it watches.", comment: "Placeholder: 20 in the free tier, 200 with Pro."))
+                Text(String(localized: "settings.folders.footer", defaultValue: "The inbox shows the \(model.effectiveListLimit) newest files from these folders.", comment: "Placeholder: 20 in the free tier, 200 with Pro."))
             }
 
             listSection
@@ -108,6 +74,26 @@ struct SettingsView: View {
         .navigationTitle(String(localized: "settings.title", defaultValue: "Downtray Settings", comment: "Window title. Keep the brand name."))
     }
 
+    // MARK: Folders
+
+    /// The folder the inbox lists: Downloads by default, any folder the user picks with Change….
+    /// The same button re-opens the picker when macOS denied access.
+    @ViewBuilder
+    private var primaryFolderRow: some View {
+        let folder = model.downloads
+        let denied = folder?.access == .denied
+        LabeledContent {
+            Button(String(localized: "settings.primary.change", defaultValue: "Change…", comment: "Opens the folder picker to move the inbox to another folder.")) { presenter.dispatch(.grantAccess(.downloads)) }
+                .accessibilityIdentifier("changeFolder")
+        } label: {
+            Text(folder?.localizedTitle ?? FolderKind.downloads.localizedTitle)
+            Text(denied
+                 ? String(localized: "settings.downloads.denied", defaultValue: "macOS has not allowed Downtray to read this folder.", comment: "Keep the brand name.")
+                 : Self.displayPath(folder?.path))
+                .foregroundStyle(denied ? Color.orange : Color.secondary)
+        }
+    }
+
     // MARK: List, appearance
 
     /// How long an item stays, and the two behaviours around reading.
@@ -132,6 +118,12 @@ struct SettingsView: View {
             }
             .toggleStyle(.switch)
             .accessibilityIdentifier("showBadge")
+            Toggle(isOn: binding(\.includeFolders) { .setIncludeFolders($0) }) {
+                Text(String(localized: "settings.includeFolders", defaultValue: "Include folders", comment: "Toggle: list folders that land in a watched folder, not only files."))
+                Text(String(localized: "settings.includeFolders.body", defaultValue: "Also list folders that land in a watched folder, such as an unzipped download.")).foregroundStyle(.secondary)
+            }
+            .toggleStyle(.switch)
+            .accessibilityIdentifier("includeFolders")
         } header: {
             Text(String(localized: "settings.list", defaultValue: "List", comment: "Section title: how the inbox list behaves."))
         }

@@ -80,7 +80,6 @@ public enum Event: Equatable, Sendable {
 
     // MARK: Settings
 
-    case setWatchDesktop(Bool)
     case setLaunchAtLogin(Bool)
     case setHotkey(Hotkey)
     case setNotifications(Bool)

@@ -11,7 +11,7 @@ private func recordFailure(_ message: String, _ file: StaticString, _ line: UInt
 }
 
 let downloads = "/Users/sample/Downloads"
-let desktop = "/Users/sample/Desktop"
+let scans = "/Users/sample/Scans"
 let today = Calendar.current.date(from: DateComponents(year: 2026, month: 9, day: 23))!
 
 func file(_ name: String, minutesAgo: Double = 0, size: Int64 = 1024, folder: String = downloads,
@@ -41,9 +41,9 @@ func model(_ files: [InboxFile] = [], open: Bool = false) -> InboxModel {
         fresh.loaded = true
         spec.given(fresh).when(.launched).then(assertThatNext(hasNoEffects(), failFunction: recordFailure))
 
-        let settings = Settings(watchDesktop: true, proUnlocked: false)
+        let settings = Settings(proUnlocked: false)
         spec.given(model()).when(.settingsLoaded(settings, folders: WatchedFolder.sample())).then { result in
-            #expect(result.model.folder(.desktop)?.enabled == true)
+            #expect(result.model.folders.map(\.kind) == [.downloads])
             #expect(result.lastNext.effects == [
                 .startWatching(result.model.folders),
                 .registerHotkey(.default),
@@ -419,22 +419,50 @@ func model(_ files: [InboxFile] = [], open: Bool = false) -> InboxModel {
         }
     }
 
-    @Test func desktopFilesOnlyShowWhenDesktopIsWatched() {
-        let m = model([file("a.pdf"), file("note.txt", folder: desktop)])
-        #expect(m.visibleFiles.map(\.name) == ["a.pdf"])
-        spec.given(m).when(.setWatchDesktop(true)).then { result in
-            #expect(result.model.visibleFiles.map(\.name) == ["a.pdf", "note.txt"])
-            #expect(result.lastNext.effects == [.saveSettings(result.model.settings), .requestAccess(.desktop)])
+    @Test func changingThePrimaryFolderSwapsItsRows() {
+        var m = model([file("a.pdf"), file("b.zip")])
+        m.panelOpen = true
+        m.focused = m.files.keys.sorted().first
+        let inbox = "/Users/sample/Inbox"
+        spec.given(m).when(.folderAccessChanged(.downloads, .granted, path: inbox)).then { result in
+            #expect(result.model.downloads?.path == inbox)
+            #expect(result.model.downloads?.title == "Inbox")
+            #expect(result.model.visibleFiles.isEmpty)
+            #expect(result.model.focused == nil)
+            #expect(result.lastNext.effects == [.startWatching([result.model.downloads!])])
+        }
+        // Cancelling the picker changes nothing.
+        spec.given(m).when(.folderAccessChanged(.downloads, .denied, path: nil)).then { result in
+            #expect(result.model.downloads?.path == downloads)
+            #expect(result.model.visibleFiles.map(\.name) == ["a.pdf", "b.zip"])
+            #expect(result.lastNext.effects.isEmpty)
+        }
+    }
+
+    @Test func movingThePrimaryFolderOntoAnExtraFolderFoldsThemTogether() {
+        var m = model([file("a.pdf"), file("scan.pdf", folder: scans)])
+        m.settings.proUnlocked = true
+        m.settings.extraFolders = [scans]
+        m.folders.append(.custom(scans))
+        spec.given(m).when(.folderAccessChanged(.downloads, .granted, path: scans)).then { result in
+            #expect(result.model.folders.map(\.kind) == [.downloads])
+            #expect(result.model.settings.extraFolders.isEmpty)
+            #expect(result.model.visibleFiles.map(\.name) == ["scan.pdf"])
+            #expect(result.lastNext.effects == [
+                .stopWatching(.custom(scans)),
+                .saveSettings(result.model.settings),
+                .startWatching([result.model.downloads!]),
+            ])
         }
     }
 
     @Test func duplicateNamesAreFlagged() {
-        let m = model([file("a.pdf"), file("a.pdf", folder: desktop)])
-        var withDesktop = m
-        withDesktop.folders[1].enabled = true
+        let m = model([file("a.pdf"), file("a.pdf", folder: scans)])
+        var withScans = m
+        withScans.folders.append(.custom(scans))
         #expect(m.duplicateNames.isEmpty)
-        #expect(withDesktop.duplicateNames == ["a.pdf"])
-        #expect(withDesktop.snapshot.rows.map(\.showFolder) == [true, true])
+        #expect(withScans.duplicateNames == ["a.pdf"])
+        #expect(withScans.snapshot.rows.map(\.showFolder) == [true, true])
     }
 
     // MARK: Selection and focus

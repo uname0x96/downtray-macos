@@ -48,7 +48,6 @@ public struct Snapshot: Codable, Equatable, Sendable {
         public let launchAtLogin: Bool
         public let hotkey: String
         public let notifications: Bool
-        public let watchDesktop: Bool
         public let includeFolders: Bool
         /// "day", "week", "month" or "forever".
         public let retention: String
@@ -157,7 +156,6 @@ public struct Snapshot: Codable, Equatable, Sendable {
             launchAtLogin: model.settings.launchAtLogin,
             hotkey: model.settings.hotkey.display,
             notifications: model.settings.notificationsEnabled,
-            watchDesktop: model.settings.watchDesktop,
             includeFolders: model.settings.includeFolders,
             retention: model.settings.retention.rawValue,
             listCleared: model.settings.listClearedAt != nil,

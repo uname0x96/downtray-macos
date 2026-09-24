@@ -256,6 +256,7 @@ struct PopoverView: View {
             EmptyStateView(
                 state: empty,
                 inHistory: model.historyMode,
+                folderName: primaryFolderName,
                 grant: { presenter.dispatch(.grantAccess(.downloads)) },
                 openDownloads: { presenter.dispatch(.openWatchedFolder(.downloads)) }
             )
@@ -399,11 +400,15 @@ struct PopoverView: View {
 
     // MARK: Footer
 
+    private var primaryFolderName: String {
+        model.downloads?.localizedTitle ?? FolderKind.downloads.localizedTitle
+    }
+
     /// Exactly two text buttons. History is not a footer link: it lives behind the gear (Pro)
     /// and the "Show older files" row.
     private var footer: some View {
         HStack {
-            Button(String(localized: "inbox.footer.openDownloads", defaultValue: "Open Downloads in Finder", comment: "Footer link button, leading. Shares one line with 'Mark all seen'.")) { presenter.dispatch(.openWatchedFolder(.downloads)) }
+            Button(String(localized: "inbox.footer.openDownloads", defaultValue: "Open \(primaryFolderName) in Finder", comment: "Footer link button, leading. Placeholder: the primary folder's name, usually Downloads. Shares one line with 'Mark all seen'.")) { presenter.dispatch(.openWatchedFolder(.downloads)) }
             Spacer()
             Button(String(localized: "inbox.footer.markAllSeen", defaultValue: "Mark all seen", comment: "Footer button: clears the unread dots and the badge.")) { presenter.dispatch(.markAllSeen) }
                 .disabled(model.unreadCount == 0)
@@ -791,6 +796,8 @@ struct EmptyStateView: View {
     let state: EmptyState
     /// History keeps its own wording for "No matches"; the inbox adds a hint.
     var inHistory = false
+    /// The primary folder's name, for the wording of "nothing new" and "open folder".
+    var folderName = "Downloads"
     let grant: () -> Void
     var openDownloads: (() -> Void)? = nil
 
@@ -814,10 +821,10 @@ struct EmptyStateView: View {
             case .nothingNew:
                 Text(String(localized: "empty.noRecent.title", defaultValue: "No recent downloads", comment: "Empty state of the inbox when the watched folders hold nothing recent."))
                     .font(.headline)
-                Text(String(localized: "empty.noRecent.body", defaultValue: "New files in Downloads will show up here."))
+                Text(String(localized: "empty.noRecent.body", defaultValue: "New files in \(folderName) will show up here.", comment: "Placeholder: the primary folder's name, usually Downloads."))
                     .foregroundStyle(.secondary)
                 if let openDownloads {
-                    Button(String(localized: "empty.openDownloads", defaultValue: "Open Downloads Folder", comment: "Button under the empty inbox: opens the folder in Finder."), action: openDownloads)
+                    Button(String(localized: "empty.openDownloads", defaultValue: "Open \(folderName) Folder", comment: "Button under the empty inbox: opens the folder in Finder. Placeholder: the primary folder's name, usually Downloads."), action: openDownloads)
                         .accessibilityIdentifier("openDownloads")
                 }
             case .nothingLastHour:

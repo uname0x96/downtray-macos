@@ -246,17 +246,17 @@ public enum HistoryFilter: String, CaseIterable, Codable, Sendable, Equatable {
 
 // MARK: - Watched folders
 
-/// Identifies a watched folder. `.downloads` and `.desktop` are the two built-in folders; a
-/// custom folder (Pro) is identified by its absolute path, so the raw value round-trips through
-/// settings, bookmarks and the command line without a separate id.
+/// Identifies a watched folder. `.downloads` is the primary folder: it starts as `~/Downloads`
+/// and the user can point it anywhere (free tier). A custom folder (Pro) is identified by its
+/// absolute path, so the raw value round-trips through settings, bookmarks and the command line
+/// without a separate id.
 public struct FolderKind: RawRepresentable, Hashable, Codable, Sendable {
     public let rawValue: String
     public init(rawValue: String) { self.rawValue = rawValue }
     public init(_ rawValue: String) { self.rawValue = rawValue }
 
     public static let downloads = FolderKind("downloads")
-    public static let desktop = FolderKind("desktop")
-    public static let standardKinds: [FolderKind] = [.downloads, .desktop]
+    public static let standardKinds: [FolderKind] = [.downloads]
 
     /// A custom folder, identified by its path.
     public static func custom(_ path: String) -> FolderKind { FolderKind(path) }
@@ -266,7 +266,6 @@ public struct FolderKind: RawRepresentable, Hashable, Codable, Sendable {
     public var title: String {
         switch self {
         case .downloads: return "Downloads"
-        case .desktop: return "Desktop"
         default: return (rawValue as NSString).lastPathComponent
         }
     }
@@ -290,14 +289,18 @@ public struct WatchedFolder: Equatable, Codable, Sendable, Identifiable {
     }
 
     public var id: FolderKind { kind }
-    public var title: String { kind.isCustom ? (path as NSString).lastPathComponent : kind.title }
+    /// The folder's own name. The primary folder is "Downloads" until the user moves it.
+    public var title: String {
+        let name = (path as NSString).lastPathComponent
+        return name.isEmpty ? kind.title : name
+    }
 
     /// A Pro folder chosen by the user, watched from the moment it is added.
     public static func custom(_ path: String, access: AccessState = .granted) -> WatchedFolder {
         WatchedFolder(kind: .custom(path), path: path, enabled: true, access: access)
     }
 
-    /// The two folders the free tier can watch, at their real locations for the current user.
+    /// The primary folder at its default location, `~/Downloads`, for the current user.
     ///
     /// Inside the App Sandbox, `FileManager.urls(for:)` and `NSHomeDirectory()` point into the
     /// app's container (`~/Library/Containers/<id>/Data/Downloads`), which the folder watcher
@@ -305,10 +308,7 @@ public struct WatchedFolder: Equatable, Codable, Sendable, Identifiable {
     /// covers the real `~/Downloads`.
     public static var standard: [WatchedFolder] {
         let home = realHomeDirectory()
-        return [
-            WatchedFolder(kind: .downloads, path: home + "/Downloads", enabled: true),
-            WatchedFolder(kind: .desktop, path: home + "/Desktop", enabled: false),
-        ]
+        return [WatchedFolder(kind: .downloads, path: home + "/Downloads", enabled: true)]
     }
 
     public static func realHomeDirectory() -> String {
@@ -320,10 +320,7 @@ public struct WatchedFolder: Equatable, Codable, Sendable, Identifiable {
 
     /// Deterministic folders for tests and the headless CLI.
     public static func sample(home: String = "/Users/sample") -> [WatchedFolder] {
-        [
-            WatchedFolder(kind: .downloads, path: home + "/Downloads", enabled: true, access: .granted),
-            WatchedFolder(kind: .desktop, path: home + "/Desktop", enabled: false),
-        ]
+        [WatchedFolder(kind: .downloads, path: home + "/Downloads", enabled: true, access: .granted)]
     }
 }
 
@@ -496,7 +493,6 @@ public struct Settings: Equatable, Codable, Sendable {
     public var launchAtLogin: Bool
     public var hotkey: Hotkey
     public var notificationsEnabled: Bool
-    public var watchDesktop: Bool
     public var proUnlocked: Bool
     /// Pro: extra folders to watch, by absolute path.
     public var extraFolders: [String]
@@ -524,7 +520,6 @@ public struct Settings: Equatable, Codable, Sendable {
         launchAtLogin: Bool = false,
         hotkey: Hotkey = .default,
         notificationsEnabled: Bool = false,
-        watchDesktop: Bool = false,
         proUnlocked: Bool = false,
         extraFolders: [String] = [],
         rules: [Rule] = [],
@@ -541,7 +536,6 @@ public struct Settings: Equatable, Codable, Sendable {
         self.launchAtLogin = launchAtLogin
         self.hotkey = hotkey
         self.notificationsEnabled = notificationsEnabled
-        self.watchDesktop = watchDesktop
         self.proUnlocked = proUnlocked
         self.extraFolders = extraFolders
         self.rules = rules
@@ -562,7 +556,6 @@ public struct Settings: Equatable, Codable, Sendable {
         launchAtLogin = try c.decodeIfPresent(Bool.self, forKey: .launchAtLogin) ?? false
         hotkey = try c.decodeIfPresent(Hotkey.self, forKey: .hotkey) ?? .default
         notificationsEnabled = try c.decodeIfPresent(Bool.self, forKey: .notificationsEnabled) ?? false
-        watchDesktop = try c.decodeIfPresent(Bool.self, forKey: .watchDesktop) ?? false
         proUnlocked = try c.decodeIfPresent(Bool.self, forKey: .proUnlocked) ?? false
         extraFolders = try c.decodeIfPresent([String].self, forKey: .extraFolders) ?? []
         rules = try c.decodeIfPresent([Rule].self, forKey: .rules) ?? []

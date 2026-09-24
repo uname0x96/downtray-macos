@@ -71,11 +71,10 @@ extension FileKind {
 }
 
 extension FolderKind {
-    /// The two built-in folders get the name Finder shows for them; a custom folder keeps its own.
+    /// The Downloads folder gets the name Finder shows for it; a custom folder keeps its own.
     var localizedTitle: String {
         switch self {
         case .downloads: String(localized: "folder.downloads", defaultValue: "Downloads", comment: "The user's Downloads folder, as Finder names it.")
-        case .desktop: String(localized: "folder.desktop", defaultValue: "Desktop", comment: "The user's Desktop folder, as Finder names it.")
         default: title
         }
     }
@@ -92,7 +91,9 @@ extension HistoryFilter {
 }
 
 extension WatchedFolder {
-    var localizedTitle: String { kind.isCustom ? title : kind.localizedTitle }
+    /// The primary folder is "Downloads" in the UI language while it still is `~/Downloads`;
+    /// once moved it carries the chosen folder's name, like a Pro folder.
+    var localizedTitle: String { kind == .downloads && title == "Downloads" ? kind.localizedTitle : title }
 }
 
 extension InboxFile {

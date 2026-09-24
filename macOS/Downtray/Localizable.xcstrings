@@ -2,30 +2,30 @@
   "sourceLanguage": "en",
   "strings": {
     "access.message": {
-      "comment": "Folder picker heading. Placeholder: Downloads or Desktop. Keep the brand name.",
+      "comment": "Folder picker heading, both for the first grant and for moving the inbox to another folder. Keep the brand name.",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Downtray braucht Zugriff auf deinen Ordner „%@“, um neue Dateien anzuzeigen."
+            "value": "Wähle den Ordner, dessen neue Dateien Downtray anzeigt. Meist ist das „Downloads“."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Downtray needs access to your %@ folder to list new files."
+            "value": "Choose the folder Downtray lists new files from. Downloads is the usual choice."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Downtray a besoin d’accéder à votre dossier « %@ » pour afficher les nouveaux fichiers."
+            "value": "Choisissez le dossier dont Downtray affiche les nouveaux fichiers. En général, c’est « Téléchargements »."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "新しいファイルを表示するには、Downtray に「%@」フォルダへのアクセスが必要です。"
+            "value": "Downtray が新しいファイルを表示するフォルダを選択してください。通常は「ダウンロード」です。"
           }
         }
       }
@@ -36,25 +36,25 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zugriff erlauben"
+            "value": "Auswählen"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Grant Access"
+            "value": "Choose"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Autoriser l’accès"
+            "value": "Choisir"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "アクセスを許可"
+            "value": "選択"
           }
         }
       }
@@ -642,28 +642,29 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Neue Dateien in Downloads erscheinen hier."
+            "value": "Neue Dateien in „%@“ erscheinen hier."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "New files in Downloads will show up here."
+            "value": "New files in %@ will show up here."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Les nouveaux fichiers de Téléchargements apparaîtront ici."
+            "value": "Les nouveaux fichiers de « %@ » apparaîtront ici."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "ダウンロードに届いた新しいファイルがここに表示されます。"
+            "value": "「%@」に届いた新しいファイルがここに表示されます。"
           }
         }
-      }
+      },
+      "comment": "Placeholder: the primary folder's name, usually Downloads."
     },
     "empty.noRecent.title": {
       "comment": "Empty state of the inbox when the watched folders hold nothing recent.",
@@ -695,30 +696,30 @@
       }
     },
     "empty.openDownloads": {
-      "comment": "Button under the empty inbox: opens the folder in Finder.",
+      "comment": "Button under the empty inbox: opens the folder in Finder. Placeholder: the primary folder's name, usually Downloads.",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ordner „Downloads“ öffnen"
+            "value": "Ordner „%@“ öffnen"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open Downloads Folder"
+            "value": "Open %@ Folder"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ouvrir le dossier Téléchargements"
+            "value": "Ouvrir le dossier « %@ »"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "ダウンロードフォルダを開く"
+            "value": "「%@」フォルダを開く"
           }
         }
       }
@@ -951,35 +952,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "未読"
-          }
-        }
-      }
-    },
-    "folder.desktop": {
-      "comment": "The user's Desktop folder, as Finder names it.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Schreibtisch"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Desktop"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bureau"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "デスクトップ"
           }
         }
       }
@@ -1362,30 +1334,30 @@
       }
     },
     "inbox.footer.openDownloads": {
-      "comment": "Footer link button, leading. Shares one line with 'Mark all seen'.",
+      "comment": "Footer link button, leading. Placeholder: the primary folder's name, usually Downloads. Shares one line with 'Mark all seen'.",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Downloads im Finder öffnen"
+            "value": "„%@“ im Finder öffnen"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open Downloads in Finder"
+            "value": "Open %@ in Finder"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ouvrir Téléchargements"
+            "value": "Ouvrir « %@ » dans le Finder"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Finder でダウンロードを開く"
+            "value": "「%@」を Finder で開く"
           }
         }
       }
@@ -4005,35 +3977,6 @@
         }
       }
     },
-    "settings.accessNeeded": {
-      "comment": "Row title when macOS denied a folder.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zugriff nötig"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Access needed"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Accès requis"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "アクセスが必要です"
-          }
-        }
-      }
-    },
     "settings.addFolder": {
       "comment": "Opens the folder picker (Pro).",
       "localizations": {
@@ -4059,35 +4002,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "フォルダを追加…"
-          }
-        }
-      }
-    },
-    "settings.alwaysOn": {
-      "comment": "Value next to the Downloads folder: it cannot be turned off.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Immer an"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Always on"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Toujours actif"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "常にオン"
           }
         }
       }
@@ -4265,63 +4179,6 @@
         }
       }
     },
-    "settings.desktop.body": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Auch Dateien anzeigen, die auf dem Schreibtisch landen."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Also list files that land on the Desktop."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Afficher aussi les fichiers qui arrivent sur le Bureau."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "デスクトップに届いたファイルも表示します。"
-          }
-        }
-      }
-    },
-    "settings.desktop.denied": {
-      "comment": "Keep the brand name.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wähle den Schreibtisch-Ordner, damit Downtray ihn überwachen kann."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choose the Desktop folder to let Downtray watch it."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choisissez le dossier Bureau pour que Downtray puisse le surveiller."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Downtray が監視できるように、デスクトップフォルダを選択してください。"
-          }
-        }
-      }
-    },
     "settings.downloads.denied": {
       "comment": "Keep the brand name.",
       "localizations": {
@@ -4444,25 +4301,25 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Der Eingang zeigt die %lld neuesten Dateien aus den überwachten Ordnern."
+            "value": "Der Posteingang zeigt die %lld neuesten Dateien aus diesen Ordnern."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The inbox shows the %lld newest files from the folders it watches."
+            "value": "The inbox shows the %lld newest files from these folders."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "La boîte de réception affiche les %lld fichiers les plus récents des dossiers surveillés."
+            "value": "La boîte de réception affiche les %lld fichiers les plus récents de ces dossiers."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "受信箱には、監視中のフォルダの新しいファイルが %lld 件まで表示されます。"
+            "value": "受信箱にはこれらのフォルダの最新 %lld 件のファイルが表示されます。"
           }
         }
       }
@@ -4492,35 +4349,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "一般"
-          }
-        }
-      }
-    },
-    "settings.grantAccess": {
-      "comment": "Opens the folder picker that grants access.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zugriff erlauben …"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Grant Access…"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Autoriser l’accès…"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "アクセスを許可…"
           }
         }
       }
@@ -5141,91 +4969,6 @@
         }
       }
     },
-    "settings.moreFolders": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Weitere Ordner"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "More folders"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Autres dossiers"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "その他のフォルダ"
-          }
-        }
-      }
-    },
-    "settings.moreFolders.free": {
-      "comment": "Shown in the free tier; 'Pro:' marks a paid feature.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pro: Beliebige weitere Ordner überwachen."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pro: watch any other folder."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pro : surveiller n’importe quel autre dossier."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pro: 他のフォルダも監視できます。"
-          }
-        }
-      }
-    },
-    "settings.moreFolders.pro": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Beliebige weitere Ordner überwachen, etwa einen Scanner- oder AirDrop-Ordner."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Watch any other folder, such as a scanner or AirDrop target."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Surveillez n’importe quel autre dossier, par exemple celui d’un scanner ou d’AirDrop."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "スキャナや AirDrop の保存先など、他のフォルダも監視できます。"
-          }
-        }
-      }
-    },
     "settings.notifications": {
       "comment": "Toggle for system notifications.",
       "localizations": {
@@ -5251,6 +4994,35 @@
           "stringUnit": {
             "state": "translated",
             "value": "新しいファイルを通知"
+          }
+        }
+      }
+    },
+    "settings.primary.change": {
+      "comment": "Opens the folder picker to move the inbox to another folder.",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ändern …"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modifier…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "変更…"
           }
         }
       }
