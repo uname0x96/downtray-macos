@@ -2476,6 +2476,35 @@
         }
       }
     },
+    "retention.forever": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unbegrenzt"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forever"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toujours"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ずっと"
+          }
+        }
+      },
+      "comment": "Keep items picker option: files never leave the inbox on their own."
+    },
     "retention.month": {
       "comment": "Keep items picker option.",
       "localizations": {
@@ -4772,13 +4801,13 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ältere Dateien verlassen den Posteingang. In ihrem Ordner bleiben sie."
+            "value": "Ältere Dateien verlassen den Posteingang. Sie bleiben in ihrem Ordner."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Older files leave the inbox. They stay in their folder."
+            "value": "Files older than this leave the inbox. They stay in their folder."
           }
         },
         "fr": {
@@ -4790,7 +4819,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "古いファイルは受信箱から消えます。フォルダには残ります。"
+            "value": "これより古いファイルは受信箱から消えます。ファイルはフォルダに残ります。"
           }
         }
       }
@@ -5337,6 +5366,63 @@
           "stringUnit": {
             "state": "translated",
             "value": "メニューバーアイコンの右クリックメニュー、または受信箱を開いた状態で ⌘Q でも終了できます。"
+          }
+        }
+      }
+    },
+    "settings.restoreList": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liste wiederherstellen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore List"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restaurer la liste"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リストを復元"
+          }
+        }
+      },
+      "comment": "Button in Settings › Danger: undoes Clear List."
+    },
+    "settings.restoreList.body": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zeigt die Dateien wieder an, die „Liste leeren“ ausgeblendet hat."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lists the files that Clear List hid."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réaffiche les fichiers masqués par « Vider la liste »."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「リストを消去」で隠したファイルを再び表示します。"
           }
         }
       }

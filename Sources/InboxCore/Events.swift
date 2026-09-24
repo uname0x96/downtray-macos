@@ -34,6 +34,8 @@ public enum Event: Equatable, Sendable {
     /// disk). Carries the clock because Settings is used while the panel, which refreshes
     /// `now`, may have been closed for hours.
     case clearList(Date)
+    /// Settings > Danger: undoes "Clear List"; the files it hid are listed again.
+    case restoreList
     case openWatchedFolder(FolderKind)
     case dismissToast
     /// The "Show older files" row: History with Pro, the Pro sheet without.

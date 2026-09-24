@@ -118,7 +118,7 @@ struct SettingsView: View {
                 ForEach(Retention.allCases, id: \.self) { Text($0.localizedTitle).tag($0) }
             } label: {
                 Text(String(localized: "settings.keepItems", defaultValue: "Keep items", comment: "Picker label: how long a file stays in the inbox after it arrived."))
-                Text(String(localized: "settings.keepItems.body", defaultValue: "Older files leave the inbox. They stay in their folder.")).foregroundStyle(.secondary)
+                Text(String(localized: "settings.keepItems.body", defaultValue: "Files older than this leave the inbox. They stay in their folder.")).foregroundStyle(.secondary)
             }
             .accessibilityIdentifier("retention")
             Toggle(isOn: binding(\.markReadOnClose) { .setMarkReadOnClose($0) }) {
@@ -231,6 +231,14 @@ struct SettingsView: View {
                     .accessibilityIdentifier("clearList")
             } label: {
                 Text(String(localized: "settings.clearList.body", defaultValue: "Empties the inbox. Files stay in their folders; new arrivals show up again."))
+            }
+            if model.settings.listClearedAt != nil {
+                LabeledContent {
+                    Button(String(localized: "settings.restoreList", defaultValue: "Restore List", comment: "Button in Settings › Danger: undoes Clear List.")) { presenter.dispatch(.restoreList) }
+                        .accessibilityIdentifier("restoreList")
+                } label: {
+                    Text(String(localized: "settings.restoreList.body", defaultValue: "Lists the files that Clear List hid."))
+                }
             }
         } header: {
             Text(String(localized: "settings.danger", defaultValue: "Danger", comment: "Section title: actions that cannot be undone."))
