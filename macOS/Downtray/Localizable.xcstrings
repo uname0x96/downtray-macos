@@ -4538,63 +4538,6 @@
         }
       }
     },
-    "settings.includeFolders": {
-      "comment": "Toggle: list folders that land in a watched folder, not only files.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ordner einbeziehen"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Include folders"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Inclure les dossiers"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "フォルダも含める"
-          }
-        }
-      }
-    },
-    "settings.includeFolders.body": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Auch Ordner auflisten, die in einem überwachten Ordner landen, etwa ein entpackter Download."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Also list folders that land in a watched folder, such as an unzipped download."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Liste aussi les dossiers qui arrivent dans un dossier surveillé, comme un téléchargement décompressé."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "解凍したダウンロードなど、監視中のフォルダに届いたフォルダも一覧に載せます。"
-          }
-        }
-      }
-    },
     "settings.keepItems": {
       "comment": "Picker label: how long a file stays in the inbox after it arrived.",
       "localizations": {
@@ -4936,35 +4879,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "未読の印とバッジをすべて消します。"
-          }
-        }
-      }
-    },
-    "settings.markReadOnClose": {
-      "comment": "Toggle in Settings › List.",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sichtbare Dateien beim Schließen als gelesen markieren"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mark visible files as read when the inbox closes"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Marquer les fichiers visibles comme lus à la fermeture"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "受信箱を閉じたとき、表示中のファイルを既読にする"
           }
         }
       }

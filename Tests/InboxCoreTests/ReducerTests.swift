@@ -306,11 +306,9 @@ func model(_ files: [InboxFile] = [], open: Bool = false) -> InboxModel {
         #expect(try InboxReducer.reduce(restored.model, .restoreList).effects.isEmpty, "nothing to restore is a no-op")
     }
 
-    @Test func foldersAreRowsOnlyWhenTheSettingSaysSo() throws {
+    @Test func foldersAreRowsLikeFiles() {
         let folder = InboxFile(path: downloads + "/shots", addedAt: now, kind: .folder)
-        var m = model([folder, file("a.pdf", minutesAgo: 1)])
-        #expect(m.visibleFiles.map(\.name) == ["a.pdf"])
-        m = try InboxReducer.reduce(m, .setIncludeFolders(true)).model
+        let m = model([folder, file("a.pdf", minutesAgo: 1)])
         #expect(m.visibleFiles.map(\.name) == ["shots", "a.pdf"])
     }
 
@@ -334,18 +332,15 @@ func model(_ files: [InboxFile] = [], open: Bool = false) -> InboxModel {
         #expect(same.model.files[first.id]?.size == 1000 && same.effects.isEmpty)
     }
 
-    @Test func markReadOnCloseAndTheBadgeSetting() throws {
+    @Test func closingThePanelKeepsUnreadAndTheBadgeSetting() throws {
         let a = file("a.pdf")
         let b = file("b.pdf", minutesAgo: 1)
         var m = model([a, b], open: true)
-        m = try InboxReducer.reduce(m, .setMarkReadOnClose(true)).model
-        m.query = "a."
-        #expect(m.visibleFiles.map(\.name) == ["a.pdf"])
         m = try InboxReducer.reduce(m, .panelClosed).model
-        #expect(m.files[a.id]?.unread == false && m.files[b.id]?.unread == true, "only the rows that were on screen")
-        #expect(m.badgeCount == 1)
+        #expect(m.files[a.id]?.unread == true && m.files[b.id]?.unread == true, "closing marks nothing read")
+        #expect(m.badgeCount == 2)
         m = try InboxReducer.reduce(m, .setShowBadge(false)).model
-        #expect(m.badgeCount == 0 && m.unreadCount == 1, "the badge is off, the dots stay")
+        #expect(m.badgeCount == 0 && m.unreadCount == 2, "the badge is off, the dots stay")
         #expect(m.snapshot.badge == 0 && m.snapshot.settings.showBadge == false)
     }
 

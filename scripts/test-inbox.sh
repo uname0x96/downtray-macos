@@ -175,10 +175,6 @@ headless_scenario() {
     send "keep day";   expect '.settings.retention == "day"'
     send "keep forever"; expect '.settings.retention == "forever"' "Forever is a retention choice"
     send "keep week"
-    send "read-on-close on"; expect '.settings.markReadOnClose == true'
-    send "read-on-close off"
-    send "folders on"; expect '.settings.includeFolders == true'
-    send "folders off"
     send "clear-list"; expect '.rows == [] and .emptyState == "nothingNew" and .settings.selectedChip == "all" and .settings.listCleared' "Clear list empties the inbox without touching the files"
     send "arrive after.txt 1k"
     expect '(.rows | map(.name)) == ["after.txt"]' "what arrives after the clear shows"

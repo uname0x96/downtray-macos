@@ -87,7 +87,6 @@ extension Event {
         ("notify on|off", "notification on new file"),
         ("folders on|off", "list folders inside watched folders as rows"),
         ("keep day|week|month|forever", "how long a file stays in the inbox after it arrived"),
-        ("read-on-close on|off", "closing the panel marks the visible rows read"),
         ("badge on|off", "show the unread count on the menu bar icon"),
         ("language en|ja|de|fr|system", "UI language (system: follow macOS); applies at the next launch"),
         ("hotkey-set <combo>", "e.g. ctrl+alt+d, cmd+shift+space"),
@@ -231,12 +230,10 @@ extension Event {
         case "finder": return .openWatchedFolder(try folder(argument))
         case "login": return .setLaunchAtLogin(try onOff())
         case "notify": return .setNotifications(try onOff())
-        case "folders": return .setIncludeFolders(try onOff())
         case "keep":
             let value = try required().lowercased()
             guard let retention = Retention(rawValue: value) else { throw .invalidArgument(value) }
             return .setRetention(retention)
-        case "read-on-close": return .setMarkReadOnClose(try onOff())
         case "badge": return .setShowBadge(try onOff())
         case "language":
             let code = try required().lowercased()
@@ -345,9 +342,7 @@ extension Event {
         case .copyName(let target): return "copy-name" + names(target)
         case .markRead(let target): return "read" + names(target)
         case .markUnread(let target): return "unread" + names(target)
-        case .setIncludeFolders(let on): return "folders \(on ? "on" : "off")"
         case .setRetention(let retention): return "keep \(retention.rawValue)"
-        case .setMarkReadOnClose(let on): return "read-on-close \(on ? "on" : "off")"
         case .setShowBadge(let on): return "badge \(on ? "on" : "off")"
         case .showOlderFiles: return "older"
         case .dismissPaywall: return "paywall off"

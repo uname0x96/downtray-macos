@@ -107,23 +107,12 @@ struct SettingsView: View {
                 Text(String(localized: "settings.keepItems.body", defaultValue: "Files older than this leave the inbox. They stay in their folder.")).foregroundStyle(.secondary)
             }
             .accessibilityIdentifier("retention")
-            Toggle(isOn: binding(\.markReadOnClose) { .setMarkReadOnClose($0) }) {
-                Text(String(localized: "settings.markReadOnClose", defaultValue: "Mark visible files as read when the inbox closes", comment: "Toggle in Settings › List."))
-            }
-            .toggleStyle(.switch)
-            .accessibilityIdentifier("markReadOnClose")
             Toggle(isOn: binding(\.showBadge) { .setShowBadge($0) }) {
                 Text(String(localized: "settings.showBadge", defaultValue: "Show badge on the menu bar icon", comment: "Toggle in Settings › List."))
                 Text(String(localized: "settings.showBadge.body", defaultValue: "The badge counts unread files.")).foregroundStyle(.secondary)
             }
             .toggleStyle(.switch)
             .accessibilityIdentifier("showBadge")
-            Toggle(isOn: binding(\.includeFolders) { .setIncludeFolders($0) }) {
-                Text(String(localized: "settings.includeFolders", defaultValue: "Include folders", comment: "Toggle: list folders that land in a watched folder, not only files."))
-                Text(String(localized: "settings.includeFolders.body", defaultValue: "Also list folders that land in a watched folder, such as an unzipped download.")).foregroundStyle(.secondary)
-            }
-            .toggleStyle(.switch)
-            .accessibilityIdentifier("includeFolders")
         } header: {
             Text(String(localized: "settings.list", defaultValue: "List", comment: "Section title: how the inbox list behaves."))
         }

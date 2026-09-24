@@ -500,12 +500,8 @@ public struct Settings: Equatable, Codable, Sendable {
     public var rules: [Rule]
     /// UI language chosen in Settings; nil follows macOS. Applied at the next launch.
     public var language: AppLanguage?
-    /// Folders inside a watched folder are listed as rows. Off by default: the inbox is for files.
-    public var includeFolders: Bool
     /// How long a file stays in the inbox after it arrived.
     public var retention: Retention
-    /// Closing the panel marks the rows that were on screen as read.
-    public var markReadOnClose: Bool
     /// The menu bar icon shows the unread count.
     public var showBadge: Bool
     /// User's extension → group mapping; wins over the built-in table.
@@ -524,9 +520,7 @@ public struct Settings: Equatable, Codable, Sendable {
         extraFolders: [String] = [],
         rules: [Rule] = [],
         language: AppLanguage? = nil,
-        includeFolders: Bool = false,
         retention: Retention = .forever,
-        markReadOnClose: Bool = false,
         showBadge: Bool = true,
         typeOverrides: [String: TypeGroup] = [:],
         selectedChip: FileFilter = .today,
@@ -540,9 +534,7 @@ public struct Settings: Equatable, Codable, Sendable {
         self.extraFolders = extraFolders
         self.rules = rules
         self.language = language
-        self.includeFolders = includeFolders
         self.retention = retention
-        self.markReadOnClose = markReadOnClose
         self.showBadge = showBadge
         self.typeOverrides = typeOverrides
         self.selectedChip = selectedChip
@@ -560,9 +552,7 @@ public struct Settings: Equatable, Codable, Sendable {
         extraFolders = try c.decodeIfPresent([String].self, forKey: .extraFolders) ?? []
         rules = try c.decodeIfPresent([Rule].self, forKey: .rules) ?? []
         language = try c.decodeIfPresent(AppLanguage.self, forKey: .language)
-        includeFolders = try c.decodeIfPresent(Bool.self, forKey: .includeFolders) ?? false
         retention = try c.decodeIfPresent(Retention.self, forKey: .retention) ?? .week
-        markReadOnClose = try c.decodeIfPresent(Bool.self, forKey: .markReadOnClose) ?? false
         showBadge = try c.decodeIfPresent(Bool.self, forKey: .showBadge) ?? true
         typeOverrides = try c.decodeIfPresent([String: TypeGroup].self, forKey: .typeOverrides) ?? [:]
         selectedChip = try c.decodeIfPresent(FileFilter.self, forKey: .selectedChip) ?? .today
@@ -817,7 +807,7 @@ public struct InboxModel: Equatable, Sendable {
     public var inboxCandidates: [InboxFile] {
         let enabled = enabledFolderPaths
         return files.values
-            .filter { enabled.contains($0.folder) && (settings.includeFolders || $0.kind != .folder) }
+            .filter { enabled.contains($0.folder) }
             .sorted(by: Self.newestFirst)
     }
 

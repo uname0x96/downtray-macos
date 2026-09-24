@@ -448,18 +448,9 @@ public enum InboxReducer {
             next.settings.language = language
             effects.append(.saveSettings(next.settings))
 
-        case .setIncludeFolders(let on):
-            next.settings.includeFolders = on
-            next.fixFocus()
-            effects.append(.saveSettings(next.settings))
-
         case .setRetention(let retention):
             next.settings.retention = retention
             next.fixFocus()
-            effects.append(.saveSettings(next.settings))
-
-        case .setMarkReadOnClose(let on):
-            next.settings.markReadOnClose = on
             effects.append(.saveSettings(next.settings))
 
         case .setShowBadge(let on):
@@ -612,12 +603,9 @@ extension InboxModel {
         fixFocus()
     }
 
-    /// What every close does. With "Mark visible as read when popover closes" on, the rows
-    /// that were on screen are read now.
+    /// What every close does. Unread state is untouched: only opening, revealing or marking
+    /// a file clears its dot.
     fileprivate mutating func closePanel() {
-        if settings.markReadOnClose && !historyMode {
-            for file in visibleFiles { files[file.id]?.unread = false }
-        }
         panelOpen = false
         selection = []
         focused = nil

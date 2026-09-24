@@ -84,7 +84,7 @@ Mobius.swift is used as the loop runtime, not as the design. The design is the r
 ## Reading the model
 
 `InboxModel` keeps `files` keyed by POSIX path. `recentFiles` are the candidates: enabled
-folders only, files (folders too with `settings.includeFolders`), younger than
+folders only, files and folders alike (an unzipped download is a row too), younger than
 `settings.retention` (24 h / 7 d / 30 d / forever, default forever, so a fresh install lists
 the Downloads folder instead of an empty inbox) and newer than `settings.listClearedAt` ("Clear
 List" in Settings; "Restore List" clears it again). The panel lists `visibleFiles`: `recentFiles` through the chip
@@ -101,8 +101,8 @@ scan shows nothing from today (`chipResolved`). `now` is the moment the panel op
 
 The badge is the number of unread files in `recentFiles` (`badgeCount`, off with
 `settings.showBadge`). `unread` is per file and is cleared by Open, Show in Finder, Mark as
-Read, "Mark all seen", or, with `settings.markReadOnClose`, for the visible rows when the
-panel closes; opening the panel alone never clears it, and Mark as Unread puts it back. A
+Read or "Mark all seen"; opening or closing the panel never clears it, and Mark as Unread
+puts it back. A
 download that lands again at the same path (`fileArrived` with a newer `addedAt`) is a new
 arrival: unread again, back at the top. A file whose watcher reports it gone leaves the list at
 once (`fileRemoved`); the user moved or deleted it themselves, so there is nothing to
@@ -162,8 +162,8 @@ the attached target sees real files.
 Filter lines: `filter all|1h|today|unread`, `type any|docs|images|media|archives|apps`,
 `type map <ext> <group|none>`, `type reset`, `search <text>`. Row actions: `open`, `reveal`,
 `copy-path`, `copy-name`, `read`, `unread`, `trash`, `move`, `unzip`. Settings: `folder change`
-(the primary folder; headless: the last `pick`), `folders on|off`, `keep day|week|month|forever`,
-`read-on-close on|off`, `badge on|off`, `clear-list`, `restore-list`, `seen` (mark all).
+(the primary folder; headless: the last `pick`), `keep day|week|month|forever`,
+`badge on|off`, `clear-list`, `restore-list`, `seen` (mark all).
 
 Pro events have their own lines: `pro on|off` (stands in for the store), `folder add`,
 `folder remove <name>`, `history on|off|all|available|gone|clear`, `forget <file>`, `search <text>`,
