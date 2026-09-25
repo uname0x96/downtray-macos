@@ -189,7 +189,7 @@ Privat von Grund auf: kein Account, kein Netzwerk, keine Analyse. Alles bleibt a
 
 **Subtitle**: Vos nouveaux téléchargements
 
-**Promotional text**: Appuyez sur ⌃⌥D et agissez sur ce qui vient d’arriver dans Téléchargements : ouvrir, Coup d’œil, déplacer, décompresser ou mettre à la corbeille, sans quitter ce que vous faisiez.
+**Promotional text**: Appuyez sur ⌃⌥D et agissez sur ce qui vient d’arriver dans Téléchargements : ouvrir, Coup d’œil, déplacer, décompresser ou jeter, sans quitter votre travail.
 
 **Description**
 
