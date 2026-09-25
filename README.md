@@ -7,6 +7,8 @@ list, a searchable history, and rules that sort arrivals automatically. macOS 14
 sandboxed, no network. English, Japanese, German and French; the app follows the macOS
 language, and Settings > General has a Language picker for choosing one of the four directly.
 
+Available on the [Mac App Store](https://apps.apple.com/us/app/downtray/id6815153471).
+
 The app's logic is headless: a Swift package (`InboxCore`) that any client can drive by sending
 events and reading a JSON snapshot. The SwiftUI app, the `inbox-cli` tool, the shell tests and
 an agent all use the same presenter. See `docs/architecture.md` for the design and
