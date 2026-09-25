@@ -14,7 +14,8 @@ an agent all use the same presenter. See `docs/architecture.md` for the design a
 
 ## Requirements
 
-- Xcode 16 or newer (Swift 6 toolchain), macOS 14 or newer.
+- Xcode 26 or newer (Swift 6 toolchain and the macOS 26 SDK, for the Liquid Glass button
+  styles behind `#available(macOS 26, *)`), macOS 14 or newer.
 - [xcodegen](https://github.com/yonaskolb/XcodeGen) to generate the app project (`brew install xcodegen`).
 - `jq` for the scenario script (`brew install jq`).
 
@@ -81,7 +82,7 @@ panel:
 ## Tests
 
 ```sh
-swift test                         # tier 1: reducer, presenter, grammar
+swift test                         # tier 1: reducer, presenter, grammar, Pro
 scripts/test-inbox.sh              # tier 2, headless
 scripts/test-inbox.sh attached     # tier 2 against the running debug app; writes to ~/Downloads
 ```
@@ -94,11 +95,14 @@ Sources/InboxCore/       model, events, effects, reducer, presenter, services, s
 Sources/inbox-cli/       headless / remote driver
 Tests/InboxCoreTests/    tier 1
 macOS/project.yml        xcodegen spec for the app
-macOS/Downtray/     SwiftUI + AppKit app, MacServices, folder watcher, debug bridge
+macOS/ExportOptions.plist App Store export options
+macOS/Downtray/          SwiftUI + AppKit app, MacServices, folder watcher, debug bridge
 scripts/test-inbox.sh    tier 2
+scripts/test-click.sh    tier 3, semi-manual: real mouse clicks on the running debug app (scripts/click.swift)
 scripts/check-strings.sh string catalog vs. code, and every language complete
-docs/                    architecture, rules
-specs/                   the product spec
+scripts/icon/            icon generation and menu bar template
+docs/                    architecture, rules, App Store checklist, icon source
+specs/                   the product spec: mvp, popover, history, filter, i18n
 ```
 
 ## Status
