@@ -14,5 +14,6 @@ xcuserdata/
 # Icon candidates that were not chosen; teal-tray.png is the installed icon's source
 docs/icons/*
 !docs/icons/teal-tray.png
+!docs/icons/pro-promo.png
 
 .DS_Store

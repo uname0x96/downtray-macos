@@ -47,17 +47,18 @@ Only possible in App Store Connect (account owner):
       primary category Productivity, SKU of your choice.
 - [ ] Create the in-app purchase: Non-Consumable, product id `app.downtray.mac.pro`,
       reference name "Pro", price tier for $7.99, display name "Downtray Pro",
-      description from `Pro.storekit`, a 1024×1024 promotional image is optional. Attach it
-      to the first version under "In-App Purchases and Subscriptions" so it is reviewed with
-      the app.
+      description from `Pro.storekit`, and the optional 1024×1024 promotional image from
+      `docs/icons/pro-promo.png` (`scripts/icon/make-iap-image.py` regenerates it from the
+      app icon; flattened PNG, square corners, no text). Attach the purchase to the first
+      version under "In-App Purchases and Subscriptions" so it is reviewed with the app.
 - [ ] Add a Sandbox tester account (Users and Access > Sandbox) and buy Pro once on a
       TestFlight or development build signed for the store, to confirm the store path outside
       the local `.storekit` file.
 - [x] Privacy policy URL (required because of the in-app purchase), support URL and
       marketing URL. The site is live at https://uname0x96.github.io/downtray/ (GitHub Pages
       from the `uname0x96/downtray` repository): use `/privacy.html`, `/support.html` and the
-      root. The pages still carry the `SUPPORT_EMAIL` and `APP_STORE_URL` placeholders; fill
-      them in before submitting.
+      root. The Download buttons point at https://apps.apple.com/us/app/downtray/id6815153471.
+      Support and privacy questions on the pages go to uname0x96@gmail.com.
 - [ ] App privacy questionnaire: "Data not collected".
 - [ ] Screenshots: at least one 1280×800 or 1440×900 (or the 2560×1600 / 2880×1800 Retina
       sizes) of the popover with a few files, one of Settings, one of the rule editor.
@@ -85,30 +86,116 @@ Still worth doing before submitting:
 
 ## Review notes (paste into "Notes" for App Review)
 
-> Downtray is a menu bar utility (it has no Dock icon). After launch, press
-> Control-Option-D or click the tray icon in the menu bar to open the inbox. The first time,
-> macOS asks for access to the Downloads folder; please allow it, then drop any file into
-> ~/Downloads and it appears at the top of the list.
+> Downtray is a menu bar utility for the Downloads folder. It has no Dock icon and no
+> account or sign-in: everything works with a fresh user.
 >
-> The gear button opens Settings. The Pro in-app purchase ("Downtray Pro",
-> non-consumable) is on the Settings window and on a sheet inside the popover; it unlocks
-> extra watched folders, a longer list, a searchable history, and rules. Rules act only on files that land in folders the user
-> chose to watch, with actions the user configured (move to a folder the user picked, move to
-> Trash with undo, mark as seen, or ask first). The app has no network access and collects no
-> data.
+> HOW TO TEST
+> 1. Launch the app. A tray icon appears in the menu bar. On first launch macOS asks for
+>    access to the Downloads folder; please allow it (the app is sandboxed and only reads
+>    and writes that folder plus folders you pick yourself).
+> 2. Press Control-Option-D or click the tray icon to open the inbox. The shortcut uses the
+>    standard system hotkey API and needs no Accessibility permission.
+> 3. Save or drop any file into ~/Downloads. It appears at the top of the list within a
+>    second, with a Quick Look thumbnail and the site it came from when that is known.
+> 4. Select a file and try the actions: Return opens it, Space shows Quick Look, Command-R
+>    reveals it in Finder, Command-C copies its path, Command-M moves it to a folder you
+>    choose, Command-U unzips an archive in place, Delete moves it to the Trash with a
+>    five-second Undo. You can also drag a file out of the list into another app.
+> 5. The filter bar narrows the list to the last hour, today or unopened files, by type, or
+>    by search. A badge on the tray icon counts files not yet opened.
+>
+> SETTINGS
+> The gear button opens Settings: shortcut, list length, "Launch at login" (uses the
+> standard Login Items approval), an optional "Notify when a download finishes" toggle that
+> asks for notification permission only when turned on, and the watched folders.
+>
+> IN-APP PURCHASE
+> "Downtray Pro" is a single non-consumable (product id app.downtray.mac.pro). The purchase
+> screen is under Settings and on a sheet inside the popover when a Pro feature is tapped.
+> Pro unlocks extra watched folders, a longer list, a searchable history and rules. Rules
+> act only on files that land in folders the user chose to watch, with actions the user set
+> (move to a folder they picked, move to Trash with undo, mark as seen, or ask first).
+> Restore Purchases is on the same screen. Everything else in the app is free.
+>
+> PRIVACY
+> The app has no network entitlement, makes no network requests, collects no data and has
+> no analytics. Settings and the file history are stored in the app's sandbox container.
+>
+> Contact the developer at the address in the contact information if anything is unclear.
+
+## In-app purchase review information (App Store Connect > In-App Purchases > Downtray Pro)
+
+The in-app purchase has its own "Review Information" box: one screenshot and optional
+notes (4000 characters at most), separate from the app's review notes above. Per Apple's
+in-app purchase information reference, the screenshot must use one of the app's
+screenshot sizes (macOS: 1280×800, 1440×900, 2560×1600 or 2880×1800, all 16:10), be a
+PNG or JPEG without an alpha channel, and clearly show the item being sold. It is seen
+by App Review only, never on the store, and can be replaced but not removed.
+
+**Screenshot.** A 2560×1600 composite of the two places the purchase is offered:
+Settings in the free tier (Pro section first) and the popover with the Pro sheet. Both
+are rendered by the debug build through the bridge, so no screen-recording permission
+is needed:
+
+```sh
+open .build/DerivedData/Build/Products/Debug/Downtray.app; sleep 3
+bridge() { printf '%s\n' "$1" | nc -w 3 127.0.0.1 8791 | head -n 1; }
+D=$HOME/Downloads/downtray-iap-shot
+bridge "pro off" >/dev/null
+bridge hotkey >/dev/null; sleep 1               # the real popover ("panel open" only sets the model)
+bridge older >/dev/null; sleep 1                 # "Show older files" opens the Pro sheet in the free tier
+bridge "screenshot $D" >/dev/null                # panel.png
+bridge "paywall off" >/dev/null; bridge "panel close" >/dev/null
+bridge settings >/dev/null; sleep 2              # SettingsOpener is captured once the popover has shown
+bridge "screenshot $D" >/dev/null                # Downtray Settings.png
+python3 scripts/make-iap-review-shot.py "$D"     # downtray-pro-iap-review-2560x1600.png
+```
+
+The price on the buttons is the live App Store price (the store loads it even outside
+the `.storekit` scheme once the product exists). `pro off` only lasts until the next
+launch, when the store reports the real entitlement again.
+
+**Review notes** (paste into the in-app purchase's "Review Notes"):
+
+> Downtray Pro is a one-time, non-consumable purchase (product id app.downtray.mac.pro).
+> It unlocks four things in this menu bar app: watching folders beyond the primary one,
+> a 200-file inbox with search (the free tier lists 20 files), the History panel, and
+> rules that sort arrivals automatically. Everything else in the app is free, and there
+> is no account or sign-in.
+>
+> How to reach the purchase:
+> 1. Click the Downtray icon in the menu bar. The inbox opens as a popover.
+> 2. Click the gear button at the top right of the popover to open Settings. (You can also
+>    right-click the menu bar icon and choose "Settings…".)
+> 3. The first section of the Settings window is "Pro", with the button
+>    "Unlock Pro — $7.99". Clicking it shows the standard StoreKit purchase sheet.
+> 4. "Restore Purchases" is in the same section.
+>
+> The same purchase is also offered on a sheet inside the popover: in the free tier,
+> clicking "History" in the popover's footer or the "Show older files" row at the bottom
+> of the list shows a "Downtray Pro" sheet with "Unlock Pro — $7.99", "Not now" and
+> "Restore Purchases".
+>
+> After the purchase, the Pro section disappears from Settings and a green "Pro" badge
+> appears in the Settings title bar. "Add Folder…" (Folders section) and "Add Rule…"
+> (Rules section) become active, the Folders footer changes from 20 to 200 files, and
+> "History" in the popover opens the History panel instead of the sheet. The app has no
+> network entitlement and makes no requests of its own; the purchase goes through
+> StoreKit only.
 
 ## App Store description (draft)
 
 One listing per language: English (U.S.) is the source; Japanese, German and French follow.
 Keywords are comma-separated without spaces, never repeat the name or the subtitle, and never
-contain "Downtray".
+contain "Downtray". Promotional text spells the shortcut out in words: App Store Connect rejects
+the ⌃ ⌥ ⌘ key symbols there with "This field contains one or more invalid characters".
 
 ### English (U.S.)
 
 **Subtitle** (30 chars): Inbox for new downloads
 
-**Promotional text**: Press ⌃⌥D and act on what just landed in Downloads: open, Quick Look,
-move, unzip or trash it, without leaving what you were doing.
+**Promotional text**: Press Control-Option-D and act on what just landed in Downloads: open,
+Quick Look, move, unzip or trash it, without leaving what you were doing.
 
 **Description**
 
@@ -141,7 +228,7 @@ the App Sandbox.
 
 **Subtitle**: 新しいダウンロードの受信箱
 
-**Promotional text**: ⌃⌥D を押すだけで、ダウンロードに届いたばかりのファイルをその場で処理できます。開く、クイックルック、移動、解凍、ゴミ箱へ。作業を中断せずに。
+**Promotional text**: Control-Option-D を押すだけで、ダウンロードに届いたばかりのファイルをその場で処理できます。開く、クイックルック、移動、解凍、ゴミ箱へ。作業を中断せずに。
 
 **Description**
 
@@ -165,7 +252,7 @@ Downtray Pro (買い切り) で追加されるもの:
 
 **Subtitle**: Eingang für neue Downloads
 
-**Promotional text**: Drücke ⌃⌥D und erledige, was gerade in Downloads gelandet ist: öffnen, Übersicht, bewegen, entpacken oder in den Papierkorb, ohne deine Arbeit zu unterbrechen.
+**Promotional text**: Drücke ctrl-Wahltaste-D und erledige, was gerade in Downloads gelandet ist: öffnen, Übersicht, bewegen, entpacken oder Papierkorb, ohne deine Arbeit zu unterbrechen.
 
 **Description**
 
@@ -189,7 +276,7 @@ Privat von Grund auf: kein Account, kein Netzwerk, keine Analyse. Alles bleibt a
 
 **Subtitle**: Vos nouveaux téléchargements
 
-**Promotional text**: Appuyez sur ⌃⌥D et agissez sur ce qui vient d’arriver dans Téléchargements : ouvrir, Coup d’œil, déplacer, décompresser ou jeter, sans quitter votre travail.
+**Promotional text**: Appuyez sur Ctrl-Option-D et agissez sur ce qui vient d’arriver dans Téléchargements : ouvrir, Coup d’œil, déplacer, décompresser ou jeter, sans quitter votre travail.
 
 **Description**
 
